@@ -1,12 +1,8 @@
 /**
  * Cliente HTTP base para comunicación con el backend.
  *
- * En la Fase 1, no se utiliza directamente porque los servicios
- * devuelven datos mock. En fases futuras, todas las funciones de
- * servicio usarán este cliente para hacer peticiones al backend Express.
- *
- * Ejemplo futuro:
- *   const data = await apiClient.get('/services');
+ * Incluye automáticamente el token JWT de localStorage en el encabezado
+ * `Authorization: Bearer <token>` cuando el usuario está autenticado.
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -24,7 +20,7 @@ interface ApiResponse<T> {
 }
 
 /**
- * Realiza una petición HTTP al backend.
+ * Realiza una petición HTTP al backend con token opcional.
  */
 async function request<T>(
   endpoint: string,
@@ -32,12 +28,20 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const { method = 'GET', body, headers = {} } = options;
 
+  const token = localStorage.getItem('auth_token');
+
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...headers,
+  };
+
+  if (token) {
+    requestHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
   const config: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: requestHeaders,
   };
 
   if (body) {

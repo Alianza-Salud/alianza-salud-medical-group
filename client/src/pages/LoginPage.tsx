@@ -1,56 +1,125 @@
-import { Link } from 'react-router-dom';
-import { Lock, ArrowLeft } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
 
-/**
- * Página placeholder de login.
- * Ruta: /login
- *
- * NO implementa autenticación real.
- * En fases futuras se desarrollará el sistema de login con JWT.
- */
+const loginSchema = z.object({
+  email: z
+    .string()
+    .email('Ingrese un correo electrónico válido'),
+  password: z
+    .string()
+    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
-  usePageMeta(
-    'Iniciar Sesión',
-    'Acceso al área de clientes de Alianza Salud Medical Group — Disponible próximamente.'
-  );
+  usePageMeta('Iniciar Sesión', 'Acceda a su cuenta en Alianza Salud Medical Group.');
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  if (isAuthenticated) {
+    navigate('/');
+  }
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setErrorMessage(null);
+    const result = await login(data);
+    if (result.success) {
+      navigate('/');
+    } else {
+      setErrorMessage(result.message || 'Error al iniciar sesión. Verifique sus credenciales.');
+    }
+  };
 
   return (
-    <section className="py-20 sm:py-32">
-      <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
-          <Lock className="h-10 w-10 text-gray-400" />
-        </div>
+    <section className="py-16 sm:py-24 bg-gray-50">
+      <div className="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="text-center mb-8">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <LogIn className="h-6 w-6" />
+            </div>
+            <h1 className="mt-4 text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Ingrese sus credenciales para acceder a la plataforma
+            </p>
+          </div>
 
-        <h1 className="mt-8 text-2xl font-bold text-gray-900">
-          Acceso próximamente
-        </h1>
+          {errorMessage && (
+            <div className="mb-6">
+              <Alert variant="error" message={errorMessage} dismissible />
+            </div>
+          )}
 
-        <p className="mt-4 text-gray-600 leading-relaxed">
-          El área de clientes estará disponible en una próxima versión de la
-          plataforma. Podrá acceder al seguimiento de su caso, documentos y
-          comunicaciones con el equipo.
-        </p>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <div>
+              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
+                Correo electrónico
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                autoComplete="email"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="correo@ejemplo.com"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+              )}
+            </div>
 
-        <div className="mt-8 space-y-3">
-          <Link to="/">
-            <Button fullWidth>
-              <ArrowLeft className="h-4 w-4" />
-              Volver al inicio
+            <div>
+              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="••••••••"
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+              )}
+            </div>
+
+            <Button type="submit" isLoading={isSubmitting} fullWidth className="mt-6">
+              <LogIn className="h-4 w-4" />
+              Ingresar
             </Button>
-          </Link>
-          <Link to="/contacto">
-            <Button variant="outline" fullWidth>
-              Contactar para más información
-            </Button>
-          </Link>
-        </div>
+          </form>
 
-        <p className="mt-8 text-xs text-gray-400">
-          Si tiene preguntas sobre el acceso a la plataforma, contáctenos a
-          través del formulario de contacto.
-        </p>
+          <div className="mt-8 border-t border-gray-200 pt-6 text-center">
+            <p className="text-sm text-gray-600">
+              ¿No tiene una cuenta?{' '}
+              <Link to="/register" className="font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                Registrarse aquí
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );

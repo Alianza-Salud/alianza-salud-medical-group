@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import { siteInfo } from '../../data/site';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Header/navbar del sitio público.
  * Responsive con menú móvil hamburger.
- * Incluye botón de login preparado para fases futuras.
+ * Muestra el perfil y botón de cierre de sesión si el usuario está autenticado.
  */
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
@@ -50,14 +52,30 @@ export function Header() {
             ))}
           </div>
 
-          {/* Acciones */}
+          {/* Acciones de usuario autenticado o invitado */}
           <div className="hidden lg:flex lg:items-center lg:gap-3">
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                <LogIn className="h-4 w-4" />
-                Iniciar Sesión
-              </Button>
-            </Link>
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700">
+                  <UserIcon className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{user.fullName.split(' ')[0]}</span>
+                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary uppercase">
+                    {user.role}
+                  </span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={logout} title="Cerrar Sesión">
+                  <LogOut className="h-4 w-4 text-red-600" />
+                  <span className="text-red-600">Salir</span>
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login">
+                <Button variant="outline" size="sm">
+                  <LogIn className="h-4 w-4" />
+                  Iniciar Sesión
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Botón menú móvil */}
@@ -97,12 +115,28 @@ export function Header() {
                 </Link>
               ))}
               <div className="mt-4 px-4">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" size="sm" fullWidth>
-                    <LogIn className="h-4 w-4" />
-                    Iniciar Sesión
-                  </Button>
-                </Link>
+                {isAuthenticated && user ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
+                      <UserIcon className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{user.fullName}</span>
+                      <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary uppercase">
+                        {user.role}
+                      </span>
+                    </div>
+                    <Button variant="outline" size="sm" fullWidth onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
+                      <LogOut className="h-4 w-4 text-red-600" />
+                      <span className="text-red-600">Cerrar Sesión</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" size="sm" fullWidth>
+                      <LogIn className="h-4 w-4" />
+                      Iniciar Sesión
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
