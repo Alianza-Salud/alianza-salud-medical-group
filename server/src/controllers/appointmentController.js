@@ -1,4 +1,5 @@
 const appointmentRepository = require('../repositories/appointmentRepository');
+const lawyerRepository = require('../repositories/lawyerRepository');
 
 const allTimeSlots = [
   { value: '08:00', label: '8:00 AM' },
@@ -12,9 +13,62 @@ const allTimeSlots = [
 ];
 
 /**
- * Obtener disponibilidad para una fecha.
- * GET /api/appointments/availability?date=YYYY-MM-DD
+ * Obtener citas en el entorno privado.
+ * - Administrador: Ve todas las citas.
+ * - Abogado/Especialista: Ve las citas asignadas a su correo/ID.
+ * GET /api/appointments
  */
+async function getAppointments(req, res, next) {
+  try {
+    const { role, email } = req.user;
+    let lawyerId = null;
+
+    if (role === 'lawyer') {
+      const lawyers = await lawyerRepository.findAll();
+      const match = lawyers.find((l) => l.email.toLowerCase() === email.toLowerCase());
+      if (match) {
+        lawyerId = match.id;
+      }
+    }
+
+    const appointments = await appointmentRepository.findAll(role === 'admin' ? null : lawyerId);
+
+    return res.json({
+      success: true,
+      data: appointments,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Actualizar estado de una cita (Aprobar, Rechazar, Convertida en Caso).
+ * PATCH /api/appointments/:id/status
+ */
+async function updateStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status, assignedLawyerId } = req.body;
+
+    if (!status && assignedLawyerId === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Debe especificar el nuevo estado o el profesional a asignar.', status: 400 },
+      });
+    }
+
+    await appointmentRepository.updateStatus(id, status || null, assignedLawyerId || null);
+
+    return res.json({
+      success: true,
+      message: 'Cita actualizada exitosamente.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getAvailability(req, res, next) {
   try {
     const { date } = req.query;
@@ -42,10 +96,6 @@ async function getAvailability(req, res, next) {
   }
 }
 
-/**
- * Crear solicitud de cita.
- * POST /api/appointments
- */
 async function createAppointment(req, res, next) {
   try {
     const { fullName, email, phone, serviceType, preferredDate, preferredTime, message, acceptedPolicy } = req.body;
@@ -84,6 +134,8 @@ async function createAppointment(req, res, next) {
 }
 
 module.exports = {
+  getAppointments,
+  updateStatus,
   getAvailability,
   createAppointment,
 };

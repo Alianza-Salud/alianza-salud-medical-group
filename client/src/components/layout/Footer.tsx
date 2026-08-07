@@ -1,13 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { siteInfo, footerNavigation } from '../../data/site';
+import { footerNavigation } from '../../data/site';
+import { fetchSiteInfo, type SiteInfoData } from '../../services/siteInfoService';
 
-/**
- * Footer del sitio público con información de contacto,
- * navegación y disclaimer legal.
- */
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [siteData, setSiteData] = useState<SiteInfoData | null>(null);
+
+  useEffect(() => {
+    fetchSiteInfo().then((data) => setSiteData(data));
+  }, []);
 
   return (
     <footer className="bg-gray-900 text-gray-300">
@@ -16,22 +19,24 @@ export function Footer() {
         <div className="py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Columna 1: Info de la empresa */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <h3 className="text-lg font-bold text-white">{siteInfo.name}</h3>
+            <h3 className="text-lg font-bold text-white">
+              {siteData?.company_name || 'Alianza Salud Medical Group'}
+            </h3>
             <p className="mt-3 text-sm leading-relaxed text-gray-400">
-              {siteInfo.tagline}
+              {siteData?.tagline || 'Acompañamiento jurídico especializado con respaldo médico integral.'}
             </p>
             <div className="mt-6 flex flex-col gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0 text-gray-500" />
-                <span>{siteInfo.contact.phone}</span>
+                <Phone className="h-4 w-4 shrink-0 text-primary" />
+                <span>{siteData?.phone || '+57 (601) 555-0199'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 shrink-0 text-gray-500" />
-                <span>{siteInfo.contact.email}</span>
+                <Mail className="h-4 w-4 shrink-0 text-primary" />
+                <span>{siteData?.email || 'contacto@alianzasalud.com'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 shrink-0 text-gray-500" />
-                <span>{siteInfo.contact.address}</span>
+                <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                <span>{siteData?.address || 'Carrera 15 # 93-47, Oficina 502, Bogotá D.C.'}</span>
               </div>
             </div>
           </div>
@@ -58,17 +63,14 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Disclaimer y copyright */}
-        <div className="border-t border-gray-800 py-6">
-          <div className="flex flex-col gap-4 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              © {currentYear} {siteInfo.name}. Todos los derechos reservados.
-            </p>
-            <p className="max-w-xl text-xs leading-relaxed">
-              La información presentada en este sitio web es de carácter informativo
-              y no constituye asesoramiento legal. Cada caso es único y requiere una
-              evaluación personalizada.
-            </p>
+        {/* Disclaimer y Copyright */}
+        <div className="border-t border-gray-800 py-6 text-xs text-gray-400 space-y-4">
+          <p className="leading-relaxed">
+            <strong>Aviso Legal:</strong> La información contenida en este sitio web tiene carácter estrictamente informativo. No constituye asesoría jurídica formal ni crea una relación abogado-cliente.
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-gray-800/60 pt-4">
+            <p>© {currentYear} {siteData?.company_name || 'Alianza Salud Medical Group'}. Todos los derechos reservados.</p>
+            <p>Especialidades Médicas & Consultoría Jurídica</p>
           </div>
         </div>
       </div>

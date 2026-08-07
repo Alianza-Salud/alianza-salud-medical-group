@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import { siteInfo } from '../../data/site';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
@@ -8,8 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 
 /**
  * Header/navbar del sitio público.
- * Responsive con menú móvil hamburger.
- * Muestra el perfil y botón de cierre de sesión si el usuario está autenticado.
+ * Muestra "Ir al Panel" si el usuario está autenticado.
  */
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -20,6 +19,8 @@ export function Header() {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
   };
+
+  const dashboardTarget = user?.role === 'admin' || user?.role === 'lawyer' ? '/dashboard' : '/dashboard/cliente';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">
@@ -56,6 +57,12 @@ export function Header() {
           <div className="hidden lg:flex lg:items-center lg:gap-3">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
+                <Link to={dashboardTarget}>
+                  <Button variant="primary" size="sm">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Ir al Panel
+                  </Button>
+                </Link>
                 <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700">
                   <UserIcon className="h-4 w-4 text-primary" />
                   <span className="font-medium">{user.fullName.split(' ')[0]}</span>
@@ -65,7 +72,6 @@ export function Header() {
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout} title="Cerrar Sesión">
                   <LogOut className="h-4 w-4 text-red-600" />
-                  <span className="text-red-600">Salir</span>
                 </Button>
               </div>
             ) : (
@@ -117,13 +123,12 @@ export function Header() {
               <div className="mt-4 px-4">
                 {isAuthenticated && user ? (
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
-                      <UserIcon className="h-4 w-4 text-primary" />
-                      <span className="font-medium">{user.fullName}</span>
-                      <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary uppercase">
-                        {user.role}
-                      </span>
-                    </div>
+                    <Link to={dashboardTarget} onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="primary" size="sm" fullWidth>
+                        <LayoutDashboard className="h-4 w-4" />
+                        Ir al Panel
+                      </Button>
+                    </Link>
                     <Button variant="outline" size="sm" fullWidth onClick={() => { logout(); setIsMobileMenuOpen(false); }}>
                       <LogOut className="h-4 w-4 text-red-600" />
                       <span className="text-red-600">Cerrar Sesión</span>

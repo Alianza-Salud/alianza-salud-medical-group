@@ -1,7 +1,40 @@
 const contactRepository = require('../repositories/contactRepository');
 
 /**
- * Recibir mensaje de contacto.
+ * Obtener todos los mensajes de contacto (Solo Admin / Lawyer).
+ * GET /api/contact
+ */
+async function getMessages(req, res, next) {
+  try {
+    const messages = await contactRepository.findAll();
+    return res.json({
+      success: true,
+      data: messages,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Marcar mensaje como leído.
+ * PATCH /api/contact/:id/read
+ */
+async function markAsRead(req, res, next) {
+  try {
+    const { id } = req.params;
+    await contactRepository.markAsRead(id, true);
+    return res.json({
+      success: true,
+      message: 'Mensaje marcado como leído.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Recibir mensaje de contacto público.
  * POST /api/contact
  */
 async function createContactMessage(req, res, next) {
@@ -39,5 +72,7 @@ async function createContactMessage(req, res, next) {
 }
 
 module.exports = {
+  getMessages,
+  markAsRead,
   createContactMessage,
 };

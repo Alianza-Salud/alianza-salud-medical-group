@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, KeyRound } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
@@ -21,11 +21,21 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  usePageMeta('Iniciar Sesión', 'Acceda a su cuenta en Alianza Salud Medical Group.');
-  const { login, isAuthenticated } = useAuth();
+  usePageMeta('Iniciar Sesión', 'Acceda a la plataforma de Alianza Salud Medical Group.');
+  const { user, login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Redirección inteligente según el rol al estar autenticado
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'admin' || user.role === 'lawyer') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard/cliente', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const {
     register,
@@ -35,16 +45,10 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  if (isAuthenticated) {
-    navigate('/');
-  }
-
   const onSubmit = async (data: LoginFormValues) => {
     setErrorMessage(null);
     const result = await login(data);
-    if (result.success) {
-      navigate('/');
-    } else {
+    if (!result.success) {
       setErrorMessage(result.message || 'Error al iniciar sesión. Verifique sus credenciales.');
     }
   };
@@ -59,7 +63,7 @@ export default function LoginPage() {
             </div>
             <h1 className="mt-4 text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Ingrese sus credenciales para acceder a la plataforma
+              Acceda a la gestión de casos y seguimiento
             </p>
           </div>
 
@@ -112,10 +116,10 @@ export default function LoginPage() {
 
           <div className="mt-8 border-t border-gray-200 pt-6 text-center">
             <p className="text-sm text-gray-600">
-              ¿No tiene una cuenta?{' '}
+              ¿Tiene un Código de Verificación?{' '}
               <Link to="/register" className="font-semibold text-primary hover:underline inline-flex items-center gap-1">
-                <UserPlus className="h-4 w-4" />
-                Registrarse aquí
+                <KeyRound className="h-4 w-4" />
+                Registrar cuenta de cliente
               </Link>
             </p>
           </div>

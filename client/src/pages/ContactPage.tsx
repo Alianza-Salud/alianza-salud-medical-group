@@ -1,44 +1,47 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, ArrowRight } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { ContactForm } from '../components/forms/ContactForm';
 import { Button } from '../components/ui/Button';
-import { siteInfo } from '../data/site';
+import { fetchSiteInfo, type SiteInfoData } from '../services/siteInfoService';
 
-/**
- * Página de contacto.
- * Ruta: /contacto
- */
 export default function ContactPage() {
   usePageMeta(
     'Contacto',
-    'Comuníquese con Alianza Salud Medical Group. Formulario de contacto, teléfono y ubicación en Medellín, Colombia.'
+    'Comuníquese con Alianza Salud Medical Group. Formulario de contacto, teléfono y ubicación.'
   );
+
+  const [siteData, setSiteData] = useState<SiteInfoData | null>(null);
+
+  useEffect(() => {
+    fetchSiteInfo().then((data) => setSiteData(data));
+  }, []);
 
   const contactItems = [
     {
       icon: Phone,
       label: 'Teléfono',
-      value: siteInfo.contact.phone,
+      value: siteData?.phone || '+57 (601) 555-0199',
       description: 'Llámenos para una atención inmediata',
     },
     {
       icon: Mail,
       label: 'Correo electrónico',
-      value: siteInfo.contact.email,
+      value: siteData?.email || 'contacto@alianzasalud.com',
       description: 'Escríbanos para consultas generales',
     },
     {
       icon: MapPin,
       label: 'Ubicación',
-      value: siteInfo.contact.address,
-      description: 'Nuestra sede en Medellín',
+      value: siteData?.address || 'Carrera 15 # 93-47, Oficina 502, Bogotá D.C.',
+      description: 'Nuestra sede principal',
     },
     {
       icon: Clock,
       label: 'Horario de atención',
-      value: siteInfo.contact.schedule,
+      value: siteData?.schedule || 'Lunes a Viernes: 8:00 AM - 6:00 PM | Sábados: 8:00 AM - 1:00 PM',
       description: 'Horario de atención al público',
     },
   ];
@@ -98,7 +101,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Formulario */}
+            {/* Formulario de contacto */}
             <div className="lg:col-span-2">
               <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">

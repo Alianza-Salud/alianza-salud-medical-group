@@ -1,0 +1,68 @@
+import type { LegalCase, CreateCaseFormData, AddUpdateFormData, CaseUpdate } from '../types/case';
+import { apiClient } from './api';
+
+interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+export async function fetchCases(): Promise<LegalCase[]> {
+  try {
+    const res = await apiClient.get<ApiResponse<LegalCase[]>>('/cases');
+    if (res.ok && res.data && res.data.success) {
+      return res.data.data;
+    }
+  } catch (error) {
+    console.error('[CaseService Error] fetchCases:', error);
+  }
+  return [];
+}
+
+export async function fetchCaseById(id: number): Promise<LegalCase | null> {
+  try {
+    const res = await apiClient.get<ApiResponse<LegalCase>>(`/cases/${id}`);
+    if (res.ok && res.data && res.data.success) {
+      return res.data.data;
+    }
+  } catch (error) {
+    console.error('[CaseService Error] fetchCaseById:', error);
+  }
+  return null;
+}
+
+export async function createCase(data: CreateCaseFormData): Promise<{ success: boolean; message?: string; data?: LegalCase }> {
+  try {
+    const res = await apiClient.post<ApiResponse<LegalCase>>('/cases', data);
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] createCase:', error);
+  }
+  return { success: false, message: 'Error al registrar el caso.' };
+}
+
+export async function updateCaseStage(caseId: number, stageName: string, status?: string): Promise<{ success: boolean; message?: string; data?: LegalCase }> {
+  try {
+    const res = await apiClient.patch<ApiResponse<LegalCase>>(`/cases/${caseId}/stage`, { stageName, status });
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] updateCaseStage:', error);
+  }
+  return { success: false, message: 'Error al actualizar etapa del caso.' };
+}
+
+export async function addCaseUpdate(caseId: number, data: AddUpdateFormData): Promise<{ success: boolean; message?: string; data?: CaseUpdate }> {
+  try {
+    const res = await apiClient.post<ApiResponse<CaseUpdate>>(`/cases/${caseId}/updates`, data);
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] addCaseUpdate:', error);
+  }
+  return { success: false, message: 'Error al registrar la novedad.' };
+}

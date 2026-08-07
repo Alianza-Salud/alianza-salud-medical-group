@@ -16,10 +16,9 @@ export interface LoginCredentials {
 }
 
 export interface RegisterFormData {
-  fullName: string;
+  verificationCode: string; // Código alfanumérico de 8 caracteres
   email: string;
   password: string;
-  phone?: string;
 }
 
 export interface AuthResponse {

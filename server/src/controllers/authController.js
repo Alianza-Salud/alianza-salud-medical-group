@@ -1,13 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
+const clientRepository = require('../repositories/clientRepository');
+const { pool } = require('../database/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alianza_salud_secret_key_2026_phase3';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
-/**
- * Generar token JWT para un usuario.
- */
 function generateToken(user) {
   return jwt.sign(
     {
@@ -22,17 +21,30 @@ function generateToken(user) {
 }
 
 /**
- * Registrar nuevo usuario.
+ * Registrar nuevo usuario Cliente mediante Código de Verificación de 8 Caracteres.
  * POST /api/auth/register
  */
 async function register(req, res, next) {
   try {
-    const { fullName, email, password, phone = '' } = req.body;
+    const { verificationCode, email, password } = req.body;
 
-    if (!fullName || !email || !password) {
+    if (!verificationCode || !email || !password) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Por favor complete todos los campos obligatorios.', status: 400 },
+        error: {
+          message: 'Debe ingresar su Código de Verificación de 8 caracteres, Correo y Contraseña.',
+          status: 400,
+        },
+      });
+    }
+
+    if (String(verificationCode).trim().length !== 8) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'El Código de Verificación debe tener exactamente 8 caracteres alfanuméricos.',
+          status: 400,
+        },
       });
     }
 
@@ -43,33 +55,65 @@ async function register(req, res, next) {
       });
     }
 
-    // Verificar si el correo ya está registrado
-    const existing = await userRepository.findByEmail(email);
-    if (existing) {
+    // 1. Buscar cliente por código de 8 caracteres en el Maestro de Clientes
+    const targetClient = await clientRepository.findByVerificationCode(verificationCode);
+    if (!targetClient) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Código de verificación inválido. Por favor confirme el código asignado por la administración.',
+          status: 404,
+        },
+      });
+    }
+
+    if (targetClient.user_id) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'Este Código de Verificación ya fue utilizado para registrar una cuenta.',
+          status: 409,
+        },
+      });
+    }
+
+    // 2. Verificar si el correo ya está registrado
+    const existingUser = await userRepository.findByEmail(email);
+    if (existingUser) {
       return res.status(409).json({
         success: false,
         error: { message: 'El correo electrónico ya se encuentra registrado.', status: 409 },
       });
     }
 
-    // Encriptar contraseña
+    // 3. Encriptar contraseña
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Crear usuario
+    // 4. Crear usuario cliente con el nombre registrado en el Maestro de Clientes
     const newUser = await userRepository.create({
-      fullName,
+      fullName: targetClient.full_name,
       email,
       passwordHash,
       role: 'client',
-      phone,
+      phone: targetClient.phone || '',
     });
+
+    // 5. Vincular cliente y sus casos con el nuevo user_id
+    await clientRepository.linkUserId(targetClient.id, newUser.id);
+    if (pool) {
+      await pool.query('UPDATE cases SET user_id = ? WHERE client_id = ? OR verification_code = ?', [
+        newUser.id,
+        targetClient.id,
+        verificationCode,
+      ]);
+    }
 
     const token = generateToken(newUser);
 
     return res.status(201).json({
       success: true,
-      message: 'Registro realizado exitosamente.',
+      message: 'Registro de cliente completado exitosamente.',
       data: {
         token,
         user: newUser,
@@ -82,7 +126,6 @@ async function register(req, res, next) {
 
 /**
  * Iniciar sesión.
- * POST /api/auth/login
  */
 async function login(req, res, next) {
   try {
@@ -95,7 +138,6 @@ async function login(req, res, next) {
       });
     }
 
-    // Buscar usuario por correo
     const account = await userRepository.findByEmail(email);
     if (!account) {
       return res.status(401).json({
@@ -104,7 +146,6 @@ async function login(req, res, next) {
       });
     }
 
-    // Comparar contraseña con el hash
     const isPasswordValid = await bcrypt.compare(password, account.passwordHash);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -135,24 +176,16 @@ async function login(req, res, next) {
   }
 }
 
-/**
- * Obtener perfil del usuario autenticado.
- * GET /api/auth/me
- */
 async function getProfile(req, res, next) {
   try {
     const user = await userRepository.findById(req.user.id);
     if (!user) {
-      return res.status(44).json({
+      return res.status(404).json({
         success: false,
         error: { message: 'Usuario no encontrado.', status: 404 },
       });
     }
-
-    return res.json({
-      success: true,
-      data: user,
-    });
+    return res.json({ success: true, data: user });
   } catch (error) {
     next(error);
   }

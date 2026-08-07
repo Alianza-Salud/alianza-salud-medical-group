@@ -1,23 +1,21 @@
+import { useEffect, useState } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { AppointmentForm } from '../components/appointments/AppointmentForm';
 import { Phone, Clock, Info } from 'lucide-react';
-import { siteInfo } from '../data/site';
+import { fetchSiteInfo, type SiteInfoData } from '../services/siteInfoService';
 
-/**
- * Página de solicitud de cita.
- * Ruta: /citas
- *
- * En Fase 1, el formulario simula el envío.
- * En fases futuras consumirá:
- *   GET /api/appointments/availability
- *   POST /api/appointments
- */
 export default function AppointmentsPage() {
   usePageMeta(
     'Agendar Cita',
     'Solicite una cita de evaluación con el equipo jurídico de Alianza Salud Medical Group.'
   );
+
+  const [siteData, setSiteData] = useState<SiteInfoData | null>(null);
+
+  useEffect(() => {
+    fetchSiteInfo().then((data) => setSiteData(data));
+  }, []);
 
   return (
     <>
@@ -56,11 +54,11 @@ export default function AppointmentsPage() {
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center gap-3 text-sm text-gray-700">
                       <Phone className="h-4 w-4 text-primary shrink-0" />
-                      <span>{siteInfo.contact.phone}</span>
+                      <span>{siteData?.phone || '+57 (601) 555-0199'}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-gray-700">
                       <Clock className="h-4 w-4 text-primary shrink-0" />
-                      <span>{siteInfo.contact.schedule}</span>
+                      <span>{siteData?.schedule || 'Lunes a Viernes: 8:00 AM - 6:00 PM | Sábados: 8:00 AM - 1:00 PM'}</span>
                     </div>
                   </div>
                 </div>

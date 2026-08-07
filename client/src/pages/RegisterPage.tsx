@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, LogIn } from 'lucide-react';
+import { KeyRound, LogIn, ShieldCheck } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
@@ -11,17 +11,14 @@ import { Alert } from '../components/ui/Alert';
 
 const registerSchema = z
   .object({
-    fullName: z
+    verificationCode: z
       .string()
-      .min(2, 'El nombre debe tener al menos 2 caracteres')
-      .max(100, 'El nombre no puede exceder 100 caracteres'),
+      .trim()
+      .length(8, 'El Código de Verificación debe tener exactamente 8 caracteres alfanuméricos')
+      .transform((val) => val.toUpperCase()),
     email: z
       .string()
       .email('Ingrese un correo electrónico válido'),
-    phone: z
-      .string()
-      .optional()
-      .or(z.literal('')),
     password: z
       .string()
       .min(6, 'La contraseña debe tener al menos 6 caracteres'),
@@ -37,11 +34,24 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  usePageMeta('Registro de Usuario', 'Cree una cuenta en Alianza Salud Medical Group.');
-  const { register: registerAuth, isAuthenticated } = useAuth();
+  usePageMeta(
+    'Registro de Cliente',
+    'Active su cuenta de cliente en Alianza Salud Medical Group usando su Código de Verificación de 8 caracteres.'
+  );
+  const { user, register: registerAuth, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'admin' || user.role === 'lawyer') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard/cliente', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const {
     register,
@@ -51,22 +61,20 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  if (isAuthenticated) {
-    navigate('/');
-  }
-
   const onSubmit = async (data: RegisterFormValues) => {
     setErrorMessage(null);
     const result = await registerAuth({
-      fullName: data.fullName,
+      verificationCode: data.verificationCode,
       email: data.email,
       password: data.password,
-      phone: data.phone || '',
     });
+
     if (result.success) {
-      navigate('/');
+      navigate('/dashboard/cliente', { replace: true });
     } else {
-      setErrorMessage(result.message || 'Error al registrar el usuario.');
+      setErrorMessage(
+        result.message || 'Error al registrar la cuenta. Verifique su Código de Verificación.'
+      );
     }
   };
 
@@ -76,11 +84,11 @@ export default function RegisterPage() {
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           <div className="text-center mb-8">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <UserPlus className="h-6 w-6" />
+              <KeyRound className="h-6 w-6" />
             </div>
-            <h1 className="mt-4 text-2xl font-bold text-gray-900">Crear Cuenta</h1>
+            <h1 className="mt-4 text-2xl font-bold text-gray-900">Registro de Cliente</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Regístrese para acceder al seguimiento de sus consultas
+              Active su usuario con el Código de Verificación de 8 caracteres entregado por su asesor o abogado.
             </p>
           </div>
 
@@ -90,24 +98,33 @@ export default function RegisterPage() {
             </div>
           )}
 
+          <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 p-3.5 text-xs text-blue-800 flex items-start gap-2.5">
+            <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-blue-600" />
+            <span>
+              Los datos personales y del caso son registrados por la Administración. Para activar su acceso solo requiere su código de 8 caracteres y crear una contraseña.
+            </span>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            {/* Código de verificación (8 caracteres) */}
             <div>
-              <label htmlFor="reg-fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre completo *
+              <label htmlFor="reg-verificationCode" className="block text-sm font-medium text-gray-700 mb-1">
+                Código de Verificación (8 caracteres) *
               </label>
               <input
-                id="reg-fullName"
+                id="reg-verificationCode"
                 type="text"
-                autoComplete="name"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Juan Pérez"
-                {...register('fullName')}
+                maxLength={8}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-mono tracking-wider uppercase transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="EJ: AS8K9X2M"
+                {...register('verificationCode')}
               />
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>
+              {errors.verificationCode && (
+                <p className="mt-1 text-sm text-red-600">{errors.verificationCode.message}</p>
               )}
             </div>
 
+            {/* Email / Nombre de Usuario */}
             <div>
               <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700 mb-1">
                 Correo electrónico *
@@ -125,23 +142,7 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <div>
-              <label htmlFor="reg-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono (opcional)
-              </label>
-              <input
-                id="reg-phone"
-                type="tel"
-                autoComplete="tel"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="+57 300 123 4567"
-                {...register('phone')}
-              />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-              )}
-            </div>
-
+            {/* Contraseña */}
             <div>
               <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700 mb-1">
                 Contraseña *
@@ -159,6 +160,7 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Confirmar contraseña */}
             <div>
               <label htmlFor="reg-confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirmar contraseña *
@@ -177,14 +179,14 @@ export default function RegisterPage() {
             </div>
 
             <Button type="submit" isLoading={isSubmitting} fullWidth className="mt-6">
-              <UserPlus className="h-4 w-4" />
-              Registrarse
+              <ShieldCheck className="h-4 w-4" />
+              Activar Cuenta de Cliente
             </Button>
           </form>
 
           <div className="mt-8 border-t border-gray-200 pt-6 text-center">
             <p className="text-sm text-gray-600">
-              ¿Ya tiene una cuenta?{' '}
+              ¿Ya activó su cuenta?{' '}
               <Link to="/login" className="font-semibold text-primary hover:underline inline-flex items-center gap-1">
                 <LogIn className="h-4 w-4" />
                 Iniciar sesión

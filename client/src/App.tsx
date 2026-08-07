@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { PageLayout } from './components/layout/PageLayout';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
 import ServiceDetailPage from './pages/ServiceDetailPage';
@@ -12,15 +15,25 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 
+import AdminDashboardPage from './pages/dashboard/AdminDashboardPage';
+import ClientDashboardPage from './pages/dashboard/ClientDashboardPage';
+import ClientsManagerPage from './pages/dashboard/ClientsManagerPage';
+import LawyersManagerPage from './pages/dashboard/LawyersManagerPage';
+import UsersManagerPage from './pages/dashboard/UsersManagerPage';
+import AppointmentsManagerPage from './pages/dashboard/AppointmentsManagerPage';
+import ContactMessagesPage from './pages/dashboard/ContactMessagesPage';
+import SettingsPage from './pages/dashboard/SettingsPage';
+
 /**
  * Componente raíz de la aplicación.
- * Encapsula la navegación y el AuthProvider para autenticación global.
+ * Define rutas públicas y rutas privadas de Dashboard protegidas por rol.
  */
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Rutas Públicas (PageLayout) */}
           <Route element={<PageLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/servicios" element={<ServicesPage />} />
@@ -32,6 +45,29 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="*" element={<NotFoundPage />} />
+          </Route>
+
+          {/* Entorno Privado / Dashboards (DashboardLayout) */}
+          <Route element={<DashboardLayout />}>
+            {/* Rutas para Admin y Abogados / Especialistas */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'lawyer']} />}>
+              <Route path="/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/dashboard/citas" element={<AppointmentsManagerPage />} />
+              <Route path="/dashboard/mensajes" element={<ContactMessagesPage />} />
+              <Route path="/dashboard/clientes" element={<ClientsManagerPage />} />
+            </Route>
+
+            {/* Rutas exclusivas para el Administrador */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="/dashboard/abogados" element={<LawyersManagerPage />} />
+              <Route path="/dashboard/usuarios" element={<UsersManagerPage />} />
+              <Route path="/dashboard/configuracion" element={<SettingsPage />} />
+            </Route>
+
+            {/* Dashboard para Clientes */}
+            <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'lawyer']} />}>
+              <Route path="/dashboard/cliente" element={<ClientDashboardPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
