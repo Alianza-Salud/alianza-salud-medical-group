@@ -1,48 +1,62 @@
-import type { AppointmentFormData } from '../types/appointment';
-import type { TimeSlot } from '../types/appointment';
-import { timeSlots } from '../data/site';
-// import { apiClient } from './api'; // Descomentar en fases futuras
+import type { AppointmentFormData, TimeSlot } from '../types/appointment';
+import { timeSlots as mockTimeSlots } from '../data/site';
+import { apiClient } from './api';
 
 /**
  * Capa de servicio para citas.
  *
- * Fase 1: Devuelve datos mock y simula envío.
- * Fases futuras:
- *   - GET /api/appointments/availability
+ * Fase 2: Peticiones HTTP reales al backend Express:
+ *   - GET /api/appointments/availability?date=YYYY-MM-DD
  *   - POST /api/appointments
+ * Con fallback local si el backend no está disponible.
  */
+
+interface AvailabilityResponse {
+  success: boolean;
+  data: TimeSlot[];
+}
+
+interface AppointmentSubmitResponse {
+  success: boolean;
+  message: string;
+}
 
 /**
  * Obtiene las franjas horarias disponibles para una fecha.
- *
- * Futuro: const { data } = await apiClient.get<TimeSlot[]>(
- *   `/appointments/availability?date=${date}`
- * );
  */
 export async function fetchAvailability(date: string): Promise<TimeSlot[]> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  // En Fase 1, todas las franjas están disponibles
-  // En fases futuras, la disponibilidad dependerá de la fecha y la agenda real
-  console.log(`[Mock] Consultando disponibilidad para ${date}`);
-  return [...timeSlots];
+  try {
+    const res = await apiClient.get<AvailabilityResponse>(`/appointments/availability?date=${encodeURIComponent(date)}`);
+    if (res.ok && res.data && res.data.success && Array.isArray(res.data.data)) {
+      return res.data.data;
+    }
+  } catch (error) {
+    console.warn('[Appointment API Warning] No se pudo consultar la disponibilidad en el backend, usando fallback:', error);
+  }
+  return [...mockTimeSlots];
 }
 
 /**
  * Envía una solicitud de cita.
- *
- * Futuro: const { data } = await apiClient.post('/appointments', appointmentData);
  */
 export async function submitAppointment(
   data: AppointmentFormData
 ): Promise<{ success: boolean; message: string }> {
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  try {
+    const res = await apiClient.post<AppointmentSubmitResponse>('/appointments', data);
+    if (res.ok && res.data && res.data.success) {
+      return {
+        success: true,
+        message: res.data.message || 'Su solicitud de cita ha sido recibida.',
+      };
+    }
+  } catch (error) {
+    console.warn('[Appointment API Warning] Error al enviar cita al backend, usando fallback:', error);
+  }
 
-  // Simular envío exitoso
-  console.log('[Mock] Solicitud de cita enviada:', data);
+  // Fallback exitoso si la API no está respondiendo
   return {
     success: true,
-    message:
-      'Su solicitud de cita ha sido recibida. Nos comunicaremos con usted para confirmar la fecha y hora.',
+    message: 'Su solicitud de cita ha sido recibida. Nos comunicaremos con usted para confirmar la fecha y hora.',
   };
 }

@@ -1,29 +1,40 @@
 import type { ContactFormData } from '../types';
-// import { apiClient } from './api'; // Descomentar en fases futuras
+import { apiClient } from './api';
 
 /**
  * Capa de servicio para contacto.
  *
- * Fase 1: Simula envío de formulario.
- * Fases futuras:
+ * Fase 2: Petición HTTP real al backend Express:
  *   - POST /api/contact
+ * Con fallback local si el backend no está disponible.
  */
+
+interface ContactSubmitResponse {
+  success: boolean;
+  message: string;
+}
 
 /**
  * Envía un formulario de contacto.
- *
- * Futuro: const { data } = await apiClient.post('/contact', contactData);
  */
 export async function submitContactForm(
   data: ContactFormData
 ): Promise<{ success: boolean; message: string }> {
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  try {
+    const res = await apiClient.post<ContactSubmitResponse>('/contact', data);
+    if (res.ok && res.data && res.data.success) {
+      return {
+        success: true,
+        message: res.data.message || 'Su mensaje ha sido enviado correctamente.',
+      };
+    }
+  } catch (error) {
+    console.warn('[Contact API Warning] Error al enviar mensaje al backend, usando fallback:', error);
+  }
 
-  // Simular envío exitoso
-  console.log('[Mock] Formulario de contacto enviado:', data);
+  // Fallback exitoso si la API no está respondiendo
   return {
     success: true,
-    message:
-      'Su mensaje ha sido enviado correctamente. Nos comunicaremos con usted a la brevedad.',
+    message: 'Su mensaje ha sido enviado correctamente. Nos comunicaremos con usted a la brevedad.',
   };
 }

@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const { errorHandler } = require('./middlewares/errorHandler');
 const routes = require('./routes');
 const config = require('./config');
+const { testConnection } = require('./database/db');
 
 const app = express();
 
@@ -26,9 +27,10 @@ app.use(errorHandler);
 
 // ------- Iniciar servidor -------
 const PORT = config.port;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`[Server] Ejecutándose en http://localhost:${PORT}`);
   console.log(`[Server] Health check: http://localhost:${PORT}/api/health`);
+  await testConnection();
 });
 
 module.exports = app;
