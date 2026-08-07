@@ -1,0 +1,16 @@
+{
+  "name": "alianza-salud-server",
+  "version": "1.0.0",
+  "description": "Backend API para Alianza Salud Medical Group",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0"
+  }
+}

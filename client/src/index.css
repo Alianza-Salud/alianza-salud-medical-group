@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+ * =============================================
+ * DESIGN TOKENS — Alianza Salud Medical Group
+ * =============================================
+ *
+ * Paleta neutra y profesional, fácilmente reemplazable
+ * cuando la empresa proporcione su identidad corporativa.
+ *
+ * Colores actuales:
+ * - Primary: Azul oscuro (confianza, seriedad jurídica)
+ * - Accents: Teal/verde-azulado (salud, bienestar)
+ */
+
+@theme {
+  --color-primary: #1e3a5f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f1f5f9;
+  --color-secondary-foreground: #1e293b;
+}
+
+/*
+ * =============================================
+ * BASE STYLES
+ * =============================================
+ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+      'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1f2937;
+    background-color: #ffffff;
+    line-height: 1.6;
+    margin: 0;
+  }
+}
