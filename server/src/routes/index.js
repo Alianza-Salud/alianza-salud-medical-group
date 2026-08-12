@@ -10,6 +10,7 @@ const caseRoutes = require('./caseRoutes');
 const clientRoutes = require('./clientRoutes');
 const lawyerRoutes = require('./lawyerRoutes');
 const userRoutes = require('./userRoutes');
+const dashboardRoutes = require('./dashboardRoutes');
 
 // Health check
 router.get('/health', (req, res) => {
@@ -30,5 +31,6 @@ router.use('/cases', caseRoutes);
 router.use('/clients', clientRoutes);
 router.use('/lawyers', lawyerRoutes);
 router.use('/users', userRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;

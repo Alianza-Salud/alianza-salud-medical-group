@@ -46,6 +46,20 @@ npm run dev
 
 El backend se ejecuta en `http://localhost:3001`.
 
+### Compartir puertos (forward ports)
+
+Para exponer el frontend y backend a otra persona:
+
+1. Comparte el puerto `5173` del cliente.
+2. Comparte el puerto `3001` del servidor.
+
+El frontend usa proxy de Vite (`/api`) hacia el backend local, así que si solo compartes `5173` en un entorno donde ambos puertos están en la misma máquina remota, la app seguirá funcionando.
+
+### Variables de entorno
+
+- `client/.env.example` contiene `VITE_API_URL=/api`
+- `server/.env.example` contiene `PORT=3001` y `CORS_ORIGIN=http://localhost:5173`
+
 ## Stack tecnológico
 
 ### Frontend

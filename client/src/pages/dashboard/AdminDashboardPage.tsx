@@ -13,12 +13,16 @@ import {
   ChevronLeft,
   Check,
   Users,
+  CalendarDays,
+  Mail,
+  AlertCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { fetchCases, createCase, addCaseUpdate, updateCaseStage } from '../../services/caseService';
 import { fetchClients } from '../../services/clientService';
 import { fetchLawyers } from '../../services/lawyerService';
+import { fetchDashboardStats, type DashboardStats } from '../../services/dashboardService';
 import type { LegalCase } from '../../types/case';
 import type { Client } from '../../types/client';
 import type { Lawyer } from '../../types/lawyer';
@@ -35,6 +39,10 @@ export default function AdminDashboardPage() {
   const [cases, setCases] = useState<LegalCase[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    pendingAppointments: 0,
+    unreadMessages: 0,
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,14 +83,16 @@ export default function AdminDashboardPage() {
 
   const loadAllData = async () => {
     setIsLoading(true);
-    const [casesData, clientsData, lawyersData] = await Promise.all([
+    const [casesData, clientsData, lawyersData, statsData] = await Promise.all([
       fetchCases(),
       fetchClients(),
       fetchLawyers(),
+      fetchDashboardStats(),
     ]);
     setCases(casesData);
     setClients(clientsData);
     setLawyers(lawyersData);
+    setDashboardStats(statsData);
 
     if (clientsData.length > 0 && newCaseData.clientId === 0) {
       setNewCaseData((prev) => ({ ...prev, clientId: clientsData[0].id }));

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   FolderKanban,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { siteInfo } from '../../data/site';
+import { fetchDashboardStats, type DashboardStats } from '../../services/dashboardService';
 import { cn } from '../../lib/utils';
 
 export function DashboardLayout() {
@@ -22,6 +23,23 @@ export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    pendingAppointments: 0,
+    unreadMessages: 0,
+  });
+
+  const loadStats = async () => {
+    if (user?.role === 'admin' || user?.role === 'lawyer') {
+      const data = await fetchDashboardStats();
+      setStats(data);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+    const interval = setInterval(loadStats, 15000); // Polling cada 15 segundos para mantener actualizado
+    return () => clearInterval(interval);
+  }, [user, location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -41,11 +59,15 @@ export function DashboardLayout() {
             label: 'Gestión de Citas',
             href: '/dashboard/citas',
             icon: CalendarDays,
+            badge: stats.pendingAppointments > 0 ? stats.pendingAppointments : null,
+            badgeType: 'amber',
           },
           {
             label: 'Mensajes de Contacto',
             href: '/dashboard/mensajes',
             icon: Mail,
+            badge: stats.unreadMessages > 0 ? stats.unreadMessages : null,
+            badgeType: 'red',
           },
           {
             label: 'Maestro de Clientes',
@@ -79,11 +101,15 @@ export function DashboardLayout() {
             label: 'Gestión de Citas',
             href: '/dashboard/citas',
             icon: CalendarDays,
+            badge: stats.pendingAppointments > 0 ? stats.pendingAppointments : null,
+            badgeType: 'amber',
           },
           {
             label: 'Mensajes de Contacto',
             href: '/dashboard/mensajes',
             icon: Mail,
+            badge: stats.unreadMessages > 0 ? stats.unreadMessages : null,
+            badgeType: 'red',
           },
           {
             label: 'Maestro de Clientes',
@@ -150,14 +176,29 @@ export function DashboardLayout() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors',
+                  'flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors',
                   isActive
                     ? 'bg-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 )}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-gray-500')} />
-                {item.label}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-gray-500')} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+
+                {item.badge !== undefined && item.badge !== null && item.badge > 0 && (
+                  <span
+                    className={cn(
+                      'ml-auto shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm',
+                      item.badgeType === 'red'
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-amber-500 text-white'
+                    )}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -217,14 +258,29 @@ export function DashboardLayout() {
                 to={item.href}
                 onClick={() => setIsSidebarOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors',
+                  'flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors',
                   isActive
                     ? 'bg-primary text-white'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 )}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-gray-500')} />
-                {item.label}
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-gray-500')} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+
+                {item.badge !== undefined && item.badge !== null && item.badge > 0 && (
+                  <span
+                    className={cn(
+                      'ml-auto shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm',
+                      item.badgeType === 'red'
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-amber-500 text-white'
+                    )}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

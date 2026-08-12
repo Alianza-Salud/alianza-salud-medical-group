@@ -24,6 +24,15 @@ class ContactRepository {
   }
 
   /**
+   * Obtener cantidad de mensajes no leídos.
+   */
+  async getUnreadCount() {
+    if (!pool) return 0;
+    const [rows] = await pool.query('SELECT COUNT(*) AS count FROM contacts WHERE is_read = 0');
+    return rows[0]?.count || 0;
+  }
+
+  /**
    * Crear un nuevo mensaje de contacto desde la web pública.
    */
   async create(contactData) {

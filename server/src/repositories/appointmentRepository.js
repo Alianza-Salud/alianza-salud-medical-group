@@ -44,6 +44,21 @@ class AppointmentRepository {
   }
 
   /**
+   * Obtener cantidad de citas pendientes de aprobación.
+   */
+  async getPendingCount(lawyerId = null) {
+    if (!pool) return 0;
+    let query = "SELECT COUNT(*) AS count FROM appointments WHERE status = 'pending'";
+    const params = [];
+    if (lawyerId) {
+      query += ' AND assigned_lawyer_id = ?';
+      params.push(lawyerId);
+    }
+    const [rows] = await pool.query(query, params);
+    return rows[0]?.count || 0;
+  }
+
+  /**
    * Crear una nueva solicitud de cita desde el sitio público.
    */
   async create(appointmentData) {
