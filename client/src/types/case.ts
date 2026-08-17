@@ -62,4 +62,5 @@ export interface AddDocumentFormData {
   type?: string;
   description?: string;
   visibleToClient: boolean;
+  file?: File;
 }

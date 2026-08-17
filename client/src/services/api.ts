@@ -1,16 +1,10 @@
-/**
- * Cliente HTTP base para comunicación con el backend.
- *
- * Incluye automáticamente el token JWT de localStorage en el encabezado
- * `Authorization: Bearer <token>` cuando el usuario está autenticado.
- */
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   headers?: Record<string, string>;
+  isFormData?: boolean;
 }
 
 interface ApiResponse<T> {
@@ -19,21 +13,19 @@ interface ApiResponse<T> {
   ok: boolean;
 }
 
-/**
- * Realiza una petición HTTP al backend con token opcional.
- */
 async function request<T>(
   endpoint: string,
   options: ApiRequestOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { method = 'GET', body, headers = {} } = options;
+  const { method = 'GET', body, headers = {}, isFormData = false } = options;
 
   const token = localStorage.getItem('auth_token');
 
-  const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...headers,
-  };
+  const requestHeaders: Record<string, string> = { ...headers };
+
+  if (!isFormData) {
+    requestHeaders['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     requestHeaders['Authorization'] = `Bearer ${token}`;
@@ -45,7 +37,7 @@ async function request<T>(
   };
 
   if (body) {
-    config.body = JSON.stringify(body);
+    config.body = isFormData ? (body as FormData) : JSON.stringify(body);
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
@@ -62,6 +54,8 @@ export const apiClient = {
   get: <T>(endpoint: string) => request<T>(endpoint),
   post: <T>(endpoint: string, body: unknown) =>
     request<T>(endpoint, { method: 'POST', body }),
+  upload: <T>(endpoint: string, formData: FormData) =>
+    request<T>(endpoint, { method: 'POST', body: formData, isFormData: true }),
   put: <T>(endpoint: string, body: unknown) =>
     request<T>(endpoint, { method: 'PUT', body }),
   patch: <T>(endpoint: string, body: unknown) =>

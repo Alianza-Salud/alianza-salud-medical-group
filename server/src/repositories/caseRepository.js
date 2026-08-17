@@ -157,14 +157,16 @@ class CaseRepository {
     description = '',
     filePath = '',
     originalName = '',
+    mimeType = '',
+    fileSize = null,
     uploadedByName = 'Administración',
     visibleToClient = false,
   }) {
     if (!pool) return null;
     const [result] = await pool.query(
-      `INSERT INTO documents (case_id, name, type, description, file_path, original_name, uploaded_by_name, visible_to_client)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [caseId, name, type, description, filePath, originalName, uploadedByName, visibleToClient ? 1 : 0]
+      `INSERT INTO documents (case_id, name, type, description, file_path, original_name, mime_type, file_size, uploaded_by_name, visible_to_client)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [caseId, name, type, description, filePath, originalName, mimeType, fileSize, uploadedByName, visibleToClient ? 1 : 0]
     );
 
     return {
@@ -175,6 +177,8 @@ class CaseRepository {
       description,
       filePath,
       originalName,
+      mimeType,
+      fileSize,
       uploadedByName,
       visibleToClient: Boolean(visibleToClient),
       createdAt: new Date().toISOString(),

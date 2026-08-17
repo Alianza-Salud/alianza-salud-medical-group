@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 const { errorHandler } = require('./middlewares/errorHandler');
 const routes = require('./routes');
 const config = require('./config');
@@ -10,7 +11,7 @@ const { testConnection } = require('./database/db');
 const app = express();
 
 // ------- Middlewares globales -------
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
   origin: config.isDev ? true : config.corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -18,6 +19,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos subidos de forma estática
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ------- Rutas -------
 app.use('/api', routes);

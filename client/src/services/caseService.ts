@@ -69,7 +69,17 @@ export async function addCaseUpdate(caseId: number, data: AddUpdateFormData): Pr
 
 export async function addCaseDocument(caseId: number, data: AddDocumentFormData): Promise<{ success: boolean; message?: string; data?: CaseDocument }> {
   try {
-    const res = await apiClient.post<ApiResponse<CaseDocument>>(`/cases/${caseId}/documents`, data);
+    const formData = new FormData();
+    formData.append('name', data.name);
+    if (data.type) formData.append('type', data.type);
+    if (data.description) formData.append('description', data.description);
+    formData.append('visibleToClient', String(data.visibleToClient));
+
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+
+    const res = await apiClient.upload<ApiResponse<CaseDocument>>(`/cases/${caseId}/documents`, formData);
     if (res.ok && res.data && res.data.success) {
       return { success: true, message: res.data.message, data: res.data.data };
     }

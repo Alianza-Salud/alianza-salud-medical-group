@@ -168,26 +168,38 @@ async function addCaseDocument(req, res, next) {
   try {
     const { id: caseId } = req.params;
     const { name, type, description, visibleToClient } = req.body;
+    const file = req.file;
 
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Ingrese el nombre del documento.', status: 400 },
-      });
+    const documentName = name || (file ? file.originalname : 'Documento sin nombre');
+
+    let filePath = '';
+    let originalName = '';
+    let mimeType = '';
+    let fileSize = null;
+
+    if (file) {
+      filePath = `/uploads/documents/${file.filename}`;
+      originalName = file.originalname;
+      mimeType = file.mimetype;
+      fileSize = file.size;
     }
 
     const doc = await caseRepository.addDocument({
       caseId: parseInt(caseId, 10),
-      name,
+      name: documentName,
       type: type || 'recibido',
       description: description || '',
+      filePath,
+      originalName,
+      mimeType,
+      fileSize,
       uploadedByName: req.user.fullName || 'Administración',
-      visibleToClient: Boolean(visibleToClient),
+      visibleToClient: visibleToClient === true || visibleToClient === 'true' || visibleToClient === '1',
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Documento registrado exitosamente en el expediente del caso.',
+      message: 'Documento subido y registrado exitosamente en el expediente.',
       data: doc,
     });
   } catch (error) {

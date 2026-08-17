@@ -204,6 +204,18 @@ export default function ClientDashboardPage() {
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               <Eye className="h-3.5 w-3.5 text-emerald-600" /> Disponible
                             </span>
+
+                            {doc.filePath && (
+                              <a
+                                href={`http://localhost:3001${doc.filePath}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm"
+                              >
+                                <Download className="h-3.5 w-3.5" /> Descargar
+                              </a>
+                            )}
                           </div>
                         </div>
                       ))}

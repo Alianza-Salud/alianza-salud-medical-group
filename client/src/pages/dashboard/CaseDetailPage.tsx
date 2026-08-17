@@ -53,6 +53,7 @@ export default function CaseDetailPage() {
   const [docType, setDocType] = useState('recibido');
   const [docDescription, setDocDescription] = useState('');
   const [docVisibleToClient, setDocVisibleToClient] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAddingDoc, setIsAddingDoc] = useState(false);
 
   // Formulario Novedad
@@ -105,25 +106,27 @@ export default function CaseDetailPage() {
 
   const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!caseData || !docName.trim()) return;
+    if (!caseData || (!docName.trim() && !selectedFile)) return;
 
     setIsAddingDoc(true);
     setAlertMsg(null);
 
     const res = await addCaseDocument(caseData.id, {
-      name: docName,
+      name: docName || selectedFile?.name || 'Documento Adjunto',
       type: docType,
       description: docDescription,
       visibleToClient: docVisibleToClient,
+      file: selectedFile || undefined,
     });
 
     setIsAddingDoc(false);
 
     if (res.success) {
-      setAlertMsg({ type: 'success', message: 'Documento adjuntado exitosamente.' });
+      setAlertMsg({ type: 'success', message: 'Documento subido exitosamente al expediente.' });
       setDocName('');
       setDocDescription('');
       setDocVisibleToClient(false);
+      setSelectedFile(null);
       setShowDocForm(false);
       loadCase();
     } else {
@@ -375,6 +378,27 @@ export default function CaseDetailPage() {
                   </div>
 
                   <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Anexar Archivo Real (.pdf, .docx, .txt, .png, etc.)</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setSelectedFile(file);
+                          if (!docName) setDocName(file.name);
+                        }
+                      }}
+                      className="w-full text-xs text-gray-600 border border-gray-300 rounded-lg p-2 bg-white cursor-pointer"
+                    />
+                    {selectedFile && (
+                      <p className="text-[11px] text-emerald-700 font-semibold mt-1">
+                        Archivo seleccionado: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Descripción / Notas (Opcional)</label>
                     <textarea
                       rows={2}
@@ -406,7 +430,7 @@ export default function CaseDetailPage() {
 
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="submit" size="sm" isLoading={isAddingDoc}>
-                      Guardar Documento en Expediente
+                      Subir y Guardar Documento
                     </Button>
                   </div>
                 </form>
@@ -422,7 +446,7 @@ export default function CaseDetailPage() {
                   {caseData.documents.map((doc) => (
                     <div
                       key={doc.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-white transition-colors gap-3"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-white transition-colors gap-3"
                     >
                       <div className="flex items-start gap-3 min-w-0">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
@@ -431,7 +455,7 @@ export default function CaseDetailPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{doc.name}</p>
                           {doc.description && <p className="text-xs text-gray-600 mt-0.5">{doc.description}</p>}
-                          <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400">
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-gray-400">
                             <span>Tipo: <strong className="capitalize">{doc.type}</strong></span>
                             <span>•</span>
                             <span>Cargado por: {doc.uploadedByName}</span>
@@ -444,12 +468,24 @@ export default function CaseDetailPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         {doc.visibleToClient ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <Eye className="h-3.5 w-3.5 text-emerald-600" /> Visible para Cliente
+                            <Eye className="h-3.5 w-3.5 text-emerald-600" /> Visible Cliente
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                             <EyeOff className="h-3.5 w-3.5 text-gray-400" /> Privado / Interno
                           </span>
+                        )}
+
+                        {doc.filePath && (
+                          <a
+                            href={`http://localhost:3001${doc.filePath}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark transition-colors shadow-sm"
+                          >
+                            <Upload className="h-3.5 w-3.5 rotate-180" /> Descargar
+                          </a>
                         )}
                       </div>
                     </div>
