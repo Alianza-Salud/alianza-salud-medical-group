@@ -164,10 +164,57 @@ async function addCaseUpdate(req, res, next) {
   }
 }
 
+async function addCaseDocument(req, res, next) {
+  try {
+    const { id: caseId } = req.params;
+    const { name, type, description, visibleToClient } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Ingrese el nombre del documento.', status: 400 },
+      });
+    }
+
+    const doc = await caseRepository.addDocument({
+      caseId: parseInt(caseId, 10),
+      name,
+      type: type || 'recibido',
+      description: description || '',
+      uploadedByName: req.user.fullName || 'Administración',
+      visibleToClient: Boolean(visibleToClient),
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Documento registrado exitosamente en el expediente del caso.',
+      data: doc,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getCaseDocuments(req, res, next) {
+  try {
+    const { id: caseId } = req.params;
+    const isClient = req.user.role === 'client';
+    const docs = await caseRepository.findDocumentsByCaseId(parseInt(caseId, 10), isClient);
+    return res.json({
+      success: true,
+      data: docs,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getCases,
   getCaseById,
   createCase,
   updateCaseStage,
   addCaseUpdate,
+  addCaseDocument,
+  getCaseDocuments,
 };

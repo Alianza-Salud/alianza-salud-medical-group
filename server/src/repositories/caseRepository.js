@@ -77,6 +77,11 @@ class CaseRepository {
       [caseId]
     );
 
+    const [documentsRows] = await pool.query(
+      'SELECT * FROM documents WHERE case_id = ? ORDER BY created_at DESC',
+      [caseId]
+    );
+
     return {
       id: caseData.id,
       caseCode: caseData.case_code,
@@ -102,6 +107,77 @@ class CaseRepository {
         stageName: u.stage_name,
         createdAt: u.created_at,
       })),
+      documents: documentsRows.map((d) => ({
+        id: d.id,
+        caseId: d.case_id,
+        name: d.name,
+        type: d.type,
+        description: d.description,
+        filePath: d.file_path,
+        originalName: d.original_name,
+        uploadedByName: d.uploaded_by_name,
+        status: d.status,
+        visibleToClient: Boolean(d.visible_to_client),
+        createdAt: d.created_at,
+      })),
+    };
+  }
+
+  /**
+   * Buscar documentos de un caso.
+   */
+  async findDocumentsByCaseId(caseId, isClientOnly = false) {
+    if (!pool) return [];
+    let query = 'SELECT * FROM documents WHERE case_id = ?';
+    if (isClientOnly) query += ' AND visible_to_client = 1';
+    query += ' ORDER BY created_at DESC';
+    const [rows] = await pool.query(query, [caseId]);
+    return rows.map((d) => ({
+      id: d.id,
+      caseId: d.case_id,
+      name: d.name,
+      type: d.type,
+      description: d.description,
+      filePath: d.file_path,
+      originalName: d.original_name,
+      uploadedByName: d.uploaded_by_name,
+      status: d.status,
+      visibleToClient: Boolean(d.visible_to_client),
+      createdAt: d.created_at,
+    }));
+  }
+
+  /**
+   * Agregar un documento a un caso.
+   */
+  async addDocument({
+    caseId,
+    name,
+    type = 'recibido',
+    description = '',
+    filePath = '',
+    originalName = '',
+    uploadedByName = 'Administración',
+    visibleToClient = false,
+  }) {
+    if (!pool) return null;
+    const [result] = await pool.query(
+      `INSERT INTO documents (case_id, name, type, description, file_path, original_name, uploaded_by_name, visible_to_client)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [caseId, name, type, description, filePath, originalName, uploadedByName, visibleToClient ? 1 : 0]
+    );
+
+    return {
+      id: result.insertId,
+      caseId,
+      name,
+      type,
+      description,
+      filePath,
+      originalName,
+      uploadedByName,
+      visibleToClient: Boolean(visibleToClient),
+      createdAt: new Date().toISOString(),
     };
   }
 

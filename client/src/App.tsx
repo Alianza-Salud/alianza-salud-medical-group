@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 import AdminDashboardPage from './pages/dashboard/AdminDashboardPage';
+import CaseDetailPage from './pages/dashboard/CaseDetailPage';
 import ClientDashboardPage from './pages/dashboard/ClientDashboardPage';
 import ClientsManagerPage from './pages/dashboard/ClientsManagerPage';
 import LawyersManagerPage from './pages/dashboard/LawyersManagerPage';
@@ -52,6 +53,7 @@ function App() {
             {/* Rutas para Admin, Auxiliar de Admisiones y Abogados / Especialistas */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'auxiliar_admisiones', 'lawyer']} />}>
               <Route path="/dashboard" element={<AdminDashboardPage />} />
+              <Route path="/dashboard/casos/:id" element={<CaseDetailPage />} />
               <Route path="/dashboard/citas" element={<AppointmentsManagerPage />} />
               <Route path="/dashboard/mensajes" element={<ContactMessagesPage />} />
               <Route path="/dashboard/clientes" element={<ClientsManagerPage />} />

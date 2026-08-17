@@ -7,6 +7,20 @@ export interface CaseUpdate {
   createdAt: string;
 }
 
+export interface CaseDocument {
+  id: number;
+  caseId: number;
+  name: string;
+  type: string;
+  description?: string;
+  filePath?: string;
+  originalName?: string;
+  uploadedByName?: string;
+  status: string;
+  visibleToClient: boolean;
+  createdAt: string;
+}
+
 export interface LegalCase {
   id: number;
   caseCode: string;
@@ -25,6 +39,7 @@ export interface LegalCase {
   lawyerId?: number | null;
   createdAt: string;
   updates?: CaseUpdate[];
+  documents?: CaseDocument[];
 }
 
 export interface CreateCaseFormData {
@@ -40,4 +55,11 @@ export interface AddUpdateFormData {
   title: string;
   description: string;
   stageName?: string;
+}
+
+export interface AddDocumentFormData {
+  name: string;
+  type?: string;
+  description?: string;
+  visibleToClient: boolean;
 }

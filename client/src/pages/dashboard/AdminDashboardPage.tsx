@@ -292,7 +292,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Tabla y Control de Etapas */}
+      {/* Tabla limpia de Casos Médico-Periciales */}
       {isLoading ? (
         <LoadingSpinner size="lg" text="Cargando casos..." />
       ) : filteredCases.length === 0 ? (
@@ -301,89 +301,53 @@ export default function AdminDashboardPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {paginatedCases.map((c) => (
-            <Card key={c.id} className="hover:border-gray-300 transition-colors">
-              <CardHeader>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-primary">{c.caseCode}</span>
-                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-800 border border-amber-200">
-                        <KeyRound className="h-3 w-3" />
-                        Código Cliente: {c.verificationCode}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mt-1">{c.title}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Cliente: <strong>{c.clientName}</strong> ({c.clientEmail}) | Abogado: <strong>{c.assignedLawyerName}</strong>
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {c.status !== 'closed' ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                          if (window.confirm(`¿Está seguro de cerrar y dar por finalizado el caso ${c.caseCode}?`)) {
-                            const res = await updateCaseStage(c.id, 'Resolución y Cierre', 'closed');
-                            if (res.success) {
-                              loadAllData();
-                            } else {
-                              alert(res.message || 'Error al cerrar el caso.');
-                            }
-                          }
-                        }}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Cerrar Caso
-                      </Button>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
-                        <CheckCircle className="h-3.5 w-3.5 text-green-600" /> Caso Cerrado
-                      </span>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedCase(c);
-                        setSelectedStageName(c.stage);
-                        setIsStageModalOpen(true);
-                        setErrorMessage(null);
-                      }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      Avanzar Etapa
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedCase(c);
-                        setNewUpdateData({ title: '', description: '', stageName: c.stage });
-                        setIsUpdateModalOpen(true);
-                        setErrorMessage(null);
-                      }}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Novedad
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                <p className="text-sm text-gray-700">{c.description}</p>
-
-                {/* Control Visual de Etapas (Stepper) */}
-                <div className="rounded-xl bg-gray-50 p-4 border border-gray-200">
-                  <CaseStageStepper currentStage={c.stage} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Código del Caso</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nombre del Caso</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Etapa Activa</th>
+                    <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {paginatedCases.map((c) => (
+                    <tr key={c.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded">
+                          {c.caseCode}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-gray-900 line-clamp-1">{c.title}</div>
+                        <div className="text-xs text-gray-500 mt-0.5 capitalize">{c.serviceSlug.replace(/-/g, ' ')}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{c.clientName}</div>
+                        <div className="text-xs text-gray-500 font-mono">Código: {c.verificationCode}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {c.stage}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <Link to={`/dashboard/casos/${c.id}`}>
+                          <Button size="sm">
+                            Ver detalles
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {/* Paginación de Casos (Máximo 10 por página) */}
           {totalPages > 1 && (

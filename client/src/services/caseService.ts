@@ -1,4 +1,4 @@
-import type { LegalCase, CreateCaseFormData, AddUpdateFormData, CaseUpdate } from '../types/case';
+import type { LegalCase, CreateCaseFormData, AddUpdateFormData, CaseUpdate, CaseDocument, AddDocumentFormData } from '../types/case';
 import { apiClient } from './api';
 
 interface ApiResponse<T> {
@@ -65,4 +65,16 @@ export async function addCaseUpdate(caseId: number, data: AddUpdateFormData): Pr
     console.error('[CaseService Error] addCaseUpdate:', error);
   }
   return { success: false, message: 'Error al registrar la novedad.' };
+}
+
+export async function addCaseDocument(caseId: number, data: AddDocumentFormData): Promise<{ success: boolean; message?: string; data?: CaseDocument }> {
+  try {
+    const res = await apiClient.post<ApiResponse<CaseDocument>>(`/cases/${caseId}/documents`, data);
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] addCaseDocument:', error);
+  }
+  return { success: false, message: 'Error al adjuntar el documento.' };
 }

@@ -8,8 +8,11 @@ router.use(authenticateToken);
 router.get('/', caseController.getCases);
 router.get('/:id', caseController.getCaseById);
 
-router.post('/', requireRole('admin', 'lawyer'), caseController.createCase);
-router.patch('/:id/stage', requireRole('admin', 'lawyer'), caseController.updateCaseStage);
-router.post('/:id/updates', requireRole('admin', 'lawyer'), caseController.addCaseUpdate);
+router.post('/', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.createCase);
+router.patch('/:id/stage', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.updateCaseStage);
+router.post('/:id/updates', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.addCaseUpdate);
+
+router.get('/:id/documents', caseController.getCaseDocuments);
+router.post('/:id/documents', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.addCaseDocument);
 
 module.exports = router;
