@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, HeartPulse, Scale, Users, Target, Eye, Award } from 'lucide-react';
+import { ArrowRight, Stethoscope, HeartPulse, Scale, Users, Target, Eye, Award } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { Button } from '../components/ui/Button';
@@ -9,7 +9,7 @@ import { fetchSiteInfo, type SiteInfoData } from '../services/siteInfoService';
 export default function AboutPage() {
   usePageMeta(
     'Nosotros',
-    'Conozca Alianza Salud Medical Group — Una organización que integra servicios jurídicos y especialidades en salud.'
+    'Conozca Alianza Salud Medical Group — Organización especializada en evaluaciones médico-periciales y dictámenes de PCLO en Medellín, Colombia.'
   );
 
   const [siteInfo, setSiteInfo] = useState<SiteInfoData | null>(null);
@@ -25,7 +25,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title={`Sobre ${siteInfo?.company_name || 'Alianza Salud Medical Group'}`}
-            subtitle={siteInfo?.tagline || 'Una organización que integra servicios de consultoría jurídica y especialidades en salud para brindar un acompañamiento integral.'}
+            subtitle={siteInfo?.tagline || 'Organización especializada en el acompañamiento e investigación médico-pericial con respaldo técnico-científico.'}
           />
         </div>
       </section>
@@ -39,16 +39,15 @@ export default function AboutPage() {
                 Quiénes somos
               </h2>
               <p className="mt-4 text-gray-600 leading-relaxed">
-                {siteInfo?.company_name || 'Alianza Salud Medical Group'} es una organización que integra diferentes áreas de servicio, entre ellas un área de especialidades en salud e IPS y un área de consultoría jurídica.
+                {siteInfo?.company_name || 'Alianza Salud Medical Group'} es una organización con sede en Medellín, Colombia, orientada a la prestación de servicios de evaluación médica especializada, peritaje médico-legal y **Calificación de Pérdida de Capacidad Laboral y Ocupacional (PCLO)**.
               </p>
               <p className="mt-4 text-gray-600 leading-relaxed">
-                Esta integración nos permite ofrecer un enfoque diferenciador en el acompañamiento de casos donde convergen aspectos legales y médicos, combinando el análisis jurídico con el respaldo de especialistas en salud.
+                Brindamos soporte a personas naturales, firmas de abogados e instituciones que requieren la determinación técnica del porcentaje de discapacidad, secuelas corporales o la evaluación de nexo causal en lesiones por accidentes de tránsito, accidentes laborales o responsabilidad médica.
               </p>
               
-              {/* Espacio reservado / Información Institucional Adicional */}
               <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-5">
                 <p className="text-sm text-gray-600 italic">
-                  {siteInfo?.history || '[Espacio reservado para información institucional adicional: historia, misión, visión, valores. — Pendiente de datos proporcionados por la empresa.]'}
+                  {siteInfo?.history || 'Fundada para responder a las necesidades de dictámenes médicos periciales rigurosos, Alianza Salud integra la práctica clínica pericial con la gestión de admisiones eficientes.'}
                 </p>
               </div>
             </div>
@@ -59,7 +58,7 @@ export default function AboutPage() {
                 <Users className="h-14 w-14" />
               </div>
               <p className="text-sm text-gray-600 font-semibold italic">
-                {siteInfo?.visual_resource || '[Espacio reservado para imagen o recurso visual institucional]'}
+                {siteInfo?.visual_resource || 'Alianza Salud Medical Group — Medellín, Colombia'}
               </p>
             </div>
           </div>
@@ -77,7 +76,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900">Misión</h3>
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                {siteInfo?.mission || 'Brindar soluciones y asesoría jurídica integral respaldada por conceptos médicos científicos de alta calidad.'}
+                {siteInfo?.mission || 'Brresar evaluaciones médico-periciales y calificaciones de PCLO objetivas con altos estándares de ética y rigor científico.'}
               </p>
             </div>
 
@@ -88,7 +87,7 @@ export default function AboutPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900">Visión</h3>
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                {siteInfo?.vision || 'Ser la organización líder en el acompañamiento interdisciplinario en responsabilidad médica y derecho de la salud.'}
+                {siteInfo?.vision || 'Ser el centro de peritaje médico y PCLO de mayor confiabilidad y liderazgo técnico en Colombia.'}
               </p>
             </div>
 
@@ -101,7 +100,7 @@ export default function AboutPage() {
               <ul className="mt-3 space-y-2">
                 {(siteInfo?.values && siteInfo.values.length > 0
                   ? siteInfo.values
-                  : ['Ética profesional', 'Excelencia técnica', 'Empatía con las víctimas', 'Transparencia', 'Rigor científico']
+                  : ['Rigor científico', 'Independencia pericial', 'Empatía y ética', 'Transparencia', 'Calidad en admisiones']
                 ).map((val, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs font-semibold text-gray-700">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -114,51 +113,51 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Áreas */}
+      {/* Estructura Operativa */}
       <section className="bg-gray-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="Nuestras áreas"
-            subtitle="La articulación entre el área jurídica y el área de especialidades en salud es lo que nos diferencia."
+            title="Estructura Operativa"
+            subtitle="La coordinación entre el área médico-pericial, la unidad de admisiones y la opción de soporte jurídico complementario."
           />
 
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Área jurídica */}
+            {/* Peritaje Médico */}
             <div className="rounded-xl border border-gray-200 bg-white p-8">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Scale className="h-6 w-6" />
+                <Stethoscope className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Consultoría Jurídica
+                Unidad Médico-Pericial
               </h3>
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                El área de consultoría jurídica atiende casos relacionados con negligencia médica, responsabilidad médica, accidentes de tránsito, indemnizaciones y otros casos jurídicos del ámbito médico.
+                Médicos especialistas y peritos encargados del estudio de historias clínicas, valoración presencial o remota y estructuración de dictámenes de PCLO e Informes Periciales.
               </p>
             </div>
 
-            {/* Área de salud */}
+            {/* Admisiones */}
             <div className="rounded-xl border border-gray-200 bg-white p-8">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <HeartPulse className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Especialidades en Salud
+                Unidad de Admisiones
               </h3>
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                El área de especialidades en salud proporciona conceptos, valoraciones y dictámenes médicos especializados que pueden ser necesarios para el análisis de determinados casos jurídicos.
+                Auxiliares de admisiones orientadas a la captación, recepción de antecedentes clínicas, apertura de expediente y acompañamiento permanente al cliente.
               </p>
             </div>
 
-            {/* Articulación */}
+            {/* Soporte Jurídico */}
             <div className="rounded-xl border border-gray-200 bg-white p-8 sm:col-span-2 lg:col-span-1">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Shield className="h-6 w-6" />
+                <Scale className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Enfoque Integrado
+                Soporte Jurídico Complementario
               </h3>
               <p className="mt-3 text-sm text-gray-600 leading-relaxed">
-                La articulación entre ambas áreas permite un análisis más completo de cada caso, combinando la perspectiva jurídica con el conocimiento médico especializado para una evaluación integral.
+                Si el cliente no cuenta con abogado representante, ofrecemos orientación e información sobre alternativas de acompañamiento jurídico una vez emitido el dictamen.
               </p>
             </div>
           </div>
@@ -169,15 +168,15 @@ export default function AboutPage() {
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            ¿Desea conocer más?
+            ¿Desea solicitar una valoración?
           </h2>
           <p className="mt-4 text-gray-600">
-            Si tiene alguna pregunta sobre nuestra organización o los servicios que ofrecemos, no dude en comunicarse con nosotros.
+            Comuníquese con nuestra unidad de admisiones o solicite su cita de valoración directamente a través del portal.
           </p>
           <div className="mt-8 flex justify-center gap-4">
-            <Link to="/contacto">
+            <Link to="/citas">
               <Button size="lg">
-                Contáctenos <ArrowRight className="ml-2 h-4 w-4" />
+                Agendar valoración <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>

@@ -9,30 +9,22 @@ import { submitAppointment } from '../../services/appointmentService';
 import { getActiveServices } from '../../data/services';
 import { timeSlots } from '../../data/site';
 
-/**
- * Schema de validación para el formulario de cita.
- */
 const appointmentSchema = z.object({
   fullName: z
     .string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(100, 'El nombre no puede exceder 100 caracteres'),
-  email: z
-    .string()
-    .email('Ingrese un correo electrónico válido'),
+  email: z.string().email('Ingrese un correo electrónico válido'),
   phone: z
     .string()
     .min(7, 'Ingrese un número de teléfono válido')
     .max(20, 'El teléfono no puede exceder 20 caracteres'),
-  serviceType: z
-    .string()
-    .min(1, 'Seleccione un tipo de servicio'),
-  preferredDate: z
-    .string()
-    .min(1, 'Seleccione una fecha'),
-  preferredTime: z
-    .string()
-    .min(1, 'Seleccione un horario'),
+  serviceType: z.string().min(1, 'Seleccione un servicio médico-pericial'),
+  caseType: z.string().min(1, 'Seleccione el origen del caso/lesión'),
+  preferredDate: z.string().min(1, 'Seleccione una fecha'),
+  preferredTime: z.string().min(1, 'Seleccione un horario'),
+  hasLawyer: z.enum(['si', 'no', 'no_especificado']).optional(),
+  wantsLegalSupport: z.enum(['si', 'no', 'no_especificado']).optional(),
   message: z
     .string()
     .max(2000, 'El mensaje no puede exceder 2000 caracteres')
@@ -45,12 +37,6 @@ const appointmentSchema = z.object({
 
 type AppointmentFormValues = z.infer<typeof appointmentSchema>;
 
-/**
- * Formulario de solicitud/programación de citas.
- * En Fase 1 usa datos mock. En fases futuras consumirá:
- *   GET /api/appointments/availability
- *   POST /api/appointments
- */
 export function AppointmentForm() {
   const [submitStatus, setSubmitStatus] = useState<{
     type: 'success' | 'error';
@@ -59,7 +45,6 @@ export function AppointmentForm() {
 
   const services = getActiveServices();
 
-  // Fecha mínima: mañana
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDate = tomorrow.toISOString().split('T')[0];
@@ -73,6 +58,8 @@ export function AppointmentForm() {
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       acceptedPolicy: false,
+      hasLawyer: 'no',
+      wantsLegalSupport: 'no_especificado',
     },
   });
 
@@ -81,6 +68,7 @@ export function AppointmentForm() {
       setSubmitStatus(null);
       const result = await submitAppointment({
         ...data,
+        caseType: data.caseType,
         message: data.message || '',
         acceptedPolicy: data.acceptedPolicy,
       });
@@ -120,7 +108,7 @@ export function AppointmentForm() {
           id="appt-fullName"
           type="text"
           autoComplete="name"
-          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder="Su nombre completo"
           {...register('fullName')}
         />
@@ -139,7 +127,7 @@ export function AppointmentForm() {
             id="appt-email"
             type="email"
             autoComplete="email"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             placeholder="correo@ejemplo.com"
             {...register('email')}
           />
@@ -155,8 +143,8 @@ export function AppointmentForm() {
             id="appt-phone"
             type="tel"
             autoComplete="tel"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
-            placeholder="+57 XXX XXX XXXX"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder="+57 300 123 4567"
             {...register('phone')}
           />
           {errors.phone && (
@@ -165,26 +153,81 @@ export function AppointmentForm() {
         </div>
       </div>
 
-      {/* Tipo de servicio */}
-      <div>
-        <label htmlFor="appt-serviceType" className="block text-sm font-medium text-gray-700 mb-1">
-          Tipo de servicio/caso *
-        </label>
-        <select
-          id="appt-serviceType"
-          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 bg-white"
-          {...register('serviceType')}
-        >
-          <option value="">Seleccione un servicio</option>
-          {services.map((service) => (
-            <option key={service.slug} value={service.slug}>
-              {service.name}
-            </option>
-          ))}
-        </select>
-        {errors.serviceType && (
-          <p className="mt-1 text-sm text-red-600">{errors.serviceType.message}</p>
-        )}
+      {/* Tipo de servicio y Origen de Caso */}
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="appt-serviceType" className="block text-sm font-medium text-gray-700 mb-1">
+            Servicio médico-pericial *
+          </label>
+          <select
+            id="appt-serviceType"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+            {...register('serviceType')}
+          >
+            <option value="">Seleccione un servicio</option>
+            {services.map((service) => (
+              <option key={service.slug} value={service.slug}>
+                {service.name}
+              </option>
+            ))}
+          </select>
+          {errors.serviceType && (
+            <p className="mt-1 text-sm text-red-600">{errors.serviceType.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="appt-caseType" className="block text-sm font-medium text-gray-700 mb-1">
+            Origen de la lesión / caso *
+          </label>
+          <select
+            id="appt-caseType"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+            {...register('caseType')}
+          >
+            <option value="">Seleccione origen del caso</option>
+            <option value="accidente-transito">Accidente de tránsito</option>
+            <option value="accidente-laboral">Accidente laboral</option>
+            <option value="negligencia-medica">Negligencia y responsabilidad médica</option>
+            <option value="otro">Otro</option>
+          </select>
+          {errors.caseType && (
+            <p className="mt-1 text-sm text-red-600">{errors.caseType.message}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Información de abogado y soporte jurídico */}
+      <div className="grid gap-5 sm:grid-cols-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div>
+          <label htmlFor="appt-hasLawyer" className="block text-xs font-semibold text-gray-700 mb-1">
+            ¿Ya cuenta con abogado representante?
+          </label>
+          <select
+            id="appt-hasLawyer"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs focus:border-primary focus:outline-none bg-white"
+            {...register('hasLawyer')}
+          >
+            <option value="no">No cuento con abogado</option>
+            <option value="si">Sí, ya tengo abogado</option>
+            <option value="no_especificado">Prefiero no especificar</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="appt-wantsLegalSupport" className="block text-xs font-semibold text-gray-700 mb-1">
+            ¿Desea información sobre acompañamiento jurídico complementario?
+          </label>
+          <select
+            id="appt-wantsLegalSupport"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs focus:border-primary focus:outline-none bg-white"
+            {...register('wantsLegalSupport')}
+          >
+            <option value="si">Sí, deseo recibir información</option>
+            <option value="no">No, solo requiero el dictamen médico</option>
+            <option value="no_especificado">Evaluar más adelante</option>
+          </select>
+        </div>
       </div>
 
       {/* Fecha y hora */}
@@ -197,7 +240,7 @@ export function AppointmentForm() {
             id="appt-date"
             type="date"
             min={minDate}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             {...register('preferredDate')}
           />
           {errors.preferredDate && (
@@ -210,7 +253,7 @@ export function AppointmentForm() {
           </label>
           <select
             id="appt-time"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 bg-white"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary bg-white"
             {...register('preferredTime')}
           >
             <option value="">Seleccione un horario</option>
@@ -231,13 +274,13 @@ export function AppointmentForm() {
       {/* Mensaje */}
       <div>
         <label htmlFor="appt-message" className="block text-sm font-medium text-gray-700 mb-1">
-          Motivo de consulta (opcional)
+          Descripción o motivo de la valoración (opcional)
         </label>
         <textarea
           id="appt-message"
-          rows={4}
-          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 resize-y"
-          placeholder="Describa brevemente el motivo de su consulta"
+          rows={3}
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-y"
+          placeholder="Describa brevemente la lesión o el estado del proceso..."
           {...register('message')}
         />
         {errors.message && (
@@ -254,8 +297,7 @@ export function AppointmentForm() {
           {...register('acceptedPolicy')}
         />
         <label htmlFor="appt-policy" className="text-sm text-gray-600">
-          Acepto que mis datos sean utilizados para gestionar mi solicitud de
-          cita. La política de tratamiento de datos será definida próximamente. *
+          Acepto el tratamiento de mis datos personales para la programación de la valoración médico-pericial. *
         </label>
       </div>
       {errors.acceptedPolicy && (
@@ -265,7 +307,7 @@ export function AppointmentForm() {
       {/* Botón de envío */}
       <Button type="submit" isLoading={isSubmitting} fullWidth>
         <CalendarCheck className="h-4 w-4" />
-        Solicitar cita
+        Solicitar valoración médica
       </Button>
     </form>
   );

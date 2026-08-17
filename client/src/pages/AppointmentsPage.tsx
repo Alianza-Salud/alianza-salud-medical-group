@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { SectionHeading } from '../components/ui/SectionHeading';
 import { AppointmentForm } from '../components/appointments/AppointmentForm';
-import { Phone, Clock, Info } from 'lucide-react';
+import { Phone, Clock, Info, ShieldCheck } from 'lucide-react';
 import { fetchSiteInfo, type SiteInfoData } from '../services/siteInfoService';
 
 export default function AppointmentsPage() {
   usePageMeta(
-    'Agendar Cita',
-    'Solicite una cita de evaluación con el equipo jurídico de Alianza Salud Medical Group.'
+    'Agendar Valoración',
+    'Solicite su cita de valoración médico-pericial con Alianza Salud Medical Group.'
   );
 
   const [siteData, setSiteData] = useState<SiteInfoData | null>(null);
@@ -23,8 +23,8 @@ export default function AppointmentsPage() {
       <section className="bg-gray-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="Agendar cita"
-            subtitle="Complete el siguiente formulario para solicitar una cita de evaluación. Nos comunicaremos con usted para confirmar la disponibilidad."
+            title="Solicitar valoración médico-pericial"
+            subtitle="Complete el formulario para agendar su cita de evaluación médica o dictamen de PCLO. Nuestro equipo de admisiones confirmará su fecha y horario."
           />
         </div>
       </section>
@@ -46,35 +46,33 @@ export default function AppointmentsPage() {
                 {/* Info de contacto */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    ¿Prefiere contacto directo?
+                    Atención directa de admisiones
                   </h3>
                   <p className="mt-2 text-sm text-gray-600">
-                    También puede comunicarse con nosotros directamente.
+                    Si prefiere atención directa o asesoría telefónica previa:
                   </p>
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center gap-3 text-sm text-gray-700">
                       <Phone className="h-4 w-4 text-primary shrink-0" />
-                      <span>{siteData?.phone || '+57 (601) 555-0199'}</span>
+                      <span>{siteData?.phone || '+57 (604) 444-5566'}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-gray-700">
                       <Clock className="h-4 w-4 text-primary shrink-0" />
-                      <span>{siteData?.schedule || 'Lunes a Viernes: 8:00 AM - 6:00 PM | Sábados: 8:00 AM - 1:00 PM'}</span>
+                      <span>{siteData?.schedule || 'Lunes a Viernes: 8:00 AM - 6:00 PM'}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Nota */}
+                {/* Nota de confidencialidad */}
                 <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
                   <div className="flex gap-3">
-                    <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                    <ShieldCheck className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-medium text-blue-800">
-                        Importante
+                        Confidencialidad Médica
                       </p>
                       <p className="mt-1 text-xs text-blue-700 leading-relaxed">
-                        La solicitud de cita no garantiza la disponibilidad en la
-                        fecha y hora seleccionadas. Nuestro equipo se comunicará
-                        para confirmar o proponer alternativas.
+                        Toda la información y documentación aportada para su valoración será tratada bajo estricta reserva profesional de acuerdo con la legislación de datos en salud.
                       </p>
                     </div>
                   </div>

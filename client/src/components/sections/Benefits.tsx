@@ -2,67 +2,60 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-/**
- * Sección de beneficios/diferenciales de la página de inicio.
- * Explica la articulación entre el área jurídica y médica.
- */
 export function Benefits() {
   const benefits = [
     {
-      title: 'Equipo interdisciplinario',
+      title: 'Peritaje Médico de Alto Rigor',
       description:
-        'Nuestro equipo combina profesionales del área jurídica y especialistas médicos para ofrecer un análisis integral de cada caso.',
+        'Dictámenes estructurados bajo normativa técnico-legal colombiana y baremos vigentes para calificación de pérdida de capacidad laboral.',
     },
     {
-      title: 'Respaldo médico especializado',
+      title: 'Evaluación Técnica Independiente',
       description:
-        'Contamos con el área de especialidades en salud de Alianza Salud Medical Group para obtener conceptos, valoraciones y dictámenes médicos.',
+        'Nuestros informes aportan pruebas médico-científicas objetivas para sustentar controversias ante aseguradoras, juntas o juzgados.',
     },
     {
-      title: 'Atención personalizada',
+      title: 'Gestión Administrativa Agilizada',
       description:
-        'Cada caso es único. Brindamos una evaluación personalizada y definimos una ruta de atención acorde a su situación particular.',
+        'La auxiliar de admisiones coordina la recepción de historias clínicas y el agendamiento eficiente de valoraciones.',
     },
     {
-      title: 'Acompañamiento integral',
+      title: 'Opción de Derivación Jurídica',
       description:
-        'Desde la evaluación inicial hasta la resolución, le acompañamos en cada etapa del proceso con comunicación transparente.',
+        'Si el cliente no cuenta con abogado representante, ofrecemos la alternativa de acompañamiento jurídico especializado complementario.',
     },
   ];
 
   return (
-    <section className="bg-white py-20 sm:py-24">
+    <section className="bg-white py-20 sm:py-24 border-t border-gray-100">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
-          {/* Texto principal */}
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              ¿Por qué elegir Alianza Salud Medical Group?
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">Diferencial Institucional</span>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Respaldamos su caso con evidencia médica sólida
             </h2>
-            <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-              Somos una organización que integra servicios jurídicos y de salud,
-              lo que nos permite ofrecer un enfoque diferenciador en el análisis
-              y acompañamiento de casos donde convergen aspectos legales y médicos.
+            <p className="mt-4 text-base text-gray-600 leading-relaxed">
+              En Alianza Salud Medical Group unimos la práctica médica pericial y el rigor científico para entregar calificaciones de PCLO e Informes Periciales Médicos de máxima confiabilidad.
             </p>
             <div className="mt-8">
               <Link to="/nosotros">
                 <Button variant="outline">
-                  Conocer más sobre nosotros
+                  Conocer sobre la institución
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Grid de beneficios */}
           <div className="grid gap-6 sm:grid-cols-2">
             {benefits.map((benefit, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-gray-100 bg-gray-50 p-5"
+                className="rounded-xl border border-gray-200 bg-gray-50/50 p-6 hover:border-primary/30 transition-colors"
               >
-                <h3 className="font-semibold text-gray-900">{benefit.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                <h3 className="font-semibold text-gray-900 text-base">{benefit.title}</h3>
+                <p className="mt-2 text-xs text-gray-600 leading-relaxed">
                   {benefit.description}
                 </p>
               </div>

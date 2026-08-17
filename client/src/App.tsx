@@ -49,8 +49,8 @@ function App() {
 
           {/* Entorno Privado / Dashboards (DashboardLayout) */}
           <Route element={<DashboardLayout />}>
-            {/* Rutas para Admin y Abogados / Especialistas */}
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'lawyer']} />}>
+            {/* Rutas para Admin, Auxiliar de Admisiones y Abogados / Especialistas */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'auxiliar_admisiones', 'lawyer']} />}>
               <Route path="/dashboard" element={<AdminDashboardPage />} />
               <Route path="/dashboard/citas" element={<AppointmentsManagerPage />} />
               <Route path="/dashboard/mensajes" element={<ContactMessagesPage />} />
@@ -65,7 +65,7 @@ function App() {
             </Route>
 
             {/* Dashboard para Clientes */}
-            <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'lawyer']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['client', 'cliente', 'admin', 'auxiliar_admisiones', 'lawyer']} />}>
               <Route path="/dashboard/cliente" element={<ClientDashboardPage />} />
             </Route>
           </Route>

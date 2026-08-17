@@ -1,37 +1,28 @@
 import type { SiteInfo, NavLink } from '../types';
 import type { TimeSlot } from '../types/appointment';
 
-/**
- * Información general del sitio.
- *
- * Los datos de contacto son placeholders.
- * Deben ser reemplazados con la información real de la empresa.
- */
 export const siteInfo: SiteInfo = {
   name: 'Alianza Salud Medical Group',
-  tagline: 'Acompañamiento jurídico especializado con respaldo médico integral',
+  tagline: 'Evaluaciones médico-periciales especializadas con soporte jurídico complementario',
   description:
-    'Alianza Salud Medical Group integra servicios de consultoría jurídica y especialidades en salud para brindar un acompañamiento integral en casos de responsabilidad médica, accidentes de tránsito y otros servicios jurídicos relacionados.',
+    'Alianza Salud Medical Group ofrece servicios médicos especializados para la Calificación de Pérdida de Capacidad Laboral y Ocupacional (PCLO) e Informes Periciales Médicos en Medellín, Colombia, brindando dictámenes técnicos para respaldo de su caso.',
   contact: {
-    phone: '+57 (XXX) XXX-XXXX', // Placeholder — reemplazar con dato real
-    email: 'contacto@alianzasalud.com.co', // Placeholder — reemplazar con dato real
-    address: 'Medellín, Colombia', // Placeholder — reemplazar con dirección completa
+    phone: '+57 (604) 444-5566',
+    email: 'contacto@alianzasalud.com.co',
+    address: 'Medellín, Colombia',
     city: 'Medellín, Colombia',
-    schedule: 'Lunes a Viernes: 8:00 AM - 6:00 PM', // Placeholder — confirmar horario
+    schedule: 'Lunes a Viernes: 8:00 AM - 6:00 PM',
   },
   navigation: [
     { label: 'Inicio', href: '/' },
     { label: 'Servicios', href: '/servicios' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Proceso', href: '/proceso' },
-    { label: 'Agendar Cita', href: '/citas' },
+    { label: 'Agendar Valoración', href: '/citas' },
     { label: 'Contacto', href: '/contacto' },
   ],
 };
 
-/**
- * Navegación del footer — puede diferir de la principal.
- */
 export const footerNavigation: { title: string; links: NavLink[] }[] = [
   {
     title: 'Navegación',
@@ -39,31 +30,26 @@ export const footerNavigation: { title: string; links: NavLink[] }[] = [
       { label: 'Inicio', href: '/' },
       { label: 'Servicios', href: '/servicios' },
       { label: 'Nosotros', href: '/nosotros' },
-      { label: 'Proceso', href: '/proceso' },
+      { label: 'Proceso Médico-Pericial', href: '/proceso' },
     ],
   },
   {
-    title: 'Servicios',
+    title: 'Servicios Médico-Periciales',
     links: [
-      { label: 'Negligencia Médica', href: '/servicios/negligencia-medica' },
-      { label: 'Responsabilidad Médica', href: '/servicios/responsabilidad-medica' },
-      { label: 'Accidentes de Tránsito', href: '/servicios/accidentes-transito' },
-      { label: 'Indemnizaciones', href: '/servicios/indemnizaciones-accidentes' },
+      { label: 'Calificación PCLO', href: '/servicios/pclo' },
+      { label: 'Informe Pericial Médico', href: '/servicios/informe-pericial-medico' },
     ],
   },
   {
-    title: 'Contacto',
+    title: 'Atención',
     links: [
-      { label: 'Agendar Cita', href: '/citas' },
+      { label: 'Agendar Valoración', href: '/citas' },
       { label: 'Contacto', href: '/contacto' },
+      { label: 'Área de Clientes', href: '/login' },
     ],
   },
 ];
 
-/**
- * Franjas horarias mock para el formulario de citas.
- * En fases futuras, vendrán del backend: GET /api/appointments/availability
- */
 export const timeSlots: TimeSlot[] = [
   { value: '08:00', label: '8:00 AM', available: true },
   { value: '09:00', label: '9:00 AM', available: true },

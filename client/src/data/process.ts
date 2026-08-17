@@ -1,69 +1,43 @@
 import type { ProcessStep } from '../types';
 
 /**
- * Datos mock de las etapas del proceso de atención.
- *
- * En fases futuras, este flujo podrá ser gestionado dinámicamente
- * desde el backend según el tipo de caso.
- *
- * NOTA: Este es un flujo conceptual para el sitio público.
- * No todos los casos siguen exactamente las mismas etapas.
+ * Pasos del proceso público de atención médico-pericial.
+ * Alineado con el flujo de 12 etapas internas del sistema.
  */
 export const processSteps: ProcessStep[] = [
   {
     id: 1,
-    title: 'Primer contacto',
+    title: 'Solicitud y contacto inicial',
     description:
-      'Comuníquese con nosotros a través de cualquiera de nuestros canales. Un asesor le atenderá para conocer su situación de manera inicial.',
+      'Solicite su valoración a través de la plataforma web o canales oficiales. Registramos la información preliminar y los antecedentes de su lesión o proceso.',
     icon: 'Phone',
   },
   {
     id: 2,
-    title: 'Solicitud de cita',
+    title: 'Admisión y recepción documental',
     description:
-      'Agende una cita de evaluación inicial a través de nuestro sitio web o por contacto directo. Le confirmaremos la fecha y hora.',
-    icon: 'CalendarCheck',
-  },
-  {
-    id: 3,
-    title: 'Evaluación inicial',
-    description:
-      'Nuestro equipo realizará una evaluación preliminar de su caso para determinar la naturaleza de la situación y los pasos a seguir.',
+      'La auxiliar de admisiones revisa los antecedentes, solicita las historias clínicas, incapacidades o evidencias y habilita la apertura del expediente.',
     icon: 'ClipboardList',
   },
   {
-    id: 4,
-    title: 'Revisión jurídica',
+    id: 3,
+    title: 'Valoración médica especializada',
     description:
-      'El equipo jurídico analizará los aspectos legales de su caso, revisando la documentación disponible y la normativa aplicable.',
-    icon: 'Scale',
+      'Evaluación presencial o médica remota realizada por peritos médicos para valorar el estado de salud, secuelas y pérdida de capacidad laboral.',
+    icon: 'Stethoscope',
   },
   {
-    id: 5,
-    title: 'Análisis médico especializado',
+    id: 4,
+    title: 'Análisis y elaboración del dictamen',
     description:
-      'Cuando el caso lo requiera, nuestros especialistas en salud emitirán conceptos, valoraciones o dictámenes médicos que respalden el análisis jurídico.',
+      'Los especialistas médicos elaboran el Informe Pericial o dictamen de PCLO bajo rigor científico y normativa técnico-legal vigente.',
     icon: 'Microscope',
   },
   {
-    id: 6,
-    title: 'Definición de ruta de atención',
+    id: 5,
+    title: 'Entrega de resultados y acompañamiento jurídico',
     description:
-      'Con base en los análisis jurídico y médico, se definirá la estrategia y ruta de atención más adecuada para su caso particular.',
-    icon: 'Route',
-  },
-  {
-    id: 7,
-    title: 'Seguimiento del caso',
-    description:
-      'Realizamos seguimiento continuo a su caso, manteniéndole informado sobre los avances, novedades y próximos pasos en cada etapa del proceso.',
-    icon: 'Eye',
-  },
-  {
-    id: 8,
-    title: 'Resolución',
-    description:
-      'Acompañamos el proceso hasta su resolución, buscando siempre el resultado más favorable para usted y brindando orientación en cada decisión.',
+      'Carga del documento oficial en su área de cliente para consulta y descarga, con opción de asesoría jurídica complementaria si lo requiere.',
     icon: 'CheckCircle',
   },
 ];

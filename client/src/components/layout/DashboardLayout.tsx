@@ -47,11 +47,13 @@ export function DashboardLayout() {
   };
 
   // Ítems principales de navegación según rol
+  const isStaff = user?.role === 'admin' || user?.role === 'auxiliar_admisiones' || user?.role === 'lawyer';
+
   const mainNavItems =
     user?.role === 'admin'
       ? [
           {
-            label: 'Casos Jurídicos',
+            label: 'Casos Médico-Periciales',
             href: '/dashboard',
             icon: FolderKanban,
           },
@@ -75,7 +77,7 @@ export function DashboardLayout() {
             icon: Users,
           },
           {
-            label: 'Maestro de Abogados',
+            label: 'Especialistas y Abogados',
             href: '/dashboard/abogados',
             icon: UserCheck,
           },
@@ -90,10 +92,10 @@ export function DashboardLayout() {
             icon: Sliders,
           },
         ]
-      : user?.role === 'lawyer'
+      : isStaff
       ? [
           {
-            label: 'Casos Asignados',
+            label: 'Casos Médico-Periciales',
             href: '/dashboard',
             icon: FolderKanban,
           },
