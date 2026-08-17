@@ -11,10 +11,12 @@ CREATE TABLE IF NOT EXISTS `cases` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `case_code` VARCHAR(50) NOT NULL UNIQUE,
   `verification_code` VARCHAR(8) NOT NULL UNIQUE,
+  `client_id` INT NULL,
   `client_name` VARCHAR(150) NOT NULL,
   `client_email` VARCHAR(120) NOT NULL,
   `client_phone` VARCHAR(30) NULL,
   `user_id` INT NULL,
+  `lawyer_id` INT NULL,
   `service_slug` VARCHAR(100) NOT NULL,
   `title` VARCHAR(200) NOT NULL,
   `description` TEXT NOT NULL,
@@ -23,6 +25,8 @@ CREATE TABLE IF NOT EXISTS `cases` (
   `assigned_lawyer_name` VARCHAR(150) NULL DEFAULT 'Equipo Jurídico Alianza Salud',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`client_id`) REFERENCES `clients`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`lawyer_id`) REFERENCES `lawyers`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
