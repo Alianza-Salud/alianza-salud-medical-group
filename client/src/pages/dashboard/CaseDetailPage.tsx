@@ -640,23 +640,23 @@ export default function CaseDetailPage() {
 
         {/* Columna Derecha: Vista de las Etapas Moderna (Vertical Stepper 1 a 12) (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="sticky top-20 border-primary/20 shadow-md">
-            <CardHeader className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-t-xl py-4">
+          <Card className="sticky top-20 border-primary/20 shadow-md p-0 overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-6 mb-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-emerald-400" />
-                  Progreso de Etapas
+                  <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
+                  <span>Progreso de Etapas</span>
                 </h3>
-                <span className="text-xs font-mono font-bold bg-white/20 text-emerald-300 px-2 py-0.5 rounded">
+                <span className="text-xs font-mono font-bold bg-white/15 text-emerald-300 px-2.5 py-1 rounded-md border border-white/10 shrink-0">
                   {activeIdx + 1} / {CASE_STAGES.length}
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-1">
+              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
                 Etapas cumplidas marcadas en verde.
               </p>
             </CardHeader>
 
-            <CardContent className="p-4 space-y-2 max-h-[calc(100vh-160px)] overflow-y-auto">
+            <CardContent className="p-4 sm:p-5 space-y-2.5 max-h-[calc(100vh-200px)] overflow-y-auto bg-slate-50/30">
               {CASE_STAGES.map((stageName, idx) => {
                 const isPassed = idx < activeIdx;
                 const isCurrent = idx === activeIdx;
