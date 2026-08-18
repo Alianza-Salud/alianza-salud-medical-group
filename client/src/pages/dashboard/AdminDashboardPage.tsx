@@ -65,7 +65,8 @@ export default function AdminDashboardPage() {
   // Formulario Crear Caso (Selección de Cliente y Abogado existente)
   const [newCaseData, setNewCaseData] = useState({
     clientId: 0,
-    serviceSlug: 'negligencia-medica',
+    serviceSlug: 'informe-pericial-medico',
+    caseType: 'Lesión por Accidente de Tránsito (SOAT)',
     title: '',
     description: '',
     lawyerId: 0,
@@ -107,6 +108,17 @@ export default function AdminDashboardPage() {
     loadAllData();
   }, []);
 
+export const INJURY_CASE_TYPES = [
+  'Lesión por Accidente de Tránsito (SOAT)',
+  'Enfermedad o Accidente de Trabajo / Laboral (ARL)',
+  'Negligencia Médica o Secuela Quirúrgica',
+  'Lesión por Responsabilidad Civil / Terceros',
+  'Pérdida de Capacidad Laboral y Ocupacional (PCLO)',
+  'Secuela Traumatológica / Incapacidad Permanente',
+  'Valoración de Estado Secuelar / Daño Corporal',
+  'Otro Tipo de Lesión / Secuela',
+];
+
   const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCaseData.clientId) {
@@ -121,6 +133,7 @@ export default function AdminDashboardPage() {
     const res = await createCase({
       clientId: Number(newCaseData.clientId),
       serviceSlug: newCaseData.serviceSlug,
+      caseType: newCaseData.caseType,
       title: newCaseData.title,
       description: newCaseData.description,
       lawyerId: selectedLawyer ? selectedLawyer.id : null,
@@ -132,7 +145,8 @@ export default function AdminDashboardPage() {
       setIsCreateModalOpen(false);
       setNewCaseData({
         clientId: clients[0]?.id || 0,
-        serviceSlug: 'negligencia-medica',
+        serviceSlug: 'informe-pericial-medico',
+        caseType: INJURY_CASE_TYPES[0],
         title: '',
         description: '',
         lawyerId: lawyers[0]?.id || 0,
@@ -458,7 +472,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Tipo de Servicio *</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Servicio médico-pericial *</label>
                   <select
                     value={newCaseData.serviceSlug}
                     onChange={(e) => setNewCaseData({ ...newCaseData, serviceSlug: e.target.value })}
@@ -467,6 +481,21 @@ export default function AdminDashboardPage() {
                     {availableServices.map((s) => (
                       <option key={s.slug} value={s.slug}>
                         {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Tipo de caso *</label>
+                  <select
+                    value={newCaseData.caseType}
+                    onChange={(e) => setNewCaseData({ ...newCaseData, caseType: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
+                  >
+                    {INJURY_CASE_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
                       </option>
                     ))}
                   </select>

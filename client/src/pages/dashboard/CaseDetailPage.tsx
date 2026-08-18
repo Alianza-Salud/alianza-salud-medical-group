@@ -259,6 +259,14 @@ export default function CaseDetailPage() {
                 </div>
 
                 <div className="space-y-1">
+                  <span className="text-xs text-gray-500 uppercase font-semibold">Tipo de Caso (Lesión)</span>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <FileText className="h-4 w-4 text-emerald-600" />
+                    <span className="font-semibold text-gray-900">{caseData.caseType || 'Peritaje Médico General'}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
                   <span className="text-xs text-gray-500 uppercase font-semibold">Especialista / Abogado Asignado</span>
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <ShieldCheck className="h-4 w-4 text-primary" />

@@ -63,18 +63,19 @@ async function getCaseById(req, res, next) {
  */
 async function createCase(req, res, next) {
   try {
-    const { clientId, serviceSlug, title, description, lawyerId, assignedLawyerName } = req.body;
+    const { clientId, serviceSlug, caseType, title, description, lawyerId, assignedLawyerName } = req.body;
 
     if (!clientId || !serviceSlug || !title || !description) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Seleccione un Cliente existente, Servicio, Título y Descripción.', status: 400 },
+        error: { message: 'Seleccione un Cliente existente, Servicio médico-pericial, Título y Descripción.', status: 400 },
       });
     }
 
     const newCase = await caseRepository.createCase({
       clientId: parseInt(clientId, 10),
       serviceSlug,
+      caseType: caseType || 'Peritaje Médico General',
       title,
       description,
       lawyerId: lawyerId ? parseInt(lawyerId, 10) : null,

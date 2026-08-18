@@ -31,6 +31,7 @@ export interface LegalCase {
   clientPhone?: string;
   userId?: number | null;
   serviceSlug: string;
+  caseType?: string;
   title: string;
   description: string;
   status: 'pending' | 'in_progress' | 'closed';
@@ -45,6 +46,7 @@ export interface LegalCase {
 export interface CreateCaseFormData {
   clientId: number;
   serviceSlug: string;
+  caseType?: string;
   title: string;
   description: string;
   lawyerId?: number | null;

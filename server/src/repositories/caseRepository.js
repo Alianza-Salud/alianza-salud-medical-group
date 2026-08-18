@@ -13,6 +13,7 @@ class CaseRepository {
   async createCase({
     clientId,
     serviceSlug,
+    caseType = 'Peritaje Médico General',
     title,
     description,
     lawyerId = null,
@@ -31,8 +32,8 @@ class CaseRepository {
 
     const [result] = await pool.query(
       `INSERT INTO cases 
-       (case_code, verification_code, client_id, client_name, client_email, client_phone, service_slug, title, description, status, stage, assigned_lawyer_name, lawyer_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'Evaluación Inicial', ?, ?)`,
+       (case_code, verification_code, client_id, client_name, client_email, client_phone, service_slug, case_type, title, description, status, stage, assigned_lawyer_name, lawyer_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'Evaluación Inicial', ?, ?)`,
       [
         caseCode,
         client.verificationCode,
@@ -41,6 +42,7 @@ class CaseRepository {
         client.email,
         client.phone,
         serviceSlug,
+        caseType,
         title,
         description,
         assignedLawyerName,
@@ -92,6 +94,7 @@ class CaseRepository {
       clientPhone: caseData.client_phone,
       userId: caseData.user_id,
       serviceSlug: caseData.service_slug,
+      caseType: caseData.case_type || 'Peritaje Médico General',
       title: caseData.title,
       description: caseData.description,
       status: caseData.status,
