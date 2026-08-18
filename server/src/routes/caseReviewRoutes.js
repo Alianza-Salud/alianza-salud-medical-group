@@ -17,6 +17,7 @@ router.post('/', handleUploadIfMultipart, caseReviewController.createRequest);
 
 // Rutas administrativas protegidas (Admin, Aux. Admisiones, Peritos / Abogados)
 router.get('/', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseReviewController.getRequests);
+router.get('/:id/documents/:docIndex/download', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseReviewController.downloadDocument);
 router.patch('/:id/status', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseReviewController.updateRequestStatus);
 router.post('/:id/convert', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseReviewController.convertToCase);
 

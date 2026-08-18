@@ -84,3 +84,34 @@ export async function convertPetitionToCase(id: number): Promise<{ success: bool
   }
   return { success: false, message: 'Error al convertir la solicitud en expediente de caso.' };
 }
+
+export async function downloadPetitionDocument(petitionId: number, docIndex: number, filename: string): Promise<boolean> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE_URL}/case-reviews/${petitionId}/documents/${docIndex}/download`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      console.error('[downloadPetitionDocument Error] HTTP status:', response.status);
+      return false;
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'documento.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch (error) {
+    console.error('[caseReviewService Error] downloadPetitionDocument:', error);
+    return false;
+  }
+}

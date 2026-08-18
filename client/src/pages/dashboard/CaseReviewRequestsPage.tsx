@@ -24,6 +24,7 @@ import {
   fetchCaseReviewPetitions,
   updatePetitionStatus,
   convertPetitionToCase,
+  downloadPetitionDocument,
   type CaseReviewPetition,
 } from '../../services/caseReviewService';
 import { downloadDocument } from '../../services/caseService';
@@ -395,15 +396,13 @@ export default function CaseReviewRequestsPage() {
                           <span className="text-xs font-semibold text-gray-900 truncate">{doc.name}</span>
                         </div>
                         {doc.filePath && (
-                          <a
-                            href={`http://localhost:3001${doc.filePath}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary text-white hover:bg-primary-dark shrink-0"
-                          >
-                            <Upload className="h-3 w-3 rotate-180" /> Descargar
-                          </a>
+                        <button
+                          type="button"
+                          onClick={() => downloadPetitionDocument(selectedPetition.id, idx, doc.name)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary text-white hover:bg-primary-dark shrink-0 cursor-pointer"
+                        >
+                          <Upload className="h-3 w-3 rotate-180" /> Descargar
+                        </button>
                         )}
                       </div>
                     ))}

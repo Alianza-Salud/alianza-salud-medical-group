@@ -160,9 +160,60 @@ async function convertToCase(req, res, next) {
   }
 }
 
+async function downloadDocument(req, res, next) {
+  try {
+    const { id, docIndex } = req.params;
+    const petition = await caseReviewRepository.findById(parseInt(id, 10));
+
+    if (!petition) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Solicitud de revisión no encontrada.', status: 404 },
+      });
+    }
+
+    const idx = parseInt(docIndex, 10);
+    const doc = petition.documents && petition.documents[idx];
+
+    if (!doc) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Documento no encontrado.', status: 404 },
+      });
+    }
+
+    const filename = doc.name || `documento_${idx + 1}.pdf`;
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    if (doc.mimeType) res.setHeader('Content-Type', doc.mimeType);
+
+    // Si tiene storageKey de StorageService (Local o S3)
+    if (doc.storageKey) {
+      const stream = await storageService.getFileStream(doc.storageKey);
+      return stream.pipe(res);
+    }
+
+    // Fallback si la ruta física directa existe
+    if (doc.filePath) {
+      const path = require('path');
+      const absolutePath = path.join(__dirname, '../../', doc.filePath.replace(/^\//, ''));
+      if (fs.existsSync(absolutePath)) {
+        return res.sendFile(absolutePath);
+      }
+    }
+
+    return res.status(404).json({
+      success: false,
+      error: { message: 'El archivo físico no se encuentra disponible en el servidor.', status: 404 },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createRequest,
   getRequests,
   updateRequestStatus,
   convertToCase,
+  downloadDocument,
 };

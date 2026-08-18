@@ -26,6 +26,10 @@ class StorageService {
     return this.provider.getReadStream(storageKey);
   }
 
+  getFileStream(storageKey) {
+    return this.provider.getReadStream(storageKey);
+  }
+
   async exists(storageKey) {
     return this.provider.exists(storageKey);
   }
