@@ -11,7 +11,7 @@ async function getCases(req, res, next) {
     const { id: userId, role, email, fullName } = req.user;
 
     let cases = [];
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'auxiliar_admisiones') {
       cases = await caseRepository.findAll();
     } else if (role === 'lawyer') {
       const lawyers = await lawyerRepository.findAll();

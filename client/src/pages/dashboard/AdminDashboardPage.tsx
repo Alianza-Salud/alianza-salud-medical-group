@@ -37,7 +37,7 @@ import { fetchCaseTypes } from '../../services/caseTypeService';
 import type { CaseType } from '../../types/caseType';
 
 export default function AdminDashboardPage() {
-  usePageMeta('Gestión de Casos', 'Panel de Administración y Gestión Jurídica');
+  usePageMeta('Casos Médico-Periciales', 'Panel de Administración y Gestión Pericial');
 
   const [cases, setCases] = useState<LegalCase[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -231,9 +231,9 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Casos Jurídicos</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Casos Médico-Periciales</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Aperture casos seleccionando clientes existentes del Maestro con la lupa de búsqueda, asigne abogados y controle las etapas.
+            Aperture expedientes médico-periciales seleccionando clientes del Maestro, asigne peritos legistas y supervise las etapas del caso.
           </p>
         </div>
         <Button onClick={() => { setIsCreateModalOpen(true); setErrorMessage(null); }}>
