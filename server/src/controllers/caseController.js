@@ -196,39 +196,56 @@ async function addCaseDocument(req, res, next) {
   try {
     const { id: caseId } = req.params;
     const { name, type, description, visibleToClient } = req.body;
-    const file = req.file;
 
-    const documentName = name || (file ? file.originalname : 'Documento sin nombre');
+    const files = req.files && req.files.length > 0 ? req.files : (req.file ? [req.file] : []);
+    const isVisible = visibleToClient === true || visibleToClient === 'true' || visibleToClient === '1';
 
-    let filePath = '';
-    let originalName = '';
-    let mimeType = '';
-    let fileSize = null;
+    const createdDocs = [];
 
-    if (file) {
-      filePath = `/uploads/documents/${file.filename}`;
-      originalName = file.originalname;
-      mimeType = file.mimetype;
-      fileSize = file.size;
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const docName = files.length === 1 && name && name.trim() ? name.trim() : file.originalname;
+
+        const doc = await caseRepository.addDocument({
+          caseId: parseInt(caseId, 10),
+          name: docName,
+          type: type || 'recibido',
+          description: description || '',
+          filePath: `/uploads/documents/${file.filename}`,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedByName: req.user.fullName || 'Administración',
+          visibleToClient: isVisible,
+        });
+
+        createdDocs.push(doc);
+      }
+    } else {
+      const doc = await caseRepository.addDocument({
+        caseId: parseInt(caseId, 10),
+        name: name || 'Documento sin archivo',
+        type: type || 'recibido',
+        description: description || '',
+        filePath: '',
+        originalName: '',
+        mimeType: '',
+        fileSize: null,
+        uploadedByName: req.user.fullName || 'Administración',
+        visibleToClient: isVisible,
+      });
+      createdDocs.push(doc);
     }
 
-    const doc = await caseRepository.addDocument({
-      caseId: parseInt(caseId, 10),
-      name: documentName,
-      type: type || 'recibido',
-      description: description || '',
-      filePath,
-      originalName,
-      mimeType,
-      fileSize,
-      uploadedByName: req.user.fullName || 'Administración',
-      visibleToClient: visibleToClient === true || visibleToClient === 'true' || visibleToClient === '1',
-    });
+    const message = createdDocs.length > 1
+      ? `${createdDocs.length} documentos subidos y registrados exitosamente en el expediente.`
+      : 'Documento subido y registrado exitosamente en el expediente.';
 
     return res.status(201).json({
       success: true,
-      message: 'Documento subido y registrado exitosamente en el expediente.',
-      data: doc,
+      message,
+      data: createdDocs.length === 1 ? createdDocs[0] : createdDocs,
     });
   } catch (error) {
     next(error);

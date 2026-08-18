@@ -67,26 +67,30 @@ export async function addCaseUpdate(caseId: number, data: AddUpdateFormData): Pr
   return { success: false, message: 'Error al registrar la novedad.' };
 }
 
-export async function addCaseDocument(caseId: number, data: AddDocumentFormData): Promise<{ success: boolean; message?: string; data?: CaseDocument }> {
+export async function addCaseDocument(caseId: number, data: AddDocumentFormData): Promise<{ success: boolean; message?: string; data?: CaseDocument | CaseDocument[] }> {
   try {
     const formData = new FormData();
-    formData.append('name', data.name);
+    if (data.name) formData.append('name', data.name);
     if (data.type) formData.append('type', data.type);
     if (data.description) formData.append('description', data.description);
     formData.append('visibleToClient', String(data.visibleToClient));
 
-    if (data.file) {
+    if (data.files && data.files.length > 0) {
+      for (let i = 0; i < data.files.length; i++) {
+        formData.append('files', data.files[i]);
+      }
+    } else if (data.file) {
       formData.append('file', data.file);
     }
 
-    const res = await apiClient.upload<ApiResponse<CaseDocument>>(`/cases/${caseId}/documents`, formData);
+    const res = await apiClient.upload<ApiResponse<CaseDocument | CaseDocument[]>>(`/cases/${caseId}/documents`, formData);
     if (res.ok && res.data && res.data.success) {
       return { success: true, message: res.data.message, data: res.data.data };
     }
   } catch (error) {
     console.error('[CaseService Error] addCaseDocument:', error);
   }
-  return { success: false, message: 'Error al adjuntar el documento.' };
+  return { success: false, message: 'Error al adjuntar los documentos.' };
 }
 
 export async function updateCaseLawyers(caseId: number, lawyerIds: number[]): Promise<{ success: boolean; message?: string; data?: LegalCase }> {

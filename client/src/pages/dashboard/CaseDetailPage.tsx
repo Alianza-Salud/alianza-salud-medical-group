@@ -57,6 +57,7 @@ export default function CaseDetailPage() {
   const [docDescription, setDocDescription] = useState('');
   const [docVisibleToClient, setDocVisibleToClient] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAddingDoc, setIsAddingDoc] = useState(false);
 
   // Formulario Novedad
@@ -131,31 +132,31 @@ export default function CaseDetailPage() {
 
   const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!caseData || (!docName.trim() && !selectedFile)) return;
+    if (!caseData || (!docName.trim() && selectedFiles.length === 0)) return;
 
     setIsAddingDoc(true);
     setAlertMsg(null);
 
     const res = await addCaseDocument(caseData.id, {
-      name: docName || selectedFile?.name || 'Documento Adjunto',
+      name: docName,
       type: docType,
       description: docDescription,
       visibleToClient: docVisibleToClient,
-      file: selectedFile || undefined,
+      files: selectedFiles.length > 0 ? selectedFiles : undefined,
     });
 
     setIsAddingDoc(false);
 
     if (res.success) {
-      setAlertMsg({ type: 'success', message: 'Documento subido exitosamente al expediente.' });
+      setAlertMsg({ type: 'success', message: res.message || 'Documento(s) subido(s) exitosamente al expediente.' });
       setDocName('');
       setDocDescription('');
       setDocVisibleToClient(false);
-      setSelectedFile(null);
+      setSelectedFiles([]);
       setShowDocForm(false);
       loadCase();
     } else {
-      setAlertMsg({ type: 'error', message: res.message || 'Error al adjuntar documento.' });
+      setAlertMsg({ type: 'error', message: res.message || 'Error al adjuntar documento(s).' });
     }
   };
 
@@ -439,23 +440,35 @@ export default function CaseDetailPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Anexar Archivo Real (.pdf, .docx, .txt, .png, etc.)</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Anexar Archivo(s) Real(es) (.pdf, .docx, .txt, .png, etc.) — Puede seleccionar varios archivos a la vez
+                    </label>
                     <input
                       type="file"
+                      multiple
                       accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip"
                       onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setSelectedFile(file);
-                          if (!docName) setDocName(file.name);
+                        const files = e.target.files ? Array.from(e.target.files) : [];
+                        setSelectedFiles(files);
+                        if (files.length === 1 && !docName) {
+                          setDocName(files[0].name);
                         }
                       }}
                       className="w-full text-xs text-gray-600 border border-gray-300 rounded-lg p-2 bg-white cursor-pointer"
                     />
-                    {selectedFile && (
-                      <p className="text-[11px] text-emerald-700 font-semibold mt-1">
-                        Archivo seleccionado: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                      </p>
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-2 space-y-1 p-2.5 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <p className="text-[11px] font-bold text-emerald-900">
+                          {selectedFiles.length} {selectedFiles.length === 1 ? 'archivo seleccionado' : 'archivos seleccionados para subida múltiple'}:
+                        </p>
+                        <ul className="list-disc list-inside text-[11px] text-emerald-800 space-y-0.5 max-h-24 overflow-y-auto">
+                          {selectedFiles.map((f, i) => (
+                            <li key={i} className="truncate">
+                              <span className="font-semibold">{f.name}</span> ({(f.size / 1024).toFixed(1)} KB)
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
 
@@ -652,7 +665,7 @@ export default function CaseDetailPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Etapas cumplidas marcadas en verde.
+                Etapas generales que sigue un caso.
               </p>
             </CardHeader>
 
