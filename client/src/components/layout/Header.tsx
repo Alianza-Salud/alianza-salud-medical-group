@@ -63,12 +63,9 @@ export function Header() {
                     Ir al Panel
                   </Button>
                 </Link>
-                <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700">
-                  <UserIcon className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{user.fullName.split(' ')[0]}</span>
-                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary uppercase">
-                    {user.role}
-                  </span>
+                <div className="flex items-center gap-2 rounded-full bg-gray-100/90 border border-gray-200 px-3.5 py-1.5 text-sm text-gray-800 shadow-2xs">
+                  <UserIcon className="h-4 w-4 text-primary shrink-0" />
+                  <span className="font-semibold">{user.fullName}</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout} title="Cerrar Sesión">
                   <LogOut className="h-4 w-4 text-red-600" />
@@ -123,6 +120,12 @@ export function Header() {
               <div className="mt-4 px-4">
                 {isAuthenticated && user ? (
                   <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-200">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0">
+                        <UserIcon className="h-4 w-4" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 truncate">{user.fullName}</span>
+                    </div>
                     <Link to={dashboardTarget} onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="primary" size="sm" fullWidth>
                         <LayoutDashboard className="h-4 w-4" />
