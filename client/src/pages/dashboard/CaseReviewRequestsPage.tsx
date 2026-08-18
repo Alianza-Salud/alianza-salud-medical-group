@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   X,
   Save,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import {
@@ -27,9 +29,10 @@ import {
   downloadPetitionDocument,
   type CaseReviewPetition,
 } from '../../services/caseReviewService';
-import { downloadDocument } from '../../services/caseService';
+import { fetchClients } from '../../services/clientService';
+import type { Client } from '../../types/client';
 import { Button } from '../../components/ui/Button';
-import { Card, CardContent } from '../../components/ui/Card';
+import { Card } from '../../components/ui/Card';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { Alert } from '../../components/ui/Alert';
 
@@ -47,6 +50,19 @@ export default function CaseReviewRequestsPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Modal Sub-diálogo de Conversión (Crear o Seleccionar Cliente)
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [existingClients, setExistingClients] = useState<Client[]>([]);
+  const [conversionMode, setConversionMode] = useState<'create' | 'existing'>('create');
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [newClientData, setNewClientData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    documentId: '',
+    address: '',
+  });
 
   const loadData = async () => {
     setIsLoading(true);
@@ -82,15 +98,58 @@ export default function CaseReviewRequestsPage() {
     }
   };
 
-  const handleConvert = async () => {
+  const openConvertModal = async () => {
     if (!selectedPetition) return;
-    if (!window.confirm(`¿Desea convertir la solicitud de ${selectedPetition.fullName} en un nuevo Expediente de Caso oficial?`)) return;
+    setNewClientData({
+      fullName: selectedPetition.fullName,
+      email: selectedPetition.email,
+      phone: selectedPetition.phone,
+      documentId: '',
+      address: '',
+    });
+    setConversionMode('create');
+    setSelectedClientId(null);
+
+    // Cargar lista de clientes existentes del Maestro
+    const clients = await fetchClients();
+    setExistingClients(clients);
+    if (clients.length > 0) {
+      // Si el correo ya coincide con un cliente existente, pre-seleccionarlo
+      const match = clients.find((c) => c.email.toLowerCase() === selectedPetition.email.toLowerCase());
+      if (match) {
+        setConversionMode('existing');
+        setSelectedClientId(match.id);
+      }
+    }
+    setIsConvertModalOpen(true);
+  };
+
+  const handleConfirmConversion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPetition) return;
+
+    let payload: { clientId?: number; clientData?: typeof newClientData } = {};
+
+    if (conversionMode === 'existing') {
+      if (!selectedClientId) {
+        alert('Debe seleccionar un cliente existente de la lista.');
+        return;
+      }
+      payload.clientId = selectedClientId;
+    } else {
+      if (!newClientData.fullName.trim() || !newClientData.email.trim()) {
+        alert('Por favor complete el nombre y correo del nuevo cliente.');
+        return;
+      }
+      payload.clientData = newClientData;
+    }
 
     setIsUpdatingStatus(true);
     setAlertMsg(null);
 
-    const res = await convertPetitionToCase(selectedPetition.id);
+    const res = await convertPetitionToCase(selectedPetition.id, payload);
     setIsUpdatingStatus(false);
+    setIsConvertModalOpen(false);
 
     if (res.success && res.caseId) {
       alert(`¡Expediente de Caso #${res.caseId} aperturado exitosamente! Se han vinculado los datos y documentos adjuntos.`);
@@ -310,7 +369,7 @@ export default function CaseReviewRequestsPage() {
         </div>
       )}
 
-      {/* Modal de Detalle y Gestión del Lead */}
+      {/* Modal Principal de Detalle y Gestión del Lead */}
       {selectedPetition && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
           <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
@@ -326,7 +385,7 @@ export default function CaseReviewRequestsPage() {
               </div>
               <button
                 onClick={() => setSelectedPetition(null)}
-                className="rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -395,7 +454,6 @@ export default function CaseReviewRequestsPage() {
                           <FileText className="h-4 w-4 text-primary shrink-0" />
                           <span className="text-xs font-semibold text-gray-900 truncate">{doc.name}</span>
                         </div>
-                        {doc.filePath && (
                         <button
                           type="button"
                           onClick={() => downloadPetitionDocument(selectedPetition.id, idx, doc.name)}
@@ -403,7 +461,6 @@ export default function CaseReviewRequestsPage() {
                         >
                           <Upload className="h-3 w-3 rotate-180" /> Descargar
                         </button>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -465,7 +522,7 @@ export default function CaseReviewRequestsPage() {
 
                   {selectedPetition.status !== 'converted' && (
                     <Button
-                      onClick={handleConvert}
+                      onClick={openConvertModal}
                       size="sm"
                       disabled={isUpdatingStatus}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
@@ -477,6 +534,194 @@ export default function CaseReviewRequestsPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-modal de Conversión (Crear o Seleccionar Cliente) */}
+      {isConvertModalOpen && selectedPetition && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-gradient-to-r from-slate-900 to-primary-dark p-5 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <FolderPlus className="h-5 w-5 text-emerald-400" />
+                  Convertir Solicitud a Expediente de Caso
+                </h3>
+                <p className="text-xs text-slate-200 mt-0.5">
+                  Asigne o cree el cliente para la apertura del expediente en MySQL.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsConvertModalOpen(false)}
+                className="rounded-full p-1 text-white/80 hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmConversion} className="p-6 space-y-5">
+              {/* Opciones de Selección de Cliente */}
+              <div>
+                <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
+                  Selección de Cliente
+                </label>
+                
+                <div className="grid gap-3">
+                  <label
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border transition-colors cursor-pointer ${
+                      conversionMode === 'create'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="conversionMode"
+                      checked={conversionMode === 'create'}
+                      onChange={() => setConversionMode('create')}
+                      className="mt-0.5 text-primary focus:ring-primary"
+                    />
+                    <div>
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-gray-900">
+                        <UserPlus className="h-4 w-4 text-primary" />
+                        Crear un NUEVO Cliente en el Maestro
+                      </span>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Registrar al cliente con los datos de contacto enviados en la solicitud de revisión.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border transition-colors cursor-pointer ${
+                      conversionMode === 'existing'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="conversionMode"
+                      checked={conversionMode === 'existing'}
+                      onChange={() => setConversionMode('existing')}
+                      className="mt-0.5 text-primary focus:ring-primary"
+                    />
+                    <div>
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-gray-900">
+                        <Users className="h-4 w-4 text-primary" />
+                        Seleccionar un Cliente EXISTENTE del Maestro ({existingClients.length})
+                      </span>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Vincular el expediente a un cliente ya registrado previamente en el sistema.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Formulario Modo Crear Nuevo Cliente */}
+              {conversionMode === 'create' && (
+                <div className="space-y-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Nombre Completo del Cliente *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newClientData.fullName}
+                      onChange={(e) => setNewClientData({ ...newClientData, fullName: e.target.value })}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary focus:outline-none bg-white"
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico *</label>
+                      <input
+                        type="email"
+                        required
+                        value={newClientData.email}
+                        onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono / WhatsApp *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newClientData.phone}
+                        onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary focus:outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Número de Cédula / Documento</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 1020304050"
+                        value={newClientData.documentId}
+                        onChange={(e) => setNewClientData({ ...newClientData, documentId: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Dirección / Ciudad</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Medellín, Antioquia"
+                        value={newClientData.address}
+                        onChange={(e) => setNewClientData({ ...newClientData, address: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs focus:border-primary focus:outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Formulario Modo Seleccionar Cliente Existente */}
+              {conversionMode === 'existing' && (
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Seleccionar Cliente Registrado *
+                  </label>
+                  {existingClients.length === 0 ? (
+                    <p className="text-xs text-amber-700 font-medium">
+                      No hay clientes registrados en el Maestro. Por favor elija la opción de crear cliente nuevo.
+                    </p>
+                  ) : (
+                    <select
+                      value={selectedClientId || ''}
+                      onChange={(e) => setSelectedClientId(Number(e.target.value))}
+                      required
+                      className="w-full rounded-lg border border-gray-300 p-2.5 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                    >
+                      <option value="">-- Seleccione un cliente del listado --</option>
+                      {existingClients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.fullName} ({c.email}) {c.documentId ? `- Cédula: ${c.documentId}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Acciones Modal */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-200">
+                <Button variant="outline" size="sm" type="button" onClick={() => setIsConvertModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button size="sm" type="submit" disabled={isUpdatingStatus} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                  {isUpdatingStatus ? 'Creando Expediente...' : 'Confirmar & Aperturar Caso'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

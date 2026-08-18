@@ -69,9 +69,15 @@ export async function updatePetitionStatus(
   return { success: false, message: 'Error al actualizar el estado de la solicitud.' };
 }
 
-export async function convertPetitionToCase(id: number): Promise<{ success: boolean; message?: string; caseId?: number }> {
+export async function convertPetitionToCase(
+  id: number,
+  payload?: {
+    clientId?: number;
+    clientData?: { fullName: string; email: string; phone: string; documentId?: string; address?: string };
+  }
+): Promise<{ success: boolean; message?: string; caseId?: number }> {
   try {
-    const res = await apiClient.post<ApiResponse<{ caseId: number }>>(`/case-reviews/${id}/convert`, {});
+    const res = await apiClient.post<ApiResponse<{ caseId: number }>>(`/case-reviews/${id}/convert`, payload || {});
     if (res.ok && res.data && res.data.success) {
       return {
         success: true,

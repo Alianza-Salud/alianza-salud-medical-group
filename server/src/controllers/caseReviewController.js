@@ -96,6 +96,7 @@ async function updateRequestStatus(req, res, next) {
 async function convertToCase(req, res, next) {
   try {
     const { id } = req.params;
+    const { clientId, clientData } = req.body || {};
     const petition = await caseReviewRepository.findById(parseInt(id, 10));
 
     if (!petition) {
@@ -105,21 +106,41 @@ async function convertToCase(req, res, next) {
       });
     }
 
-    // 1. Buscar o crear el cliente en el Maestro de Clientes
-    let client = await clientRepository.findByEmail(petition.email);
-    if (!client) {
-      client = await clientRepository.create({
-        fullName: petition.fullName,
-        email: petition.email,
-        phone: petition.phone,
-        notes: `Cliente registrado automáticamente a partir de la Solicitud de Revisión #${petition.id}`,
-      });
+    let client = null;
+
+    // Opción A: Se seleccionó un cliente existente del Maestro
+    if (clientId) {
+      client = await clientRepository.findById(parseInt(clientId, 10));
+      if (!client) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'El cliente seleccionado no existe en el Maestro de Clientes.', status: 404 },
+        });
+      }
+    } else {
+      // Opción B: Crear un nuevo cliente o buscarlo si el correo ya existe
+      const nameToUse = (clientData && clientData.fullName) || petition.fullName;
+      const emailToUse = (clientData && clientData.email) || petition.email;
+      const phoneToUse = (clientData && clientData.phone) || petition.phone;
+      const docIdToUse = (clientData && clientData.documentId) || '';
+      const addressToUse = (clientData && clientData.address) || '';
+
+      client = await clientRepository.findByEmail(emailToUse);
+      if (!client) {
+        client = await clientRepository.create({
+          fullName: nameToUse,
+          email: emailToUse,
+          phone: phoneToUse,
+          documentId: docIdToUse,
+          address: addressToUse,
+        });
+      }
     }
 
     // 2. Crear el Expediente de Caso en MySQL
     const newCase = await caseRepository.createCase({
       clientId: client.id,
-      title: `${petition.caseType} — ${petition.fullName}`,
+      title: `${petition.caseType} — ${client.fullName}`,
       caseType: petition.caseType,
       serviceSlug: 'pclo-dictamen',
       description: petition.description || 'Expediente aperturado desde Solicitud de Revisión Preliminar.',
@@ -145,7 +166,7 @@ async function convertToCase(req, res, next) {
     }
 
     // 4. Marcar la solicitud como convertida
-    await caseReviewRepository.updateStatus(petition.id, 'converted', `Convertido a Expediente Caso #${newCase.id} por ${req.user.fullName}`);
+    await caseReviewRepository.updateStatus(petition.id, 'converted', `Convertido a Expediente Caso #${newCase.id} (Cliente: ${client.fullName}) por ${req.user.fullName}`);
 
     return res.json({
       success: true,
@@ -153,6 +174,7 @@ async function convertToCase(req, res, next) {
       data: {
         caseId: newCase.id,
         clientId: client.id,
+        clientName: client.fullName,
       },
     });
   } catch (error) {
