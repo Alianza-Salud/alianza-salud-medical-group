@@ -398,10 +398,10 @@ export default function AppointmentsManagerPage() {
         <LoadingSpinner size="lg" text="Cargando agendamiento de citas..." />
       ) : viewMode === 'calendar' ? (
         /* VISTA CALENDARIO MENSUAL INTERACTIVO */
-        <Card className="p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">
+        <Card className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-3 sm:pb-4">
+            <div className="flex items-center justify-between sm:justify-start gap-3">
+              <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight">
                 {monthNames[month]} {year}
               </h2>
               <button
@@ -412,25 +412,26 @@ export default function AppointmentsManagerPage() {
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2">
               <Button variant="outline" size="sm" onClick={prevMonth}>
-                <ChevronLeft className="h-4 w-4" /> Anterior
+                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Anterior</span>
               </Button>
               <Button variant="outline" size="sm" onClick={nextMonth}>
-                Siguiente <ChevronRight className="h-4 w-4" />
+                <span className="hidden sm:inline">Siguiente</span> <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((dayName) => (
-              <div key={dayName} className="text-center text-xs font-bold text-gray-500 uppercase tracking-wider py-2">
-                {dayName}
+              <div key={dayName} className="text-center text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider py-1.5">
+                <span className="sm:hidden">{dayName.substring(0, 1)}</span>
+                <span className="hidden sm:inline">{dayName}</span>
               </div>
             ))}
 
             {Array.from({ length: startingDayOfWeek }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[100px] rounded-xl bg-gray-50/50 border border-transparent" />
+              <div key={`empty-${i}`} className="min-h-[50px] sm:min-h-[110px] rounded-lg sm:rounded-xl bg-gray-50/40 border border-transparent" />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -447,28 +448,40 @@ export default function AppointmentsManagerPage() {
                   key={dateStr}
                   onDoubleClick={() => handleDayClick(dateStr)}
                   onClick={() => handleDayClick(dateStr)}
-                  className={`group relative min-h-[110px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`group relative min-h-[52px] sm:min-h-[110px] p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                     isToday
                       ? 'border-2 border-primary bg-primary/5 shadow-sm'
+                      : dayApps.length > 0
+                      ? 'border-blue-200 bg-blue-50/20 sm:bg-white hover:border-primary/50 hover:shadow-md'
                       : 'border-gray-200 bg-white hover:border-primary/50 hover:shadow-md'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[11px] sm:text-xs font-bold ${
                         isToday ? 'bg-primary text-white' : 'text-gray-700'
                       }`}
                     >
                       {dayNum}
                     </span>
+
+                    {/* Badge contador en pantallas medianas/grandes */}
                     {dayApps.length > 0 && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-primary/20 text-primary font-mono text-[10px] font-extrabold px-1.5 py-0.5">
+                      <span className="hidden sm:inline-flex items-center justify-center rounded-full bg-primary/20 text-primary font-mono text-[10px] font-extrabold px-1.5 py-0.5">
                         {dayApps.length} {dayApps.length === 1 ? 'cita' : 'citas'}
+                      </span>
+                    )}
+
+                    {/* Badge circular en pantallas móviles */}
+                    {dayApps.length > 0 && (
+                      <span className="sm:hidden flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-primary text-white font-mono text-[9px] font-extrabold">
+                        {dayApps.length}
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-1 space-y-1 overflow-hidden flex-1">
+                  {/* Vista previa compacta en pantallas grandes (Desktop) */}
+                  <div className="hidden sm:block mt-1 space-y-1 overflow-hidden flex-1">
                     {dayApps.slice(0, 2).map((app) => (
                       <div
                         key={app.id}
@@ -494,7 +507,27 @@ export default function AppointmentsManagerPage() {
                     )}
                   </div>
 
-                  <p className="text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity text-center mt-1">
+                  {/* Indicadores visuales por puntos en móvil */}
+                  {dayApps.length > 0 && (
+                    <div className="sm:hidden flex items-center justify-center gap-0.5 mt-0.5">
+                      {dayApps.slice(0, 3).map((app, idx) => (
+                        <span
+                          key={idx}
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            app.status === 'approved'
+                              ? 'bg-green-500'
+                              : app.status === 'case_created'
+                              ? 'bg-purple-500'
+                              : app.status === 'rejected'
+                              ? 'bg-red-500'
+                              : 'bg-amber-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="hidden sm:block text-[9px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity text-center mt-1">
                     Clic para detalle
                   </p>
                 </div>
