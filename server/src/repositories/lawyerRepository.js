@@ -15,6 +15,8 @@ class LawyerRepository {
       phone: r.phone || '',
       specialty: r.specialty,
       roleType: r.role_type,
+      userId: r.user_id,
+      isRegistered: Boolean(r.user_id),
       isActive: Boolean(r.is_active),
       createdAt: r.created_at,
     }));
@@ -32,6 +34,8 @@ class LawyerRepository {
       phone: r.phone || '',
       specialty: r.specialty,
       roleType: r.role_type,
+      userId: r.user_id,
+      isRegistered: Boolean(r.user_id),
       isActive: Boolean(r.is_active),
       createdAt: r.created_at,
     };
@@ -55,6 +59,12 @@ class LawyerRepository {
       [fullName, email, phone, specialty, roleType, isActive ? 1 : 0, id]
     );
     return this.findById(id);
+  }
+
+  async linkUserId(lawyerId, userId) {
+    if (!pool) return false;
+    await pool.query('UPDATE lawyers SET user_id = ? WHERE id = ?', [userId, lawyerId]);
+    return true;
   }
 }
 

@@ -24,11 +24,42 @@ async function getUsers(req, res, next) {
   }
 }
 
+const clientRepository = require('../repositories/clientRepository');
+const lawyerRepository = require('../repositories/lawyerRepository');
+
 async function createUser(req, res, next) {
   try {
-    const { fullName, email, password, role = 'client', phone = '' } = req.body;
+    const { fullName, email, password, role = 'client', phone = '', clientId, lawyerId } = req.body;
     if (!fullName || !email || !password) {
       return res.status(400).json({ success: false, error: { message: 'Nombre, correo y contraseña son obligatorios.', status: 400 } });
+    }
+
+    // Verificar si el correo electrónico ya existe en usuarios
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: { message: 'El correo electrónico ya está registrado en la plataforma.', status: 400 } });
+    }
+
+    // Si se crea cuenta para un Cliente del Maestro
+    if (role === 'client' && clientId) {
+      const client = await clientRepository.findById(parseInt(clientId, 10));
+      if (!client) {
+        return res.status(404).json({ success: false, error: { message: 'Cliente no encontrado en el Maestro.', status: 404 } });
+      }
+      if (client.userId) {
+        return res.status(400).json({ success: false, error: { message: 'El cliente seleccionado ya cuenta con un usuario registrado.', status: 400 } });
+      }
+    }
+
+    // Si se crea cuenta para un Especialista del Maestro
+    if (role === 'lawyer' && lawyerId) {
+      const lawyer = await lawyerRepository.findById(parseInt(lawyerId, 10));
+      if (!lawyer) {
+        return res.status(404).json({ success: false, error: { message: 'Especialista no encontrado en el Maestro.', status: 404 } });
+      }
+      if (lawyer.userId) {
+        return res.status(400).json({ success: false, error: { message: 'El especialista seleccionado ya cuenta con un usuario registrado.', status: 400 } });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -39,10 +70,20 @@ async function createUser(req, res, next) {
       [fullName, email, passwordHash, role, phone]
     );
 
+    const newUserId = result.insertId;
+
+    if (role === 'client' && clientId) {
+      await clientRepository.linkUserId(parseInt(clientId, 10), newUserId);
+    }
+
+    if (role === 'lawyer' && lawyerId) {
+      await lawyerRepository.linkUserId(parseInt(lawyerId, 10), newUserId);
+    }
+
     return res.status(201).json({
       success: true,
-      message: 'Usuario creado exitosamente.',
-      data: { id: result.insertId, fullName, email, role, phone, isActive: true },
+      message: 'Usuario creado y vinculado exitosamente al Maestro.',
+      data: { id: newUserId, fullName, email, role, phone, isActive: true },
     });
   } catch (error) {
     next(error);
