@@ -5,7 +5,7 @@ const { authenticateToken, requireRole } = require('../middlewares/authMiddlewar
 
 router.post('/', contactController.createContactMessage);
 
-router.get('/', authenticateToken, requireRole('admin', 'lawyer'), contactController.getMessages);
-router.patch('/:id/read', authenticateToken, requireRole('admin', 'lawyer'), contactController.markAsRead);
+router.get('/', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), contactController.getMessages);
+router.patch('/:id/read', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), contactController.markAsRead);
 
 module.exports = router;

@@ -29,7 +29,7 @@ export function DashboardLayout() {
   });
 
   const loadStats = async () => {
-    if (user?.role === 'admin' || user?.role === 'lawyer') {
+    if (user?.role === 'admin' || user?.role === 'lawyer' || user?.role === 'auxiliar_admisiones') {
       const data = await fetchDashboardStats();
       setStats(data);
     }
@@ -160,8 +160,10 @@ export function DashboardLayout() {
               <span className="mt-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary capitalize">
                 {user?.role === 'admin'
                   ? 'Administrador'
+                  : user?.role === 'auxiliar_admisiones'
+                  ? 'Auxiliar de Admisiones'
                   : user?.role === 'lawyer'
-                  ? 'Abogado'
+                  ? 'Abogado / Especialista'
                   : 'Cliente'}
               </span>
             </div>

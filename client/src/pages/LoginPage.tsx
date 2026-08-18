@@ -29,7 +29,7 @@ export default function LoginPage() {
   // Redirección inteligente según el rol al estar autenticado
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === 'admin' || user.role === 'lawyer') {
+      if (user.role === 'admin' || user.role === 'lawyer' || user.role === 'auxiliar_admisiones') {
         navigate('/dashboard', { replace: true });
       } else {
         navigate('/dashboard/cliente', { replace: true });

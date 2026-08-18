@@ -20,7 +20,7 @@ export function Header() {
     return location.pathname.startsWith(href);
   };
 
-  const dashboardTarget = user?.role === 'admin' || user?.role === 'lawyer' ? '/dashboard' : '/dashboard/cliente';
+  const dashboardTarget = user?.role === 'admin' || user?.role === 'lawyer' || user?.role === 'auxiliar_admisiones' ? '/dashboard' : '/dashboard/cliente';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">

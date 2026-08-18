@@ -3,7 +3,7 @@ const router = express.Router();
 const clientController = require('../controllers/clientController');
 const { authenticateToken, requireRole } = require('../middlewares/authMiddleware');
 
-router.use(authenticateToken, requireRole('admin', 'lawyer'));
+router.use(authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'));
 
 router.get('/', clientController.getClients);
 router.get('/:id', clientController.getClientById);

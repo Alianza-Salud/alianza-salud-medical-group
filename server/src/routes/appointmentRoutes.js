@@ -7,8 +7,8 @@ const { authenticateToken, requireRole } = require('../middlewares/authMiddlewar
 router.get('/availability', appointmentController.getAvailability);
 router.post('/', appointmentController.createAppointment);
 
-// Rutas privadas para administración y expertos
-router.get('/', authenticateToken, requireRole('admin', 'lawyer'), appointmentController.getAppointments);
-router.patch('/:id/status', authenticateToken, requireRole('admin', 'lawyer'), appointmentController.updateStatus);
+// Rutas privadas para administración, auxiliares y expertos
+router.get('/', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), appointmentController.getAppointments);
+router.patch('/:id/status', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), appointmentController.updateStatus);
 
 module.exports = router;
