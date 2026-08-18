@@ -25,6 +25,7 @@ import {
   addCaseUpdate,
   addCaseDocument,
   updateCaseLawyers,
+  toggleDocumentVisibility,
 } from '../../services/caseService';
 import { fetchLawyers } from '../../services/lawyerService';
 import type { Lawyer } from '../../types/lawyer';
@@ -157,6 +158,20 @@ export default function CaseDetailPage() {
       loadCase();
     } else {
       setAlertMsg({ type: 'error', message: res.message || 'Error al adjuntar documento(s).' });
+    }
+  };
+
+  const handleToggleDocumentVisibility = async (docId: number, newVisibility: boolean) => {
+    setAlertMsg(null);
+    const res = await toggleDocumentVisibility(docId, newVisibility);
+    if (res.success) {
+      setAlertMsg({
+        type: 'success',
+        message: res.message || `Visibilidad del documento ${newVisibility ? 'activada' : 'desactivada'} para el cliente.`,
+      });
+      loadCase();
+    } else {
+      setAlertMsg({ type: 'error', message: res.message || 'Error al cambiar la visibilidad del documento.' });
     }
   };
 
@@ -540,13 +555,33 @@ export default function CaseDetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        {doc.visibleToClient ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <Eye className="h-3.5 w-3.5 text-emerald-600" /> Visible Cliente
-                          </span>
+                        {isStaff ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleDocumentVisibility(doc.id, !doc.visibleToClient)}
+                            title={doc.visibleToClient ? 'Hacer clic para ocultar al cliente' : 'Hacer clic para hacer visible al cliente'}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs',
+                              doc.visibleToClient
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200'
+                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                            )}
+                          >
+                            {doc.visibleToClient ? (
+                              <>
+                                <Eye className="h-3.5 w-3.5 text-emerald-700" />
+                                <span>Visible Cliente</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="h-3.5 w-3.5 text-gray-500" />
+                                <span>Oculto Cliente</span>
+                              </>
+                            )}
+                          </button>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                            <EyeOff className="h-3.5 w-3.5 text-gray-400" /> Privado / Interno
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Eye className="h-3.5 w-3.5 text-emerald-600" /> Visible Cliente
                           </span>
                         )}
 

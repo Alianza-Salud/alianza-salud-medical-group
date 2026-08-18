@@ -15,6 +15,7 @@ router.post('/:id/updates', requireRole('admin', 'auxiliar_admisiones', 'lawyer'
 
 router.get('/:id/documents', caseController.getCaseDocuments);
 router.post('/:id/documents', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), upload.any(), caseController.addCaseDocument);
+router.patch('/documents/:docId/visibility', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.updateDocumentVisibility);
 router.put('/:id/lawyers', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.updateCaseLawyers);
 
 module.exports = router;

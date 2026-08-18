@@ -266,6 +266,31 @@ async function getCaseDocuments(req, res, next) {
   }
 }
 
+async function updateDocumentVisibility(req, res, next) {
+  try {
+    const { docId } = req.params;
+    const { visibleToClient } = req.body;
+
+    if (visibleToClient === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Indique el estado de visibilidad para el cliente (visibleToClient).', status: 400 },
+      });
+    }
+
+    const isVisible = visibleToClient === true || visibleToClient === 'true' || visibleToClient === '1' || visibleToClient === 1;
+    await caseRepository.updateDocumentVisibility(parseInt(docId, 10), isVisible);
+
+    return res.json({
+      success: true,
+      message: `Visibilidad del documento ${isVisible ? 'activada' : 'desactivada'} para el cliente.`,
+      data: { id: parseInt(docId, 10), visibleToClient: isVisible },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getCases,
   getCaseById,
@@ -275,4 +300,5 @@ module.exports = {
   addCaseDocument,
   getCaseDocuments,
   updateCaseLawyers,
+  updateDocumentVisibility,
 };

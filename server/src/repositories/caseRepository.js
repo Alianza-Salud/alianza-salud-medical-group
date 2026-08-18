@@ -237,6 +237,18 @@ class CaseRepository {
   }
 
   /**
+   * Actualizar visibilidad de un documento para el cliente.
+   */
+  async updateDocumentVisibility(docId, visibleToClient) {
+    if (!pool) return false;
+    await pool.query('UPDATE documents SET visible_to_client = ? WHERE id = ?', [
+      visibleToClient ? 1 : 0,
+      docId,
+    ]);
+    return true;
+  }
+
+  /**
    * Obtener todos los casos.
    */
   async findAll() {

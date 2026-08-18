@@ -104,3 +104,15 @@ export async function updateCaseLawyers(caseId: number, lawyerIds: number[]): Pr
   }
   return { success: false, message: 'Error al actualizar especialistas asignados.' };
 }
+
+export async function toggleDocumentVisibility(docId: number, visibleToClient: boolean): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await apiClient.patch<ApiResponse<{ id: number; visibleToClient: boolean }>>(`/cases/documents/${docId}/visibility`, { visibleToClient });
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] toggleDocumentVisibility:', error);
+  }
+  return { success: false, message: 'Error al cambiar la visibilidad del documento.' };
+}
