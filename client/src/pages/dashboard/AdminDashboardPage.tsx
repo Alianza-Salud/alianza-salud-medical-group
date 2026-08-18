@@ -101,8 +101,11 @@ export default function AdminDashboardPage() {
     setDashboardStats(statsData);
     setCaseTypes(caseTypesData);
 
-    if (caseTypesData.length > 0 && !newCaseData.caseType) {
-      setNewCaseData((prev) => ({ ...prev, caseType: caseTypesData[0].name }));
+    if (caseTypesData.length > 0) {
+      const exists = caseTypesData.some((t) => t.name === newCaseData.caseType);
+      if (!exists) {
+        setNewCaseData((prev) => ({ ...prev, caseType: caseTypesData[0].name }));
+      }
     }
     if (clientsData.length > 0 && newCaseData.clientId === 0) {
       setNewCaseData((prev) => ({ ...prev, clientId: clientsData[0].id }));
@@ -491,11 +494,15 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setNewCaseData({ ...newCaseData, caseType: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
                   >
-                    {caseTypes.map((t) => (
-                      <option key={t.id} value={t.name}>
-                        {t.name}
-                      </option>
-                    ))}
+                    {caseTypes.length === 0 ? (
+                      <option value="">Cargando tipos de caso...</option>
+                    ) : (
+                      caseTypes.map((t) => (
+                        <option key={t.id} value={t.name}>
+                          {t.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
