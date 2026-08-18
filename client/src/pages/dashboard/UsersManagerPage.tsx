@@ -231,18 +231,6 @@ export default function UsersManagerPage() {
   // Clientes y Especialistas sin usuario registrado
   const availableClients = masterClients.filter((c) => !c.userId && !c.isRegistered);
   const availableLawyers = masterLawyers.filter((l) => !l.userId && !l.isRegistered);
-      if (res.ok && res.data && res.data.success) {
-        setIsCreateModalOpen(false);
-        setCreateFormData({ fullName: '', email: '', password: '', role: 'lawyer', phone: '' });
-        loadData();
-      } else {
-        setErrorMessage(res.data?.message || 'Error al crear la cuenta de usuario.');
-      }
-    } catch (err) {
-      setErrorMessage('Error de servidor al crear la cuenta.');
-    }
-    setIsSubmitting(false);
-  };
 
   const toggleUserStatus = async (u: User) => {
     await updateUser(u.id, { isActive: !u.isActive });
