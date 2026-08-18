@@ -63,3 +63,24 @@ export async function updateSiteInfo(
   }
   return { success: false, message: 'Error al guardar la configuración del sitio.' };
 }
+
+export async function uploadVisualResourceImage(
+  file: File
+): Promise<{ success: boolean; message?: string; data?: { imageUrl: string; siteInfo: SiteInfoData } }> {
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res = await apiClient.upload<ApiResponse<{ imageUrl: string; siteInfo: SiteInfoData }>>('/site-info/upload-visual-resource', formData);
+    if (res.ok && res.data && res.data.success) {
+      return {
+        success: true,
+        message: res.data.message || 'Imagen subida exitosamente.',
+        data: res.data.data,
+      };
+    }
+  } catch (error) {
+    console.error('[siteInfoService Error] uploadVisualResourceImage:', error);
+  }
+  return { success: false, message: 'Error al subir la imagen del recurso visual.' };
+}

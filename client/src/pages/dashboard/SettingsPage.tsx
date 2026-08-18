@@ -20,9 +20,10 @@ import {
   Trash2,
   X,
   Check,
+  Upload,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { fetchSiteInfo, updateSiteInfo, type SiteInfoData } from '../../services/siteInfoService';
+import { fetchSiteInfo, updateSiteInfo, uploadVisualResourceImage, type SiteInfoData } from '../../services/siteInfoService';
 import {
   fetchCaseTypes,
   createCaseType,
@@ -56,8 +57,30 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'general' | 'about' | 'case-types'>('general');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleVisualImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+
+    const res = await uploadVisualResourceImage(file);
+    setIsUploadingImage(false);
+
+    if (res.success && res.data) {
+      setFormData((prev) => ({
+        ...prev,
+        visual_resource: res.data!.imageUrl,
+      }));
+      setSuccessMessage('Imagen del recurso visual institucional subida y proyectada exitosamente.');
+    } else {
+      setErrorMessage(res.message || 'Error al subir la imagen del recurso visual.');
+    }
+  };
 
   // Estado del Maestro de Tipos de Caso
   const [caseTypes, setCaseTypes] = useState<CaseType[]>([]);
@@ -608,20 +631,56 @@ export default function SettingsPage() {
                     <ImageIcon className="h-5 w-5 text-primary" />
                     Recurso Visual Institucional (Imagen o Multimedia)
                   </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Seleccione una imagen real (.png, .jpg, .webp, .svg) para proyectarla en la sección pública Nosotros.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center justify-between">
+                      <span>Seleccionar Archivo de Imagen Real *</span>
+                      {isUploadingImage && <span className="text-primary font-bold animate-pulse flex items-center gap-1"><Upload className="h-3 w-3" /> Subiendo imagen...</span>}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleVisualImageUpload}
+                      disabled={isUploadingImage}
+                      className="w-full text-xs text-gray-600 border border-gray-300 rounded-lg p-2 bg-white cursor-pointer disabled:opacity-50"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Descripción / Enlace del Recurso Visual Institucional *
+                      Ruta o Enlace Directo del Recurso Visual (Autogenerado al subir o manual)
                     </label>
                     <input
                       type="text"
                       required
                       value={formData.visual_resource}
                       onChange={(e) => setFormData({ ...formData, visual_resource: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm focus:border-primary focus:outline-none"
+                      className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-xs font-mono focus:border-primary focus:outline-none bg-gray-50"
                     />
                   </div>
+
+                  {/* Vista Previa en Tiempo Real */}
+                  {formData.visual_resource && (formData.visual_resource.startsWith('/') || formData.visual_resource.startsWith('http') || formData.visual_resource.startsWith('data:')) && (
+                    <div className="p-3.5 rounded-xl border border-gray-200 bg-slate-900/95 text-white space-y-2 shadow-sm">
+                      <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block">
+                        Vista Previa Proyectada en el Sitio Público
+                      </span>
+                      <div className="relative overflow-hidden rounded-lg border border-slate-700 max-h-64 bg-slate-950 flex items-center justify-center p-2">
+                        <img
+                          src={formData.visual_resource.startsWith('/') ? `http://localhost:3001${formData.visual_resource}` : formData.visual_resource}
+                          alt="Recurso Visual Proyectado"
+                          className="max-h-56 w-auto object-contain rounded-md"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

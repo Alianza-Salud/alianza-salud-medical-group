@@ -53,14 +53,32 @@ export default function AboutPage() {
             </div>
 
             {/* Recurso visual institucional */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center shadow-sm">
-              <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
-                <Users className="h-14 w-14" />
+            {siteInfo?.visual_resource && (siteInfo.visual_resource.startsWith('/') || siteInfo.visual_resource.startsWith('http') || siteInfo.visual_resource.startsWith('data:')) ? (
+              <div className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl">
+                <img
+                  src={siteInfo.visual_resource.startsWith('/') ? `http://localhost:3001${siteInfo.visual_resource}` : siteInfo.visual_resource}
+                  alt="Recurso Visual Institucional — Alianza Salud Medical Group"
+                  className="h-80 sm:h-96 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent p-6 flex flex-col justify-end">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                    Alianza Salud Medical Group
+                  </span>
+                  <p className="text-sm font-semibold text-white mt-1 drop-shadow-xs">
+                    Unidad Médico-Pericial & Gestión de Admisiones — Medellín, Colombia
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-gray-600 font-semibold italic">
-                {siteInfo?.visual_resource || 'Alianza Salud Medical Group — Medellín, Colombia'}
-              </p>
-            </div>
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-12 text-center shadow-sm">
+                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
+                  <Users className="h-14 w-14" />
+                </div>
+                <p className="text-sm text-gray-600 font-semibold italic">
+                  {siteInfo?.visual_resource || 'Alianza Salud Medical Group — Medellín, Colombia'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>

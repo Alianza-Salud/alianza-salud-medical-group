@@ -70,7 +70,36 @@ async function updateSiteInfo(req, res, next) {
   }
 }
 
+async function uploadVisualResource(req, res, next) {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Debe seleccionar un archivo de imagen válido.', status: 400 },
+      });
+    }
+
+    const imageUrl = `/uploads/documents/${file.filename}`;
+
+    await siteInfoRepository.updateInfo({ visual_resource: imageUrl });
+    const updatedInfo = await siteInfoRepository.getInfo();
+
+    return res.json({
+      success: true,
+      message: 'Imagen del recurso visual institucional subida y proyectada exitosamente.',
+      data: {
+        imageUrl,
+        siteInfo: updatedInfo,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getSiteInfo,
   updateSiteInfo,
+  uploadVisualResource,
 };
