@@ -7,37 +7,37 @@ import type { ProcessStep } from '../types';
 export const processSteps: ProcessStep[] = [
   {
     id: 1,
-    title: 'Solicitud y contacto inicial',
+    title: 'Envío de caso y revisión preliminar',
     description:
-      'Solicite su valoración a través de la plataforma web o canales oficiales. Registramos la información preliminar y los antecedentes de su lesión o proceso.',
-    icon: 'Phone',
+      'Nos envías la información y documentos disponibles (IPAT, historia clínica, epicrisis). Realizamos un análisis inicial sin costo ni compromiso.',
+    icon: 'UploadCloud',
   },
   {
     id: 2,
-    title: 'Admisión y recepción documental',
+    title: 'Análisis de viabilidad',
     description:
-      'La auxiliar de admisiones revisa los antecedentes, solicita las historias clínicas, incapacidades o evidencias y habilita la apertura del expediente.',
-    icon: 'ClipboardList',
+      'Estudio inicial de viabilidad técnico-médica y análisis del nexo causal para verificar si existe mérito de dictamen pericial.',
+    icon: 'FileSearch',
   },
   {
     id: 3,
-    title: 'Valoración médica especializada',
+    title: 'Valoración y especialistas',
     description:
-      'Evaluación presencial o médica remota realizada por peritos médicos para valorar el estado de salud, secuelas y pérdida de capacidad laboral.',
+      'Valoración médica presencial o remota con participación de médicos especialistas peritos y exámenes complementarios cuando corresponda.',
     icon: 'Stethoscope',
   },
   {
     id: 4,
-    title: 'Análisis y elaboración del dictamen',
+    title: 'Informe técnico y pericial',
     description:
-      'Los especialistas médicos elaboran el Informe Pericial o dictamen de PCLO bajo rigor científico y normativa técnico-legal vigente.',
+      'Análisis técnico-médico detallado y estructuración del dictamen de PCLO o Informe Pericial Especializado con blindaje científico.',
     icon: 'Microscope',
   },
   {
     id: 5,
-    title: 'Entrega de resultados y acompañamiento jurídico',
+    title: 'Entrega de resultados',
     description:
-      'Carga del documento oficial en su área de cliente para consulta y descarga, con opción de asesoría jurídica complementaria si lo requiere.',
+      'Entrega oficial de los resultados en el portal con opción de soporte jurídico complementario si lo requiere.',
     icon: 'CheckCircle',
   },
 ];

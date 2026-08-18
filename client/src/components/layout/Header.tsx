@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogIn, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User as UserIcon, LayoutDashboard, UploadCloud } from 'lucide-react';
 import { siteInfo } from '../../data/site';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 
+interface HeaderProps {
+  onOpenModal?: () => void;
+}
+
 /**
  * Header/navbar del sitio público.
- * Muestra "Ir al Panel" si el usuario está autenticado.
+ * Muestra "Ir al Panel" si el usuario está autenticado y CTA "QUIERO QUE REVISEN MI CASO".
  */
-export function Header() {
+export function Header({ onOpenModal }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
@@ -25,11 +29,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Navegación principal">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between gap-2">
           {/* Logo / Nombre */}
           <Link
             to="/"
-            className="flex items-center gap-2 text-xl font-bold text-primary"
+            className="flex items-center gap-2 text-lg sm:text-xl font-bold text-primary shrink-0"
             aria-label="Ir al inicio"
           >
             <span className="text-primary">{siteInfo.name}</span>
@@ -53,19 +57,29 @@ export function Header() {
             ))}
           </div>
 
-          {/* Acciones de usuario autenticado o invitado */}
-          <div className="hidden lg:flex lg:items-center lg:gap-3">
+          {/* Acciones de usuario autenticado o invitado + CTA de Captación */}
+          <div className="hidden lg:flex lg:items-center lg:gap-2.5">
+            <Button
+              size="sm"
+              onClick={onOpenModal}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-2xs border-none"
+            >
+              <UploadCloud className="h-4 w-4" />
+              <span className="hidden xl:inline">Quiero que revisen mi caso</span>
+              <span className="xl:hidden">Revisar Caso</span>
+            </Button>
+
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Link to={dashboardTarget}>
                   <Button variant="primary" size="sm">
                     <LayoutDashboard className="h-4 w-4" />
                     Ir al Panel
                   </Button>
                 </Link>
-                <div className="flex items-center gap-2 rounded-full bg-gray-100/90 border border-gray-200 px-3.5 py-1.5 text-sm text-gray-800 shadow-2xs">
-                  <UserIcon className="h-4 w-4 text-primary shrink-0" />
-                  <span className="font-semibold">{user.fullName}</span>
+                <div className="flex items-center gap-2 rounded-full bg-gray-100/90 border border-gray-200 px-3 py-1.5 text-xs text-gray-800 shadow-2xs">
+                  <UserIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="font-semibold">{user.fullName.split(' ')[0]}</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout} title="Cerrar Sesión">
                   <LogOut className="h-4 w-4 text-red-600" />
@@ -117,7 +131,16 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              <div className="mt-4 px-4">
+              <div className="mt-4 px-4 space-y-3">
+                <Button
+                  size="sm"
+                  fullWidth
+                  onClick={() => { setIsMobileMenuOpen(false); onOpenModal && onOpenModal(); }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none shadow-xs"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Quiero que revisen mi caso
+                </Button>
                 {isAuthenticated && user ? (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-200">
