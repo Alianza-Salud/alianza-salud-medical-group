@@ -448,18 +448,18 @@ export default function AppointmentsManagerPage() {
                   key={dateStr}
                   onDoubleClick={() => handleDayClick(dateStr)}
                   onClick={() => handleDayClick(dateStr)}
-                  className={`group relative min-h-[52px] sm:min-h-[110px] p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`group relative min-h-[58px] sm:min-h-[110px] p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                     isToday
                       ? 'border-2 border-primary bg-primary/5 shadow-sm'
                       : dayApps.length > 0
-                      ? 'border-blue-200 bg-blue-50/20 sm:bg-white hover:border-primary/50 hover:shadow-md'
+                      ? 'border-indigo-200 bg-indigo-50/20 sm:bg-white hover:border-indigo-400 hover:shadow-md'
                       : 'border-gray-200 bg-white hover:border-primary/50 hover:shadow-md'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between sm:justify-between w-full">
                     <span
                       className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[11px] sm:text-xs font-bold ${
-                        isToday ? 'bg-primary text-white' : 'text-gray-700'
+                        isToday ? 'bg-primary text-white shadow-sm' : 'text-gray-700'
                       }`}
                     >
                       {dayNum}
@@ -471,14 +471,16 @@ export default function AppointmentsManagerPage() {
                         {dayApps.length} {dayApps.length === 1 ? 'cita' : 'citas'}
                       </span>
                     )}
+                  </div>
 
-                    {/* Badge circular en pantallas móviles */}
-                    {dayApps.length > 0 && (
-                      <span className="sm:hidden flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-primary text-white font-mono text-[9px] font-extrabold">
+                  {/* Badge circular centrado en pantallas móviles con color Índigo contrastante */}
+                  {dayApps.length > 0 && (
+                    <div className="sm:hidden flex items-center justify-center my-0.5">
+                      <span className="flex h-4.5 min-w-[18px] px-1.5 items-center justify-center rounded-full bg-indigo-600 text-white font-mono text-[10px] font-extrabold shadow-xs">
                         {dayApps.length}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Vista previa compacta en pantallas grandes (Desktop) */}
                   <div className="hidden sm:block mt-1 space-y-1 overflow-hidden flex-1">
@@ -509,7 +511,7 @@ export default function AppointmentsManagerPage() {
 
                   {/* Indicadores visuales por puntos en móvil */}
                   {dayApps.length > 0 && (
-                    <div className="sm:hidden flex items-center justify-center gap-0.5 mt-0.5">
+                    <div className="sm:hidden flex items-center justify-center gap-0.5 mt-auto">
                       {dayApps.slice(0, 3).map((app, idx) => (
                         <span
                           key={idx}
