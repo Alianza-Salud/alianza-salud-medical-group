@@ -26,6 +26,21 @@ interface ApiResponse<T> {
   data: T;
 }
 
+export async function submitCaseReviewPetition(formData: FormData): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await apiClient.upload<ApiResponse<unknown>>('/case-reviews', formData);
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message };
+    }
+    if (res.data && (res.data as any).error) {
+      return { success: false, message: (res.data as any).error.message };
+    }
+  } catch (error: any) {
+    console.error('[caseReviewService Error] submitCaseReviewPetition:', error);
+  }
+  return { success: false, message: 'Error al conectar con el servidor para enviar la solicitud.' };
+}
+
 export async function fetchCaseReviewPetitions(statusFilter: string = 'all'): Promise<CaseReviewPetition[]> {
   try {
     const res = await apiClient.get<ApiResponse<CaseReviewPetition[]>>(`/case-reviews${statusFilter && statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`);

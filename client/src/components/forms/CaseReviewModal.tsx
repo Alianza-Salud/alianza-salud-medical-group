@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, CheckCircle2, ShieldCheck, FileText, AlertCircle, Send } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { submitCaseReviewPetition } from '../../services/caseReviewService';
 
 interface CaseReviewModalProps {
   isOpen: boolean;
@@ -50,7 +51,6 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
     setIsSubmitting(true);
 
     try {
-      // Simulación de envío o conexión al backend
       const formData = new FormData();
       formData.append('fullName', fullName);
       formData.append('email', email);
@@ -59,18 +59,14 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
       formData.append('description', description);
       files.forEach((f) => formData.append('documents', f));
 
-      // Intento opcional de POST a la API de contacto/admisiones
-      try {
-        await fetch('/api/contact', {
-          method: 'POST',
-          body: formData,
-        });
-      } catch {
-        // Silencioso para fallback visual limpia
-      }
-
+      const res = await submitCaseReviewPetition(formData);
       setIsSubmitting(false);
-      setIsSuccess(true);
+
+      if (res.success) {
+        setIsSuccess(true);
+      } else {
+        setErrorMsg(res.message || 'Error al enviar la solicitud de revisión.');
+      }
     } catch (err: any) {
       setIsSubmitting(false);
       setErrorMsg(err.message || 'Error al enviar la solicitud de revisión.');
