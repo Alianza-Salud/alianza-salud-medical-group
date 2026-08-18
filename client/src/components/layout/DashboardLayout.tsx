@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Sliders,
+  FileSearch,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { siteInfo } from '../../data/site';
@@ -26,6 +27,7 @@ export function DashboardLayout() {
   const [stats, setStats] = useState<DashboardStats>({
     pendingAppointments: 0,
     unreadMessages: 0,
+    pendingCaseReviews: 0,
   });
 
   const loadStats = async () => {
@@ -37,7 +39,7 @@ export function DashboardLayout() {
 
   useEffect(() => {
     loadStats();
-    const interval = setInterval(loadStats, 15000); // Polling cada 15 segundos para mantener actualizado
+    const interval = setInterval(loadStats, 15000);
     return () => clearInterval(interval);
   }, [user, location.pathname]);
 
@@ -46,7 +48,6 @@ export function DashboardLayout() {
     navigate('/login');
   };
 
-  // Ítems principales de navegación según rol
   const isStaff = user?.role === 'admin' || user?.role === 'auxiliar_admisiones' || user?.role === 'lawyer';
 
   const mainNavItems =
@@ -56,6 +57,13 @@ export function DashboardLayout() {
             label: 'Casos Médico-Periciales',
             href: '/dashboard',
             icon: FolderKanban,
+          },
+          {
+            label: 'Solicitudes de Revisión',
+            href: '/dashboard/solicitudes-revision',
+            icon: FileSearch,
+            badge: stats.pendingCaseReviews > 0 ? stats.pendingCaseReviews : null,
+            badgeType: 'amber',
           },
           {
             label: 'Gestión de Citas',
@@ -98,6 +106,13 @@ export function DashboardLayout() {
             label: 'Casos Médico-Periciales',
             href: '/dashboard',
             icon: FolderKanban,
+          },
+          {
+            label: 'Solicitudes de Revisión',
+            href: '/dashboard/solicitudes-revision',
+            icon: FileSearch,
+            badge: stats.pendingCaseReviews > 0 ? stats.pendingCaseReviews : null,
+            badgeType: 'amber',
           },
           {
             label: 'Gestión de Citas',

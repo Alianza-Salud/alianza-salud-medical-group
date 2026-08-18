@@ -1,5 +1,6 @@
 const appointmentRepository = require('../repositories/appointmentRepository');
 const contactRepository = require('../repositories/contactRepository');
+const caseReviewRepository = require('../repositories/caseReviewRepository');
 
 /**
  * Obtener estadísticas globales y contadores de pendientes para el Dashboard.
@@ -10,9 +11,10 @@ async function getDashboardStats(req, res, next) {
     const userRole = req.user?.role;
     const lawyerId = userRole === 'lawyer' ? req.user?.id : null;
 
-    const [pendingAppointments, unreadMessages] = await Promise.all([
+    const [pendingAppointments, unreadMessages, pendingCaseReviews] = await Promise.all([
       appointmentRepository.getPendingCount(lawyerId),
       contactRepository.getUnreadCount(),
+      caseReviewRepository.countPending(),
     ]);
 
     return res.json({
@@ -20,6 +22,7 @@ async function getDashboardStats(req, res, next) {
       data: {
         pendingAppointments,
         unreadMessages,
+        pendingCaseReviews,
       },
     });
   } catch (error) {

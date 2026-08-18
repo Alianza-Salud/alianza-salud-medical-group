@@ -13,6 +13,8 @@ const lawyerRoutes = require('./lawyerRoutes');
 const userRoutes = require('./userRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 
+const caseReviewRoutes = require('./caseReviewRoutes');
+
 // Health check
 router.get('/health', (req, res) => {
   res.json({
@@ -34,5 +36,6 @@ router.use('/clients', clientRoutes);
 router.use('/lawyers', lawyerRoutes);
 router.use('/users', userRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/case-reviews', caseReviewRoutes);
 
 module.exports = router;

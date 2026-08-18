@@ -3,6 +3,7 @@ import { apiClient } from './api';
 export interface DashboardStats {
   pendingAppointments: number;
   unreadMessages: number;
+  pendingCaseReviews: number;
 }
 
 interface ApiResponse<T> {
@@ -22,5 +23,6 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
   return {
     pendingAppointments: 0,
     unreadMessages: 0,
+    pendingCaseReviews: 0,
   };
 }

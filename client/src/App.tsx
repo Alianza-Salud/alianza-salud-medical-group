@@ -24,6 +24,7 @@ import UsersManagerPage from './pages/dashboard/UsersManagerPage';
 import AppointmentsManagerPage from './pages/dashboard/AppointmentsManagerPage';
 import ContactMessagesPage from './pages/dashboard/ContactMessagesPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
+import CaseReviewRequestsPage from './pages/dashboard/CaseReviewRequestsPage';
 
 /**
  * Componente raíz de la aplicación.
@@ -54,6 +55,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['admin', 'auxiliar_admisiones', 'lawyer']} />}>
               <Route path="/dashboard" element={<AdminDashboardPage />} />
               <Route path="/dashboard/casos/:id" element={<CaseDetailPage />} />
+              <Route path="/dashboard/solicitudes-revision" element={<CaseReviewRequestsPage />} />
               <Route path="/dashboard/citas" element={<AppointmentsManagerPage />} />
               <Route path="/dashboard/mensajes" element={<ContactMessagesPage />} />
               <Route path="/dashboard/clientes" element={<ClientsManagerPage />} />

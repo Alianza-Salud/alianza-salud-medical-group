@@ -55,6 +55,16 @@ class ClientRepository {
   }
 
   /**
+   * Buscar cliente por correo electrónico.
+   */
+  async findByEmail(email) {
+    if (!pool) return null;
+    const [rows] = await pool.query('SELECT * FROM clients WHERE email = ? LIMIT 1', [email]);
+    if (rows.length === 0) return null;
+    return this.findById(rows[0].id);
+  }
+
+  /**
    * Buscar cliente por Código de Verificación de 8 caracteres.
    */
   async findByVerificationCode(code) {

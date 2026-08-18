@@ -59,7 +59,7 @@ export function InjuryManagementSection() {
                 Rigor Científico e Independencia Pericial
               </h4>
               <p className="text-xs text-slate-300 mt-0.5">
-                No actuamos como firma de abogados pura. Nuestro valor central radica en el análisis clínico y pericial objetivo de la secuela corporal.
+                Nuestro valor central radica en el análisis clínico y pericial objetivo de la secuela corporal.
               </p>
             </div>
           </div>
