@@ -24,7 +24,10 @@ import {
   updateCaseStage,
   addCaseUpdate,
   addCaseDocument,
+  updateCaseLawyers,
 } from '../../services/caseService';
+import { fetchLawyers } from '../../services/lawyerService';
+import type { Lawyer } from '../../types/lawyer';
 import type { LegalCase } from '../../types/case';
 import { CASE_STAGES } from '../../components/cases/CaseStageStepper';
 import { Button } from '../../components/ui/Button';
@@ -62,7 +65,29 @@ export default function CaseDetailPage() {
   const [updateDesc, setUpdateDesc] = useState('');
   const [isAddingUpdate, setIsAddingUpdate] = useState(false);
 
+  // Modal Reasignar Especialistas
+  const [isLawyersModalOpen, setIsLawyersModalOpen] = useState(false);
+  const [allLawyers, setAllLawyers] = useState<Lawyer[]>([]);
+  const [editingLawyerIds, setEditingLawyerIds] = useState<number[]>([]);
+  const [isUpdatingLawyers, setIsUpdatingLawyers] = useState(false);
+
   const isStaff = user?.role === 'admin' || user?.role === 'auxiliar_admisiones' || user?.role === 'lawyer';
+
+  const handleSaveLawyers = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!caseData) return;
+    setIsUpdatingLawyers(true);
+    setAlertMsg(null);
+    const res = await updateCaseLawyers(caseData.id, editingLawyerIds);
+    setIsUpdatingLawyers(false);
+    if (res.success) {
+      setAlertMsg({ type: 'success', message: 'Especialistas asignados al caso actualizados exitosamente.' });
+      setIsLawyersModalOpen(false);
+      loadCase();
+    } else {
+      setAlertMsg({ type: 'error', message: res.message || 'Error al actualizar especialistas.' });
+    }
+  };
 
   usePageMeta(
     caseData ? `Detalle ${caseData.caseCode}` : 'Detalle del Caso',
@@ -266,11 +291,39 @@ export default function CaseDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-xs text-gray-500 uppercase font-semibold">Especialista / Abogado Asignado</span>
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-gray-900">{caseData.assignedLawyerName}</span>
+                <div className="space-y-1 sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 uppercase font-semibold">Especialistas / Médicos Legistas Asignados</span>
+                    {isStaff && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const llist = await fetchLawyers();
+                          setAllLawyers(llist);
+                          const currentIds = caseData.assignedLawyers ? caseData.assignedLawyers.map((l) => l.id) : (caseData.lawyerId ? [caseData.lawyerId] : []);
+                          setEditingLawyerIds(currentIds);
+                          setIsLawyersModalOpen(true);
+                        }}
+                        className="text-xs text-primary font-bold hover:underline"
+                      >
+                        Gestionar Especialistas
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    {caseData.assignedLawyers && caseData.assignedLawyers.length > 0 ? (
+                      caseData.assignedLawyers.map((l) => (
+                        <span key={l.id} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          {l.fullName} <span className="text-[10px] text-gray-500">({l.specialty || 'Especialista'})</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                        <ShieldCheck className="h-3.5 w-3.5 text-gray-500" />
+                        {caseData.assignedLawyerName}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -663,6 +716,75 @@ export default function CaseDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Modal Reasignar Especialistas */}
+      {isLawyersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                Asignar Especialistas al Caso
+              </h3>
+              <button onClick={() => setIsLawyersModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <AlertCircle className="h-5 w-5 rotate-45" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveLawyers} className="space-y-4">
+              <p className="text-xs text-gray-600">
+                Seleccione los especialistas o médicos legistas asignados al expediente del cliente.
+              </p>
+
+              <div className="max-h-60 overflow-y-auto rounded-lg border border-gray-300 p-2.5 bg-white space-y-1.5">
+                {allLawyers.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">No hay especialistas registrados en el Maestro.</p>
+                ) : (
+                  allLawyers.map((l) => {
+                    const isChecked = editingLawyerIds.includes(l.id);
+                    return (
+                      <label
+                        key={l.id}
+                        className={`flex items-center justify-between p-2 rounded-md border text-xs cursor-pointer transition-colors ${
+                          isChecked
+                            ? 'border-primary bg-primary/5 text-primary font-bold'
+                            : 'border-gray-100 hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditingLawyerIds((prev) => [...prev, l.id]);
+                              } else {
+                                setEditingLawyerIds((prev) => prev.filter((id) => id !== l.id));
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                          />
+                          <span>{l.fullName}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-mono">({l.specialty})</span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-gray-200 flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => setIsLawyersModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" isLoading={isUpdatingLawyers}>
+                  Guardar Especialistas
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

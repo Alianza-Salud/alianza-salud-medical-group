@@ -63,7 +63,7 @@ async function getCaseById(req, res, next) {
  */
 async function createCase(req, res, next) {
   try {
-    const { clientId, serviceSlug, caseType, title, description, lawyerId, assignedLawyerName } = req.body;
+    const { clientId, serviceSlug, caseType, title, description, lawyerId, lawyerIds, assignedLawyerName } = req.body;
 
     if (!clientId || !serviceSlug || !title || !description) {
       return res.status(400).json({
@@ -79,6 +79,7 @@ async function createCase(req, res, next) {
       title,
       description,
       lawyerId: lawyerId ? parseInt(lawyerId, 10) : null,
+      lawyerIds: Array.isArray(lawyerIds) ? lawyerIds.map((id) => parseInt(id, 10)) : [],
       assignedLawyerName: assignedLawyerName || 'Equipo Jurídico Alianza Salud',
     });
 
@@ -86,6 +87,32 @@ async function createCase(req, res, next) {
       success: true,
       message: 'Caso aperturado y vinculado al cliente exitosamente.',
       data: newCase,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateCaseLawyers(req, res, next) {
+  try {
+    const { id: caseId } = req.params;
+    const { lawyerIds } = req.body;
+
+    if (!Array.isArray(lawyerIds)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Envíe una lista de especialistas válidos.', status: 400 },
+      });
+    }
+
+    const parsedIds = lawyerIds.map((id) => parseInt(id, 10)).filter((id) => !isNaN(id));
+    await caseRepository.updateCaseLawyers(parseInt(caseId, 10), parsedIds);
+    const updatedCase = await caseRepository.findById(caseId);
+
+    return res.json({
+      success: true,
+      message: 'Especialistas asignados al caso actualizados exitosamente.',
+      data: updatedCase,
     });
   } catch (error) {
     next(error);
@@ -230,4 +257,5 @@ module.exports = {
   addCaseUpdate,
   addCaseDocument,
   getCaseDocuments,
+  updateCaseLawyers,
 };

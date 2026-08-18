@@ -65,6 +65,7 @@ export default function AdminDashboardPage() {
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLawyerIds, setSelectedLawyerIds] = useState<number[]>([]);
 
   // Formulario Crear Caso (Selección de Cliente y Abogado existente)
   const [newCaseData, setNewCaseData] = useState({
@@ -110,8 +111,8 @@ export default function AdminDashboardPage() {
     if (clientsData.length > 0 && newCaseData.clientId === 0) {
       setNewCaseData((prev) => ({ ...prev, clientId: clientsData[0].id }));
     }
-    if (lawyersData.length > 0 && newCaseData.lawyerId === 0) {
-      setNewCaseData((prev) => ({ ...prev, lawyerId: lawyersData[0].id }));
+    if (lawyersData.length > 0 && selectedLawyerIds.length === 0) {
+      setSelectedLawyerIds([lawyersData[0].id]);
     }
     setIsLoading(false);
   };
@@ -129,7 +130,10 @@ export default function AdminDashboardPage() {
     setErrorMessage(null);
     setIsSubmitting(true);
 
-    const selectedLawyer = lawyers.find((l) => l.id === Number(newCaseData.lawyerId));
+    const selectedLawyersList = lawyers.filter((l) => selectedLawyerIds.includes(l.id));
+    const lawyerNamesStr = selectedLawyersList.length > 0
+      ? selectedLawyersList.map((l) => l.fullName).join(', ')
+      : 'Equipo Jurídico Alianza Salud';
 
     const res = await createCase({
       clientId: Number(newCaseData.clientId),
@@ -137,20 +141,22 @@ export default function AdminDashboardPage() {
       caseType: newCaseData.caseType,
       title: newCaseData.title,
       description: newCaseData.description,
-      lawyerId: selectedLawyer ? selectedLawyer.id : null,
-      assignedLawyerName: selectedLawyer ? selectedLawyer.fullName : 'Equipo Jurídico Alianza Salud',
+      lawyerId: selectedLawyerIds[0] || null,
+      lawyerIds: selectedLawyerIds,
+      assignedLawyerName: lawyerNamesStr,
     });
     setIsSubmitting(false);
 
     if (res.success) {
       setIsCreateModalOpen(false);
+      setSelectedLawyerIds([]);
       setNewCaseData({
         clientId: clients[0]?.id || 0,
         serviceSlug: 'informe-pericial-medico',
-        caseType: INJURY_CASE_TYPES[0],
+        caseType: caseTypes[0]?.name || '',
         title: '',
         description: '',
-        lawyerId: lawyers[0]?.id || 0,
+        lawyerId: 0,
       });
       loadAllData();
     } else {
@@ -454,24 +460,50 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Selector de Abogado / Profesional */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Abogado / Especialista Asignado</label>
-                  <select
-                    value={newCaseData.lawyerId}
-                    onChange={(e) => setNewCaseData({ ...newCaseData, lawyerId: Number(e.target.value) })}
-                    className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
-                  >
-                    <option value={0}>Equipo Jurídico Alianza Salud</option>
-                    {lawyers.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.fullName} ({l.specialty})
-                      </option>
-                    ))}
-                  </select>
+              {/* Selector de Especialistas Asignados (Múltiples) */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-gray-700">
+                  Especialistas Asignados 
+                </label>
+                <div className="max-h-36 overflow-y-auto rounded-lg border border-gray-300 p-2.5 bg-white space-y-1.5">
+                  {lawyers.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic">No hay especialistas registrados en el Maestro.</p>
+                  ) : (
+                    lawyers.map((l) => {
+                      const isChecked = selectedLawyerIds.includes(l.id);
+                      return (
+                        <label
+                          key={l.id}
+                          className={`flex items-center justify-between p-2 rounded-md border text-xs cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'border-primary bg-primary/5 text-primary font-bold'
+                              : 'border-gray-100 hover:bg-gray-50 text-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLawyerIds((prev) => [...prev, l.id]);
+                                } else {
+                                  setSelectedLawyerIds((prev) => prev.filter((id) => id !== l.id));
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                            />
+                            <span>{l.fullName}</span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-mono">({l.specialty})</span>
+                        </label>
+                      );
+                    })
+                  )}
                 </div>
+              </div>
 
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Servicio médico-pericial *</label>
                   <select

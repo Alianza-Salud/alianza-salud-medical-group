@@ -278,7 +278,8 @@ export default function UsersManagerPage() {
                     onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value as UserRole })}
                     className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
                   >
-                    <option value="lawyer">Abogado / Médico Experto</option>
+                    <option value="auxiliar_admisiones">Auxiliar de Admisiones</option>
+                    <option value="lawyer">Abogado / Médico Especialista</option>
                     <option value="admin">Administrador</option>
                     <option value="client">Cliente</option>
                   </select>
@@ -352,9 +353,10 @@ export default function UsersManagerPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
                 >
-                  <option value="client">Cliente</option>
-                  <option value="lawyer">Abogado / Médico</option>
+                  <option value="auxiliar_admisiones">Auxiliar de Admisiones</option>
+                  <option value="lawyer">Abogado / Médico Especialista</option>
                   <option value="admin">Administrador</option>
+                  <option value="client">Cliente</option>
                 </select>
               </div>
 

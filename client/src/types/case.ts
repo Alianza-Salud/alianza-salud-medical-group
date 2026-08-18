@@ -21,6 +21,14 @@ export interface CaseDocument {
   createdAt: string;
 }
 
+export interface AssignedLawyerInfo {
+  id: number;
+  fullName: string;
+  specialty?: string;
+  email?: string;
+  phone?: string;
+}
+
 export interface LegalCase {
   id: number;
   caseCode: string;
@@ -38,6 +46,7 @@ export interface LegalCase {
   stage: string;
   assignedLawyerName: string;
   lawyerId?: number | null;
+  assignedLawyers?: AssignedLawyerInfo[];
   createdAt: string;
   updates?: CaseUpdate[];
   documents?: CaseDocument[];
@@ -50,6 +59,7 @@ export interface CreateCaseFormData {
   title: string;
   description: string;
   lawyerId?: number | null;
+  lawyerIds?: number[];
   assignedLawyerName?: string;
 }
 

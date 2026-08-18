@@ -10,6 +10,9 @@ class CaseRepository {
   /**
    * Crear un nuevo caso asociándolo a un cliente existente.
    */
+  /**
+   * Crear un nuevo caso asociándolo a un cliente existente y múltiples especialistas.
+   */
   async createCase({
     clientId,
     serviceSlug,
@@ -17,6 +20,7 @@ class CaseRepository {
     title,
     description,
     lawyerId = null,
+    lawyerIds = [],
     assignedLawyerName = 'Equipo Jurídico Alianza Salud',
   }) {
     if (!pool) return null;
@@ -29,6 +33,10 @@ class CaseRepository {
     const [countRows] = await pool.query('SELECT COUNT(*) AS total FROM cases');
     const seq = (countRows[0]?.total || 0) + 1;
     const caseCode = generateCaseCode(seq);
+
+    const targetLawyerIds = Array.isArray(lawyerIds) && lawyerIds.length > 0
+      ? lawyerIds
+      : (lawyerId ? [lawyerId] : []);
 
     const [result] = await pool.query(
       `INSERT INTO cases 
@@ -46,11 +54,18 @@ class CaseRepository {
         title,
         description,
         assignedLawyerName,
-        lawyerId,
+        targetLawyerIds[0] || null,
       ]
     );
 
     const caseId = result.insertId;
+
+    // Vincular especialistas en case_lawyers
+    for (const lid of targetLawyerIds) {
+      if (lid) {
+        await pool.query('INSERT IGNORE INTO case_lawyers (case_id, lawyer_id) VALUES (?, ?)', [caseId, lid]);
+      }
+    }
 
     // Crear primera novedad automática de apertura
     await this.addUpdate({
@@ -65,7 +80,7 @@ class CaseRepository {
   }
 
   /**
-   * Buscar caso por ID con todas sus novedades.
+   * Buscar caso por ID con todas sus novedades, documentos y lista de especialistas asignados.
    */
   async findById(caseId) {
     if (!pool) return null;
@@ -84,6 +99,21 @@ class CaseRepository {
       [caseId]
     );
 
+    const [lawyersRows] = await pool.query(
+      `SELECT l.id, l.full_name AS fullName, l.specialty, l.email, l.phone 
+       FROM case_lawyers cl
+       JOIN lawyers l ON l.id = cl.lawyer_id
+       WHERE cl.case_id = ?`,
+      [caseId]
+    );
+
+    let assignedLawyers = lawyersRows;
+    let lawyerNameStr = caseData.assigned_lawyer_name;
+
+    if (assignedLawyers.length > 0) {
+      lawyerNameStr = assignedLawyers.map((l) => l.fullName).join(', ');
+    }
+
     return {
       id: caseData.id,
       caseCode: caseData.case_code,
@@ -99,8 +129,9 @@ class CaseRepository {
       description: caseData.description,
       status: caseData.status,
       stage: caseData.stage,
-      assignedLawyerName: caseData.assigned_lawyer_name,
+      assignedLawyerName: lawyerNameStr,
       lawyerId: caseData.lawyer_id,
+      assignedLawyers: assignedLawyers,
       createdAt: caseData.created_at,
       updates: updatesRows.map((u) => ({
         id: u.id,
@@ -124,6 +155,23 @@ class CaseRepository {
         createdAt: d.created_at,
       })),
     };
+  }
+
+  /**
+   * Actualizar especialistas asignados a un caso.
+   */
+  async updateCaseLawyers(caseId, lawyerIds = []) {
+    if (!pool) return false;
+    await pool.query('DELETE FROM case_lawyers WHERE case_id = ?', [caseId]);
+    for (const lid of lawyerIds) {
+      if (lid) {
+        await pool.query('INSERT IGNORE INTO case_lawyers (case_id, lawyer_id) VALUES (?, ?)', [caseId, lid]);
+      }
+    }
+    // Actualizar lawyer_id en la tabla cases con el primero
+    const primaryId = lawyerIds[0] || null;
+    await pool.query('UPDATE cases SET lawyer_id = ? WHERE id = ?', [primaryId, caseId]);
+    return true;
   }
 
   /**

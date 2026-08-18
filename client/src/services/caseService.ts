@@ -88,3 +88,15 @@ export async function addCaseDocument(caseId: number, data: AddDocumentFormData)
   }
   return { success: false, message: 'Error al adjuntar el documento.' };
 }
+
+export async function updateCaseLawyers(caseId: number, lawyerIds: number[]): Promise<{ success: boolean; message?: string; data?: LegalCase }> {
+  try {
+    const res = await apiClient.put<ApiResponse<LegalCase>>(`/cases/${caseId}/lawyers`, { lawyerIds });
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[CaseService Error] updateCaseLawyers:', error);
+  }
+  return { success: false, message: 'Error al actualizar especialistas asignados.' };
+}

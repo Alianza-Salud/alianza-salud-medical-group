@@ -15,5 +15,6 @@ router.post('/:id/updates', requireRole('admin', 'auxiliar_admisiones', 'lawyer'
 
 router.get('/:id/documents', caseController.getCaseDocuments);
 router.post('/:id/documents', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), upload.single('file'), caseController.addCaseDocument);
+router.put('/:id/lawyers', requireRole('admin', 'auxiliar_admisiones', 'lawyer'), caseController.updateCaseLawyers);
 
 module.exports = router;
