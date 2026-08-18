@@ -95,12 +95,31 @@ async function updateUser(req, res, next) {
     const { id } = req.params;
     const { fullName, email, role, phone, isActive } = req.body;
 
+    const [existing] = await pool.query('SELECT role, is_active FROM users WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, error: { message: 'Usuario no encontrado.', status: 404 } });
+    }
+
+    const currentRole = existing[0].role;
+    const targetIsActive = isActive === true || isActive === 1 || isActive === 'true';
+
+    // Regla de seguridad: Impedir inactivar cuentas de tipo 'admin'
+    if (currentRole === 'admin' && !targetIsActive) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No es posible inactivar a un usuario con rol de Administrador.', status: 400 },
+      });
+    }
+
     await pool.query(
       'UPDATE users SET full_name = ?, email = ?, role = ?, phone = ?, is_active = ? WHERE id = ?',
-      [fullName, email, role, phone, isActive ? 1 : 0, id]
+      [fullName, email, role, phone, targetIsActive ? 1 : 0, id]
     );
 
-    return res.json({ success: true, message: 'Usuario actualizado.' });
+    return res.json({
+      success: true,
+      message: `Cuenta de usuario ${targetIsActive ? 'activada' : 'inactivada'} exitosamente.`,
+    });
   } catch (error) {
     next(error);
   }

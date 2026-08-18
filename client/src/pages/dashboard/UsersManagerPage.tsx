@@ -280,7 +280,20 @@ export default function UsersManagerPage() {
   );
 
   const toggleUserStatus = async (u: User) => {
-    await updateUser(u.id, { isActive: !u.isActive });
+    if (u.role === 'admin') {
+      alert('Las cuentas de tipo Administrador no se pueden inactivar por seguridad del sistema.');
+      return;
+    }
+    const res = await updateUser(u.id, {
+      fullName: u.fullName,
+      email: u.email,
+      role: u.role,
+      phone: u.phone,
+      isActive: !u.isActive,
+    });
+    if (!res.success) {
+      alert(res.message || 'Error al cambiar estado del usuario.');
+    }
     loadData();
   };
 
@@ -370,15 +383,29 @@ export default function UsersManagerPage() {
                   </td>
                   <td className="px-6 py-4 text-xs text-gray-600">{u.phone || 'N/A'}</td>
                   <td className="px-6 py-4">
-                    <button
-                      onClick={() => toggleUserStatus(u)}
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {u.isActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                      {u.isActive ? 'Activo' : 'Desactivado'}
-                    </button>
+                    {u.role === 'admin' ? (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-not-allowed"
+                        title="Los usuarios administradores no se pueden inactivar por seguridad del sistema"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        Activo (Protegido)
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => toggleUserStatus(u)}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold cursor-pointer transition-colors ${
+                          u.isActive
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                        title={u.isActive ? 'Hacer clic para inactivar cuenta de usuario' : 'Hacer clic para activar cuenta de usuario'}
+                      >
+                        {u.isActive ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                        {u.isActive ? 'Activo' : 'Inactivo'}
+                      </button>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

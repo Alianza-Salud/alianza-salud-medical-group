@@ -65,7 +65,7 @@ export default function AboutPage() {
                     Alianza Salud Medical Group
                   </span>
                   <p className="text-sm font-semibold text-white mt-1 drop-shadow-xs">
-                    Unidad Médico-Pericial & Gestión de Admisiones — Medellín, Colombia
+                    Servicios Médicos Especializados & Peritaje
                   </p>
                 </div>
               </div>
