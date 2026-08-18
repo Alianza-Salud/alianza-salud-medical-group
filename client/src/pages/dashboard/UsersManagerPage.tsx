@@ -45,6 +45,13 @@ export default function UsersManagerPage() {
   const [selectedClientId, setSelectedClientId] = useState<number>(0);
   const [selectedLawyerId, setSelectedLawyerId] = useState<number>(0);
 
+  // Modales de Búsqueda (Picker)
+  const [isClientPickerOpen, setIsClientPickerOpen] = useState(false);
+  const [searchClientModalTerm, setSearchClientModalTerm] = useState('');
+
+  const [isLawyerPickerOpen, setIsLawyerPickerOpen] = useState(false);
+  const [searchLawyerModalTerm, setSearchLawyerModalTerm] = useState('');
+
   // Formulario Editar
   const [formData, setFormData] = useState({
     fullName: '',
@@ -151,49 +158,29 @@ export default function UsersManagerPage() {
   };
 
   // Seleccionar Cliente sin Usuario registrado
-  const handleSelectClient = (clientId: number) => {
-    setSelectedClientId(clientId);
-    const client = masterClients.find((c) => c.id === clientId);
-    if (client) {
-      setCreateFormData((prev) => ({
-        ...prev,
-        clientId: client.id,
-        fullName: client.fullName,
-        email: client.email,
-        phone: client.phone || '',
-      }));
-    } else {
-      setCreateFormData((prev) => ({
-        ...prev,
-        clientId: 0,
-        fullName: '',
-        email: '',
-        phone: '',
-      }));
-    }
+  const handleSelectClient = (client: Client) => {
+    setSelectedClientId(client.id);
+    setCreateFormData((prev) => ({
+      ...prev,
+      clientId: client.id,
+      fullName: client.fullName,
+      email: client.email,
+      phone: client.phone || '',
+    }));
+    setIsClientPickerOpen(false);
   };
 
   // Seleccionar Especialista sin Usuario registrado
-  const handleSelectLawyer = (lawyerId: number) => {
-    setSelectedLawyerId(lawyerId);
-    const lawyer = masterLawyers.find((l) => l.id === lawyerId);
-    if (lawyer) {
-      setCreateFormData((prev) => ({
-        ...prev,
-        lawyerId: lawyer.id,
-        fullName: lawyer.fullName,
-        email: lawyer.email,
-        phone: lawyer.phone || '',
-      }));
-    } else {
-      setCreateFormData((prev) => ({
-        ...prev,
-        lawyerId: 0,
-        fullName: '',
-        email: '',
-        phone: '',
-      }));
-    }
+  const handleSelectLawyer = (lawyer: Lawyer) => {
+    setSelectedLawyerId(lawyer.id);
+    setCreateFormData((prev) => ({
+      ...prev,
+      lawyerId: lawyer.id,
+      fullName: lawyer.fullName,
+      email: lawyer.email,
+      phone: lawyer.phone || '',
+    }));
+    setIsLawyerPickerOpen(false);
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -201,11 +188,11 @@ export default function UsersManagerPage() {
     setErrorMessage(null);
 
     if (createFormData.role === 'client' && !selectedClientId) {
-      setErrorMessage('Seleccione un cliente válido del Maestro de Clientes.');
+      setErrorMessage('Seleccione un cliente del Maestro mediante el botón de búsqueda.');
       return;
     }
     if (createFormData.role === 'lawyer' && !selectedLawyerId) {
-      setErrorMessage('Seleccione un especialista válido del Maestro de Especialistas.');
+      setErrorMessage('Seleccione un especialista del Maestro mediante el botón de búsqueda.');
       return;
     }
 
@@ -231,6 +218,22 @@ export default function UsersManagerPage() {
   // Clientes y Especialistas sin usuario registrado
   const availableClients = masterClients.filter((c) => !c.userId && !c.isRegistered);
   const availableLawyers = masterLawyers.filter((l) => !l.userId && !l.isRegistered);
+
+  // Filtrados por búsqueda en modales picker
+  const filteredAvailableClients = availableClients.filter(
+    (c) =>
+      c.fullName.toLowerCase().includes(searchClientModalTerm.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchClientModalTerm.toLowerCase()) ||
+      (c.verificationCode && c.verificationCode.toLowerCase().includes(searchClientModalTerm.toLowerCase())) ||
+      (c.documentId && c.documentId.toLowerCase().includes(searchClientModalTerm.toLowerCase()))
+  );
+
+  const filteredAvailableLawyers = availableLawyers.filter(
+    (l) =>
+      l.fullName.toLowerCase().includes(searchLawyerModalTerm.toLowerCase()) ||
+      l.email.toLowerCase().includes(searchLawyerModalTerm.toLowerCase()) ||
+      (l.specialty && l.specialty.toLowerCase().includes(searchLawyerModalTerm.toLowerCase()))
+  );
 
   const toggleUserStatus = async (u: User) => {
     await updateUser(u.id, { isActive: !u.isActive });
@@ -376,31 +379,38 @@ export default function UsersManagerPage() {
 
               {/* CASO A: CLIENTE */}
               {createFormData.role === 'client' && (
-                <div className="space-y-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div className="space-y-3 p-3.5 bg-blue-50/50 rounded-xl border border-blue-100">
                   <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
                     <Building2 className="h-4 w-4 text-blue-600" />
                     <span>Vinculación con el Maestro de Clientes</span>
                   </div>
 
                   {availableClients.length === 0 ? (
-                    <Alert variant="warning" message="Todos los clientes registrados en el Maestro ya cuentan con una usuario de acceso asignado. Debe crear un cliente nuevo en el Maestro de Clientes primero." />
+                    <Alert variant="warning" message="Todos los clientes registrados en el Maestro ya cuentan con un usuario asignado." />
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Seleccione el Cliente del Maestro *
+                        Cliente del Maestro *
                       </label>
-                      <select
-                        value={selectedClientId}
-                        onChange={(e) => handleSelectClient(Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
-                      >
-                        <option value={0}>-- Seleccione un cliente registrado --</option>
-                        {availableClients.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.fullName} ({c.email}) - Código: {c.verificationCode}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          placeholder="Ningún cliente seleccionado..."
+                          value={createFormData.fullName ? `${createFormData.fullName} (${createFormData.email})` : ''}
+                          className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:outline-none font-semibold text-gray-900 placeholder:font-normal"
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setSearchClientModalTerm('');
+                            setIsClientPickerOpen(true);
+                          }}
+                          className="shrink-0"
+                        >
+                          <Search className="h-4 w-4" /> Buscar Cliente
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -432,31 +442,38 @@ export default function UsersManagerPage() {
 
               {/* CASO B: ABOGADO / MÉDICO ESPECIALISTA */}
               {createFormData.role === 'lawyer' && (
-                <div className="space-y-3 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <div className="space-y-3 p-3.5 bg-emerald-50/50 rounded-xl border border-emerald-100">
                   <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                     <span>Vinculación con el Maestro de Especialistas</span>
                   </div>
 
                   {availableLawyers.length === 0 ? (
-                    <Alert variant="warning" message="Todos los especialistas registrados en el Maestro ya cuentan con una cuenta de usuario asignada. Debe agregar un especialista nuevo en el Maestro de Especialistas primero." />
+                    <Alert variant="warning" message="Todos los especialistas registrados en el Maestro ya cuentan con un usuario asignado." />
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Seleccione el Especialista del Maestro *
+                        Especialista del Maestro *
                       </label>
-                      <select
-                        value={selectedLawyerId}
-                        onChange={(e) => handleSelectLawyer(Number(e.target.value))}
-                        className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
-                      >
-                        <option value={0}>-- Seleccione un especialista registrado --</option>
-                        {availableLawyers.map((l) => (
-                          <option key={l.id} value={l.id}>
-                            {l.fullName} ({l.email}) - {l.specialty}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          placeholder="Ningún especialista seleccionado..."
+                          value={createFormData.fullName ? `${createFormData.fullName} (${createFormData.email})` : ''}
+                          className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:outline-none font-semibold text-gray-900 placeholder:font-normal"
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setSearchLawyerModalTerm('');
+                            setIsLawyerPickerOpen(true);
+                          }}
+                          className="shrink-0"
+                        >
+                          <Search className="h-4 w-4" /> Buscar Especialista
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -557,6 +574,160 @@ export default function UsersManagerPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Picker Buscar Cliente sin Usuario */}
+      {isClientPickerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60">
+          <div className="relative w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Search className="h-5 w-5 text-blue-600" />
+                Buscar Cliente sin Usuario Registrado
+              </h3>
+              <button onClick={() => setIsClientPickerOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Solo se muestran los clientes del Maestro que no tienen una cuenta de acceso registrada.
+            </p>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, correo, documento o código de verificación..."
+                value={searchClientModalTerm}
+                onChange={(e) => setSearchClientModalTerm(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-primary focus:outline-none"
+              />
+            </div>
+
+            <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200">
+              {filteredAvailableClients.length === 0 ? (
+                <p className="p-6 text-center text-xs text-gray-500 italic">
+                  {availableClients.length === 0
+                    ? 'No hay clientes disponibles sin usuario registrado.'
+                    : 'No se encontraron coincidencias para la búsqueda.'}
+                </p>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-gray-50 border-b border-gray-200 font-bold text-gray-500 uppercase">
+                    <tr>
+                      <th className="p-3">Cliente</th>
+                      <th className="p-3">Documento</th>
+                      <th className="p-3">Código Verif.</th>
+                      <th className="p-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredAvailableClients.map((c) => (
+                      <tr key={c.id} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-gray-900">{c.fullName}</div>
+                          <div className="text-gray-500">{c.email}</div>
+                        </td>
+                        <td className="p-3 font-mono text-gray-600">{c.documentId || 'N/A'}</td>
+                        <td className="p-3">
+                          <span className="inline-block rounded bg-gray-100 px-2 py-0.5 font-mono text-[11px] font-bold text-primary border border-gray-200">
+                            {c.verificationCode}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <Button size="sm" onClick={() => handleSelectClient(c)}>
+                            Seleccionar
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <Button variant="outline" onClick={() => setIsClientPickerOpen(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Picker Buscar Especialista sin Usuario */}
+      {isLawyerPickerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60">
+          <div className="relative w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Search className="h-5 w-5 text-emerald-600" />
+                Buscar Especialista sin Usuario Registrado
+              </h3>
+              <button onClick={() => setIsLawyerPickerOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Solo se muestran los especialistas del Maestro que no tienen una cuenta de acceso registrada.
+            </p>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, especialidad o correo..."
+                value={searchLawyerModalTerm}
+                onChange={(e) => setSearchLawyerModalTerm(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-primary focus:outline-none"
+              />
+            </div>
+
+            <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200">
+              {filteredAvailableLawyers.length === 0 ? (
+                <p className="p-6 text-center text-xs text-gray-500 italic">
+                  {availableLawyers.length === 0
+                    ? 'No hay especialistas disponibles sin usuario registrado.'
+                    : 'No se encontraron coincidencias para la búsqueda.'}
+                </p>
+              ) : (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-gray-50 border-b border-gray-200 font-bold text-gray-500 uppercase">
+                    <tr>
+                      <th className="p-3">Especialista</th>
+                      <th className="p-3">Especialidad</th>
+                      <th className="p-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredAvailableLawyers.map((l) => (
+                      <tr key={l.id} className="hover:bg-emerald-50/50 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-gray-900">{l.fullName}</div>
+                          <div className="text-gray-500">{l.email}</div>
+                        </td>
+                        <td className="p-3 font-semibold text-emerald-800">{l.specialty}</td>
+                        <td className="p-3 text-right">
+                          <Button size="sm" onClick={() => handleSelectLawyer(l)}>
+                            Seleccionar
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <Button variant="outline" onClick={() => setIsLawyerPickerOpen(false)}>
+                Cerrar
+              </Button>
+            </div>
           </div>
         </div>
       )}
