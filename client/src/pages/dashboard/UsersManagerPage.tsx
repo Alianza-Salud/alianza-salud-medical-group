@@ -352,12 +352,20 @@ export default function UsersManagerPage() {
                       className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold uppercase ${
                         u.role === 'admin'
                           ? 'bg-purple-100 text-purple-800'
+                          : u.role === 'auxiliar_admisiones'
+                          ? 'bg-amber-100 text-amber-800'
                           : u.role === 'lawyer'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {u.role === 'admin' ? 'Administrador' : u.role === 'lawyer' ? 'Abogado / Médico' : 'Cliente'}
+                      {u.role === 'admin'
+                        ? 'Administrador'
+                        : u.role === 'auxiliar_admisiones'
+                        ? 'Aux. Admisiones'
+                        : u.role === 'lawyer'
+                        ? 'Abogado / Médico'
+                        : 'Cliente'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-xs text-gray-600">{u.phone || 'N/A'}</td>
