@@ -1,14 +1,15 @@
 const LocalStorage = require('./LocalStorage');
+const S3Storage = require('./S3Storage');
 
 class StorageService {
   constructor() {
     const driver = process.env.STORAGE_DRIVER || 'local';
 
-    if (driver === 'local') {
-      this.provider = new LocalStorage();
+    if (driver === 's3') {
+      console.log('[StorageService] Inicializando proveedor de almacenamiento en la Nube (S3 / Cloudflare R2)...');
+      this.provider = new S3Storage();
     } else {
-      // Futuras integraciones (S3Storage, R2Storage)
-      console.warn(`[StorageService] Driver '${driver}' no soportado aún, utilizando LocalStorage fallback.`);
+      console.log('[StorageService] Inicializando proveedor de almacenamiento local privado (LocalStorage)...');
       this.provider = new LocalStorage();
     }
   }
