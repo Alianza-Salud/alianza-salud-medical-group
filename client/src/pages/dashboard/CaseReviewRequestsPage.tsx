@@ -20,6 +20,8 @@ import {
   Save,
   UserPlus,
   Users,
+  Check,
+  Building,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import {
@@ -45,13 +47,13 @@ export default function CaseReviewRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Modal de Detalle y Gestión
+  // Modal de Detalle y Gestión del Lead
   const [selectedPetition, setSelectedPetition] = useState<CaseReviewPetition | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Modal Sub-diálogo de Conversión (Crear o Seleccionar Cliente)
+  // Modal de Conversión (Crear o Seleccionar Cliente)
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [existingClients, setExistingClients] = useState<Client[]>([]);
   const [conversionMode, setConversionMode] = useState<'create' | 'existing'>('create');
@@ -63,6 +65,10 @@ export default function CaseReviewRequestsPage() {
     documentId: '',
     address: '',
   });
+
+  // Modal de Búsqueda y Selección de Cliente del Maestro
+  const [isClientPickerModalOpen, setIsClientPickerModalOpen] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
 
   const loadData = async () => {
     setIsLoading(true);
@@ -110,11 +116,9 @@ export default function CaseReviewRequestsPage() {
     setConversionMode('create');
     setSelectedClientId(null);
 
-    // Cargar lista de clientes existentes del Maestro
     const clients = await fetchClients();
     setExistingClients(clients);
     if (clients.length > 0) {
-      // Si el correo ya coincide con un cliente existente, pre-seleccionarlo
       const match = clients.find((c) => c.email.toLowerCase() === selectedPetition.email.toLowerCase());
       if (match) {
         setConversionMode('existing');
@@ -132,7 +136,7 @@ export default function CaseReviewRequestsPage() {
 
     if (conversionMode === 'existing') {
       if (!selectedClientId) {
-        alert('Debe seleccionar un cliente existente de la lista.');
+        alert('Debe abrir el selector y seleccionar un cliente existente.');
         return;
       }
       payload.clientId = selectedClientId;
@@ -167,6 +171,16 @@ export default function CaseReviewRequestsPage() {
       p.phone.includes(searchTerm) ||
       p.caseType.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const filteredClientsForPicker = existingClients.filter(
+    (c) =>
+      c.fullName.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+      c.email.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+      c.phone.includes(clientSearchTerm) ||
+      (c.documentId && c.documentId.includes(clientSearchTerm))
+  );
+
+  const selectedClientObject = existingClients.find((c) => c.id === selectedClientId);
 
   const pendingCount = petitions.filter((p) => p.status === 'pending').length;
   const inReviewCount = petitions.filter((p) => p.status === 'in_review' || p.status === 'contacted').length;
@@ -538,7 +552,7 @@ export default function CaseReviewRequestsPage() {
         </div>
       )}
 
-      {/* Sub-modal de Conversión (Crear o Seleccionar Cliente) */}
+      {/* Sub-modal de Conversión (Crear o Seleccionar Cliente mediante Modal) */}
       {isConvertModalOpen && selectedPetition && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
           <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
@@ -554,7 +568,7 @@ export default function CaseReviewRequestsPage() {
               </div>
               <button
                 onClick={() => setIsConvertModalOpen(false)}
-                className="rounded-full p-1 text-white/80 hover:bg-white/10 hover:text-white"
+                className="rounded-full p-1 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -613,7 +627,7 @@ export default function CaseReviewRequestsPage() {
                         Seleccionar un Cliente EXISTENTE del Maestro ({existingClients.length})
                       </span>
                       <p className="text-[11px] text-gray-500 mt-0.5">
-                        Vincular el expediente a un cliente ya registrado previamente en el sistema.
+                        Búsqueda y selección interactiva en ventana modal dedicada.
                       </p>
                     </div>
                   </label>
@@ -684,30 +698,47 @@ export default function CaseReviewRequestsPage() {
                 </div>
               )}
 
-              {/* Formulario Modo Seleccionar Cliente Existente */}
+              {/* Modo Seleccionar Cliente Existente mediante Modal */}
               {conversionMode === 'existing' && (
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Seleccionar Cliente Registrado *
-                  </label>
-                  {existingClients.length === 0 ? (
-                    <p className="text-xs text-amber-700 font-medium">
-                      No hay clientes registrados en el Maestro. Por favor elija la opción de crear cliente nuevo.
-                    </p>
-                  ) : (
-                    <select
-                      value={selectedClientId || ''}
-                      onChange={(e) => setSelectedClientId(Number(e.target.value))}
-                      required
-                      className="w-full rounded-lg border border-gray-300 p-2.5 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      Cliente Seleccionado
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsClientPickerModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark cursor-pointer transition-colors"
                     >
-                      <option value="">-- Seleccione un cliente del listado --</option>
-                      {existingClients.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.fullName} ({c.email}) {c.documentId ? `- Cédula: ${c.documentId}` : ''}
-                        </option>
-                      ))}
-                    </select>
+                      <Users className="h-3.5 w-3.5" />
+                      {selectedClientObject ? 'Cambiar Cliente' : 'Abrir Modal de Selección'}
+                    </button>
+                  </div>
+
+                  {selectedClientObject ? (
+                    <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <span>{selectedClientObject.fullName}</span>
+                        </div>
+                        <div className="text-[11px] text-emerald-800 space-y-0.5 mt-1">
+                          <p>Correo: <strong>{selectedClientObject.email}</strong></p>
+                          <p>Teléfono: <strong>{selectedClientObject.phone || 'No registrado'}</strong></p>
+                          <p>Cédula: <strong>{selectedClientObject.documentId || 'Sin registrar'}</strong></p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                        ID #{selectedClientObject.id}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
+                      <p className="font-semibold">Ningún cliente seleccionado del Maestro.</p>
+                      <p className="text-[11px] text-amber-700 mt-0.5">
+                        Haga clic en el botón superior para buscar y elegir un cliente registrado en la ventana modal.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -722,6 +753,120 @@ export default function CaseReviewRequestsPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Exclusivo de Búsqueda y Selección de Cliente del Maestro */}
+      {isClientPickerModalOpen && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Users className="h-6 w-6 text-primary" />
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Seleccionar Cliente del Maestro
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Busque y seleccione el cliente registrado para asignarle el expediente de caso.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsClientPickerModalOpen(false)}
+                className="rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Buscador */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Buscar cliente por nombre, cédula, correo o teléfono..."
+                  value={clientSearchTerm}
+                  onChange={(e) => setClientSearchTerm(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-2.5 text-xs focus:border-primary focus:outline-none bg-gray-50/50"
+                />
+              </div>
+
+              {/* Lista de Clientes Tabla Modal */}
+              <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-100">
+                {filteredClientsForPicker.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-gray-500">
+                    No se encontraron clientes que coincidan con la búsqueda "{clientSearchTerm}".
+                  </div>
+                ) : (
+                  filteredClientsForPicker.map((c) => {
+                    const isSelected = selectedClientId === c.id;
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setSelectedClientId(c.id);
+                          setIsClientPickerModalOpen(false);
+                        }}
+                        className={`flex items-center justify-between p-3.5 hover:bg-primary/5 transition-colors cursor-pointer ${
+                          isSelected ? 'bg-emerald-50/80 border-l-4 border-l-emerald-500' : ''
+                        }`}
+                      >
+                        <div className="min-w-0 pr-3">
+                          <div className="text-xs font-bold text-gray-900 flex items-center gap-2">
+                            <span>{c.fullName}</span>
+                            {c.documentId && (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                                Cédula: {c.documentId}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
+                            <span>{c.email}</span>
+                            <span>•</span>
+                            <span>{c.phone || 'Sin teléfono'}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedClientId(c.id);
+                            setIsClientPickerModalOpen(false);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <span className="flex items-center gap-1">
+                              <Check className="h-3.5 w-3.5" /> Seleccionado
+                            </span>
+                          ) : (
+                            'Seleccionar'
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end">
+              <Button size="sm" variant="outline" onClick={() => setIsClientPickerModalOpen(false)}>
+                Cerrar Selector
+              </Button>
+            </div>
           </div>
         </div>
       )}
