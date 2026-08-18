@@ -33,16 +33,8 @@ import { Card, CardContent, CardHeader } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
-export const INJURY_CASE_TYPES = [
-  'Lesión por Accidente de Tránsito (SOAT)',
-  'Enfermedad o Accidente de Trabajo / Laboral (ARL)',
-  'Negligencia Médica o Secuela Quirúrgica',
-  'Lesión por Responsabilidad Civil / Terceros',
-  'Pérdida de Capacidad Laboral y Ocupacional (PCLO)',
-  'Secuela Traumatológica / Incapacidad Permanente',
-  'Valoración de Estado Secuelar / Daño Corporal',
-  'Otro Tipo de Lesión / Secuela',
-];
+import { fetchCaseTypes } from '../../services/caseTypeService';
+import type { CaseType } from '../../types/caseType';
 
 export default function AdminDashboardPage() {
   usePageMeta('Gestión de Casos', 'Panel de Administración y Gestión Jurídica');
@@ -50,6 +42,7 @@ export default function AdminDashboardPage() {
   const [cases, setCases] = useState<LegalCase[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [lawyers, setLawyers] = useState<Lawyer[]>([]);
+  const [caseTypes, setCaseTypes] = useState<CaseType[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     pendingAppointments: 0,
     unreadMessages: 0,
@@ -95,17 +88,22 @@ export default function AdminDashboardPage() {
 
   const loadAllData = async () => {
     setIsLoading(true);
-    const [casesData, clientsData, lawyersData, statsData] = await Promise.all([
+    const [casesData, clientsData, lawyersData, statsData, caseTypesData] = await Promise.all([
       fetchCases(),
       fetchClients(),
       fetchLawyers(),
       fetchDashboardStats(),
+      fetchCaseTypes(),
     ]);
     setCases(casesData);
     setClients(clientsData);
     setLawyers(lawyersData);
     setDashboardStats(statsData);
+    setCaseTypes(caseTypesData);
 
+    if (caseTypesData.length > 0 && !newCaseData.caseType) {
+      setNewCaseData((prev) => ({ ...prev, caseType: caseTypesData[0].name }));
+    }
     if (clientsData.length > 0 && newCaseData.clientId === 0) {
       setNewCaseData((prev) => ({ ...prev, clientId: clientsData[0].id }));
     }
@@ -493,9 +491,9 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setNewCaseData({ ...newCaseData, caseType: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm bg-white focus:border-primary focus:outline-none"
                   >
-                    {INJURY_CASE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {caseTypes.map((t) => (
+                      <option key={t.id} value={t.name}>
+                        {t.name}
                       </option>
                     ))}
                   </select>
