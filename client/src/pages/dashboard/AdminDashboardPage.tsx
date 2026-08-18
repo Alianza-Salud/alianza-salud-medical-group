@@ -33,6 +33,17 @@ import { Card, CardContent, CardHeader } from '../../components/ui/Card';
 import { Alert } from '../../components/ui/Alert';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
+export const INJURY_CASE_TYPES = [
+  'Lesión por Accidente de Tránsito (SOAT)',
+  'Enfermedad o Accidente de Trabajo / Laboral (ARL)',
+  'Negligencia Médica o Secuela Quirúrgica',
+  'Lesión por Responsabilidad Civil / Terceros',
+  'Pérdida de Capacidad Laboral y Ocupacional (PCLO)',
+  'Secuela Traumatológica / Incapacidad Permanente',
+  'Valoración de Estado Secuelar / Daño Corporal',
+  'Otro Tipo de Lesión / Secuela',
+];
+
 export default function AdminDashboardPage() {
   usePageMeta('Gestión de Casos', 'Panel de Administración y Gestión Jurídica');
 
@@ -107,17 +118,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadAllData();
   }, []);
-
-export const INJURY_CASE_TYPES = [
-  'Lesión por Accidente de Tránsito (SOAT)',
-  'Enfermedad o Accidente de Trabajo / Laboral (ARL)',
-  'Negligencia Médica o Secuela Quirúrgica',
-  'Lesión por Responsabilidad Civil / Terceros',
-  'Pérdida de Capacidad Laboral y Ocupacional (PCLO)',
-  'Secuela Traumatológica / Incapacidad Permanente',
-  'Valoración de Estado Secuelar / Daño Corporal',
-  'Otro Tipo de Lesión / Secuela',
-];
 
   const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
