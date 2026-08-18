@@ -466,7 +466,7 @@ export default function CaseDetailPage() {
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Anexar Archivo(s) Real(es) (.pdf, .docx, .txt, .png, etc.) — Puede seleccionar varios archivos a la vez
+                      Anexar Archivo(s) Real(es) (.pdf, .docx, .png, etc. máx. 25 MB por archivo)
                     </label>
                     <input
                       type="file"
@@ -474,9 +474,14 @@ export default function CaseDetailPage() {
                       accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip"
                       onChange={(e) => {
                         const files = e.target.files ? Array.from(e.target.files) : [];
-                        setSelectedFiles(files);
-                        if (files.length === 1 && !docName) {
-                          setDocName(files[0].name);
+                        const oversized = files.filter((f) => f.size > 25 * 1024 * 1024);
+                        if (oversized.length > 0) {
+                          alert(`Uno o más archivos exceden el tamaño máximo permitido de 25 MB: ${oversized.map(f => f.name).join(', ')}`);
+                        }
+                        const valid = files.filter((f) => f.size <= 25 * 1024 * 1024);
+                        setSelectedFiles(valid);
+                        if (valid.length === 1 && !docName) {
+                          setDocName(valid[0].name);
                         }
                       }}
                       className="w-full text-xs text-gray-600 border border-gray-300 rounded-lg p-2 bg-white cursor-pointer"

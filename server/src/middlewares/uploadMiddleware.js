@@ -2,6 +2,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Tamaño máximo permitido por documento: 25 MB
+const MAX_FILE_SIZE_MB = 25;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 // Crear la carpeta server/uploads/documents si no existe
 const uploadDir = path.join(__dirname, '../../uploads/documents');
 if (!fs.existsSync(uploadDir)) {
@@ -20,11 +24,43 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
+const rawUpload = multer({
   storage: storage,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20 MB máximo por archivo
+    fileSize: MAX_FILE_SIZE_BYTES, // 25 MB por archivo
   },
 });
 
-module.exports = upload;
+/**
+ * Middleware para envolver multer y capturar errores de tamaño (LIMIT_FILE_SIZE)
+ */
+function handleUploadMiddleware(multerMethod) {
+  return (req, res, next) => {
+    multerMethod(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            success: false,
+            error: {
+              message: `Uno o más archivos exceden el tamaño máximo permitido por documento (${MAX_FILE_SIZE_MB} MB). Por favor reduzca el archivo o comprímalo.`,
+              status: 400,
+            },
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          error: { message: err.message || 'Error al procesar la subida del archivo.', status: 400 },
+        });
+      }
+      next();
+    });
+  };
+}
+
+module.exports = {
+  single: (fieldName) => handleUploadMiddleware(rawUpload.single(fieldName)),
+  array: (fieldName, maxCount) => handleUploadMiddleware(rawUpload.array(fieldName, maxCount)),
+  any: () => handleUploadMiddleware(rawUpload.any()),
+  MAX_FILE_SIZE_MB,
+  MAX_FILE_SIZE_BYTES,
+};

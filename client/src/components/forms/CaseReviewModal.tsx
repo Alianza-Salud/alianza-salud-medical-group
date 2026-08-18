@@ -23,10 +23,18 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
 
   if (!isOpen) return null;
 
+  const MAX_FILE_SIZE_MB = 25;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selected = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...selected]);
+      const oversized = selected.filter((f) => f.size > MAX_FILE_SIZE_BYTES);
+      if (oversized.length > 0) {
+        setErrorMsg(`Uno o más archivos exceden el tamaño máximo permitido de ${MAX_FILE_SIZE_MB} MB: ${oversized.map((f) => f.name).join(', ')}`);
+      }
+      const valid = selected.filter((f) => f.size <= MAX_FILE_SIZE_BYTES);
+      setFiles((prev) => [...prev, ...valid]);
     }
   };
 
@@ -211,7 +219,7 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
                   Adjuntar Documentos Disponibles (Opcional para comenzar)
                 </label>
                 <p className="text-[11px] text-gray-500 mb-3">
-                  Puedes adjuntar IPAT, Historia Clínica, Epicrisis, Incapacidades o Imágenes diagnósticas (.pdf, .jpg, .png). <strong>No es obligatorio tener todos.</strong>
+                  Puedes adjuntar IPAT, Historia Clínica, Epicrisis, Incapacidades o Imágenes diagnósticas (.pdf, .jpg, .png, máx. 25 MB por archivo). <strong>No es obligatorio tener todos.</strong>
                 </p>
 
                 <div className="flex items-center gap-3">
