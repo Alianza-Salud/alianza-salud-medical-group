@@ -13,6 +13,18 @@ class CaseRepository {
   /**
    * Crear un nuevo caso asociándolo a un cliente existente y múltiples especialistas.
    */
+  async ensureSchema() {
+    if (!pool) return;
+    try {
+      const [indexes] = await pool.query("SHOW INDEX FROM cases WHERE Column_name = 'verification_code' AND Non_unique = 0");
+      for (const idx of indexes) {
+        if (idx.Key_name !== 'PRIMARY') {
+          await pool.query(`ALTER TABLE cases DROP INDEX ${idx.Key_name}`);
+        }
+      }
+    } catch {}
+  }
+
   async createCase({
     clientId,
     serviceSlug,
@@ -24,6 +36,7 @@ class CaseRepository {
     assignedLawyerName = 'Equipo Jurídico Alianza Salud',
   }) {
     if (!pool) return null;
+    await this.ensureSchema();
 
     const client = await clientRepository.findById(clientId);
     if (!client) {
