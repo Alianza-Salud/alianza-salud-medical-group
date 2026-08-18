@@ -30,3 +30,19 @@ export async function updateUser(id: number, data: Partial<User>): Promise<{ suc
   }
   return { success: false, message: 'Error al actualizar usuario.' };
 }
+
+export async function resetUserPassword(id: number, newPassword?: string): Promise<{ success: boolean; message?: string; temporaryPassword?: string }> {
+  try {
+    const res = await apiClient.post<ApiResponse<{ userId: number; temporaryPassword: string }>>(`/users/${id}/reset-password`, { newPassword });
+    if (res.ok && res.data && res.data.success) {
+      return {
+        success: true,
+        message: res.data.message,
+        temporaryPassword: res.data.data.temporaryPassword,
+      };
+    }
+  } catch (error) {
+    console.error('[UserService Error] resetUserPassword:', error);
+  }
+  return { success: false, message: 'Error al restablecer la contraseña.' };
+}

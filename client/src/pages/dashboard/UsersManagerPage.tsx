@@ -10,9 +10,13 @@ import {
   Building2,
   ShieldCheck,
   AlertCircle,
+  KeyRound,
+  Copy,
+  Lock,
+  Check,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { fetchUsers, updateUser } from '../../services/userService';
+import { fetchUsers, updateUser, resetUserPassword } from '../../services/userService';
 import { fetchClients } from '../../services/clientService';
 import { fetchLawyers } from '../../services/lawyerService';
 import type { User, UserRole } from '../../types/auth';
@@ -37,6 +41,14 @@ export default function UsersManagerPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // Modal Restablecer Contraseña
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState<User | null>(null);
+  const [customNewPassword, setCustomNewPassword] = useState('');
+  const [generatedPasswordResult, setGeneratedPasswordResult] = useState<string | null>(null);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,6 +135,38 @@ export default function UsersManagerPage() {
     });
     setErrorMessage(null);
     setIsEditModalOpen(true);
+  };
+
+  const openResetPasswordModal = (u: User) => {
+    setResetTargetUser(u);
+    setCustomNewPassword('');
+    setGeneratedPasswordResult(null);
+    setIsCopied(false);
+    setErrorMessage(null);
+    setIsResetModalOpen(true);
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetTargetUser) return;
+    setIsResettingPassword(true);
+    setErrorMessage(null);
+
+    const res = await resetUserPassword(resetTargetUser.id, customNewPassword);
+    setIsResettingPassword(false);
+
+    if (res.success && res.temporaryPassword) {
+      setGeneratedPasswordResult(res.temporaryPassword);
+    } else {
+      setErrorMessage(res.message || 'Error al restablecer la contraseña.');
+    }
+  };
+
+  const handleCopyPassword = () => {
+    if (!generatedPasswordResult) return;
+    navigator.clipboard.writeText(generatedPasswordResult);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2500);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -329,10 +373,23 @@ export default function UsersManagerPage() {
                     </button>
                   </td>
                   <td className="px-6 py-4">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(u)}>
-                      <Edit2 className="h-4 w-4" />
-                      Editar
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(u)}>
+                        <Edit2 className="h-4 w-4" />
+                        Editar
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openResetPasswordModal(u)}
+                        title="Restablecer Contraseña del Usuario"
+                        className="text-amber-700 border-amber-200 hover:bg-amber-50"
+                      >
+                        <KeyRound className="h-4 w-4 text-amber-600" />
+                        Restablecer Clave
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -801,6 +858,81 @@ export default function UsersManagerPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Restablecer Contraseña */}
+      {isResetModalOpen && resetTargetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-amber-600" />
+                Restablecer Contraseña de Usuario
+              </h3>
+              <button onClick={() => setIsResetModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
+              <span className="text-xs font-bold text-amber-900 uppercase">Usuario Seleccionado</span>
+              <p className="text-sm font-bold text-gray-900">{resetTargetUser.fullName}</p>
+              <p className="text-xs text-gray-600">{resetTargetUser.email}</p>
+            </div>
+
+            {errorMessage && <Alert variant="error" message={errorMessage} dismissible />}
+
+            {generatedPasswordResult ? (
+              <div className="space-y-3 p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-center">
+                <p className="text-xs font-bold text-emerald-900 uppercase">¡Contraseña Restablecida con Éxito!</p>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <span className="font-mono text-lg font-bold text-emerald-950 bg-white px-4 py-1.5 rounded-lg border border-emerald-300 tracking-wider">
+                    {generatedPasswordResult}
+                  </span>
+                  <Button size="sm" onClick={handleCopyPassword} variant="outline">
+                    {isCopied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                    {isCopied ? '¡Copiado!' : 'Copiar'}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-emerald-700">
+                  Proporcione esta nueva clave temporal al usuario para que pueda acceder a la plataforma.
+                </p>
+                <div className="pt-2">
+                  <Button className="w-full" onClick={() => setIsResetModalOpen(false)}>
+                    Finalizar y Cerrar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Nueva Contraseña (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Deje en blanco para auto-generar clave aleatoria..."
+                    value={customNewPassword}
+                    onChange={(e) => setCustomNewPassword(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm focus:border-primary focus:outline-none"
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    Si deja el campo vacío, el sistema generará automáticamente una clave segura (ej. <em>Alianza8492!</em>).
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-gray-200 flex justify-end gap-3">
+                  <Button type="button" variant="outline" onClick={() => setIsResetModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" isLoading={isResettingPassword}>
+                    Restablecer Contraseña
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

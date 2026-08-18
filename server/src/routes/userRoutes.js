@@ -8,5 +8,6 @@ router.use(authenticateToken, requireRole('admin'));
 router.get('/', userController.getUsers);
 router.post('/', userController.createUser);
 router.put('/:id', userController.updateUser);
+router.post('/:id/reset-password', userController.resetUserPassword);
 
 module.exports = router;

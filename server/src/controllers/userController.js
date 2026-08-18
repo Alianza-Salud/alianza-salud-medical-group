@@ -106,8 +106,36 @@ async function updateUser(req, res, next) {
   }
 }
 
+async function resetUserPassword(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body || {};
+
+    const targetPassword = newPassword && String(newPassword).trim()
+      ? String(newPassword).trim()
+      : `Alianza${Math.floor(1000 + Math.random() * 9000)}!`;
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(targetPassword, salt);
+
+    await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, id]);
+
+    return res.json({
+      success: true,
+      message: 'Contraseña restablecida exitosamente.',
+      data: {
+        userId: parseInt(id, 10),
+        temporaryPassword: targetPassword,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUsers,
   createUser,
   updateUser,
+  resetUserPassword,
 };
