@@ -21,6 +21,7 @@ try {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    charset: 'utf8mb4',
   });
 } catch (error) {
   console.warn('[MySQL Pool Warning] No se pudo inicializar el pool de MySQL:', error.message);
