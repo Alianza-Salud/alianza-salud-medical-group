@@ -1,10 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const caseRepository = require('../repositories/caseRepository');
-
-/**
- * Controlador de Casos y Movimientos.
- */
-
 const lawyerRepository = require('../repositories/lawyerRepository');
+const storageService = require('../storage/StorageService');
 
 async function getCases(req, res, next) {
   try {
@@ -207,18 +205,33 @@ async function addCaseDocument(req, res, next) {
         const file = files[i];
         const docName = files.length === 1 && name && name.trim() ? name.trim() : file.originalname;
 
+        // Guardar archivo mediante StorageService
+        const stored = await storageService.uploadFile(file.path, file.originalname, file.mimetype);
+
         const doc = await caseRepository.addDocument({
           caseId: parseInt(caseId, 10),
           name: docName,
           type: type || 'recibido',
           description: description || '',
-          filePath: `/uploads/documents/${file.filename}`,
+          filePath: `/uploads/documents/${file.filename}`, // Conservado para compatibilidad legada
+          storageKey: stored.storageKey,
+          checksum: stored.checksum,
           originalName: file.originalname,
           mimeType: file.mimetype,
-          fileSize: file.size,
+          fileSize: stored.size,
           uploadedByName: req.user.fullName || 'Administración',
           visibleToClient: isVisible,
+          status: 'ready',
         });
+
+        // Limpiar archivo temporal si se guardó en almacenamiento interno
+        if (fs.existsSync(file.path)) {
+          try {
+            await fs.promises.unlink(file.path);
+          } catch (err) {
+            // Silencioso
+          }
+        }
 
         createdDocs.push(doc);
       }
@@ -229,11 +242,14 @@ async function addCaseDocument(req, res, next) {
         type: type || 'recibido',
         description: description || '',
         filePath: '',
+        storageKey: '',
+        checksum: '',
         originalName: '',
         mimeType: '',
         fileSize: null,
         uploadedByName: req.user.fullName || 'Administración',
         visibleToClient: isVisible,
+        status: 'ready',
       });
       createdDocs.push(doc);
     }
@@ -247,6 +263,44 @@ async function addCaseDocument(req, res, next) {
       message,
       data: createdDocs.length === 1 ? createdDocs[0] : createdDocs,
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function downloadCaseDocument(req, res, next) {
+  try {
+    const { id: caseId, docId } = req.params;
+    const doc = await caseRepository.findDocumentById(parseInt(docId, 10));
+
+    if (!doc || doc.caseId !== parseInt(caseId, 10)) {
+      return res.status(404).json({ success: false, message: 'Documento no encontrado en este expediente.' });
+    }
+
+    // Comprobar autorización para cliente
+    if (req.user.role === 'client' && !doc.visibleToClient) {
+      return res.status(403).json({ success: false, message: 'No tiene autorización para descargar este documento.' });
+    }
+
+    // 1. Descarga desde StorageService si existe storageKey
+    if (doc.storageKey && (await storageService.exists(doc.storageKey))) {
+      const stream = storageService.getReadStream(doc.storageKey);
+      const safeFilename = doc.originalName || doc.name || 'documento.pdf';
+      res.setHeader('Content-Type', doc.mimeType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(safeFilename)}"`);
+      return stream.pipe(res);
+    }
+
+    // 2. Descarga de respaldo desde almacenamiento legado
+    if (doc.filePath) {
+      const legacyAbsolutePath = path.join(__dirname, '../../', doc.filePath);
+      if (fs.existsSync(legacyAbsolutePath)) {
+        const safeFilename = doc.originalName || doc.name || 'documento.pdf';
+        return res.download(legacyAbsolutePath, safeFilename);
+      }
+    }
+
+    return res.status(404).json({ success: false, message: 'El archivo físico del documento no está disponible en el servidor.' });
   } catch (error) {
     next(error);
   }
@@ -298,6 +352,7 @@ module.exports = {
   updateCaseStage,
   addCaseUpdate,
   addCaseDocument,
+  downloadCaseDocument,
   getCaseDocuments,
   updateCaseLawyers,
   updateDocumentVisibility,

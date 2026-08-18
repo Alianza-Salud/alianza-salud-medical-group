@@ -175,6 +175,33 @@ class CaseRepository {
   }
 
   /**
+   * Buscar un documento por su ID.
+   */
+  async findDocumentById(docId) {
+    if (!pool) return null;
+    const [rows] = await pool.query('SELECT * FROM documents WHERE id = ?', [docId]);
+    if (rows.length === 0) return null;
+    const d = rows[0];
+    return {
+      id: d.id,
+      caseId: d.case_id,
+      name: d.name,
+      type: d.type,
+      description: d.description,
+      filePath: d.file_path,
+      storageKey: d.storage_key,
+      checksum: d.checksum,
+      originalName: d.original_name,
+      mimeType: d.mime_type,
+      fileSize: d.file_size,
+      uploadedByName: d.uploaded_by_name,
+      status: d.status,
+      visibleToClient: Boolean(d.visible_to_client),
+      createdAt: d.created_at,
+    };
+  }
+
+  /**
    * Buscar documentos de un caso.
    */
   async findDocumentsByCaseId(caseId, isClientOnly = false) {
@@ -190,6 +217,8 @@ class CaseRepository {
       type: d.type,
       description: d.description,
       filePath: d.file_path,
+      storageKey: d.storage_key,
+      checksum: d.checksum,
       originalName: d.original_name,
       uploadedByName: d.uploaded_by_name,
       status: d.status,
@@ -207,17 +236,20 @@ class CaseRepository {
     type = 'recibido',
     description = '',
     filePath = '',
+    storageKey = '',
+    checksum = '',
     originalName = '',
     mimeType = '',
     fileSize = null,
     uploadedByName = 'Administración',
     visibleToClient = false,
+    status = 'ready',
   }) {
     if (!pool) return null;
     const [result] = await pool.query(
-      `INSERT INTO documents (case_id, name, type, description, file_path, original_name, mime_type, file_size, uploaded_by_name, visible_to_client)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [caseId, name, type, description, filePath, originalName, mimeType, fileSize, uploadedByName, visibleToClient ? 1 : 0]
+      `INSERT INTO documents (case_id, name, type, description, file_path, storage_key, checksum, original_name, mime_type, file_size, uploaded_by_name, visible_to_client, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [caseId, name, type, description, filePath, storageKey, checksum, originalName, mimeType, fileSize, uploadedByName, visibleToClient ? 1 : 0, status]
     );
 
     return {
@@ -227,11 +259,14 @@ class CaseRepository {
       type,
       description,
       filePath,
+      storageKey,
+      checksum,
       originalName,
       mimeType,
       fileSize,
       uploadedByName,
       visibleToClient: Boolean(visibleToClient),
+      status,
       createdAt: new Date().toISOString(),
     };
   }

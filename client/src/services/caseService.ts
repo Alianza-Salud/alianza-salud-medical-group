@@ -116,3 +116,33 @@ export async function toggleDocumentVisibility(docId: number, visibleToClient: b
   }
   return { success: false, message: 'Error al cambiar la visibilidad del documento.' };
 }
+
+export async function downloadDocument(caseId: number, docId: number, filename: string): Promise<boolean> {
+  try {
+    const token = localStorage.getItem('alianza_token');
+    const response = await fetch(`http://localhost:3001/api/cases/${caseId}/documents/${docId}/download`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      console.error('[downloadDocument Error] HTTP:', response.status);
+      return false;
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'documento.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    return true;
+  } catch (error) {
+    console.error('[CaseService Error] downloadDocument:', error);
+    return false;
+  }
+}
