@@ -21,7 +21,7 @@ import {
   UserPlus,
   Users,
   Check,
-  Building,
+  ArrowRight,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import {
@@ -55,6 +55,7 @@ export default function CaseReviewRequestsPage() {
 
   // Modal de Conversión (Crear o Seleccionar Cliente)
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [convertModalError, setConvertModalError] = useState<string | null>(null);
   const [existingClients, setExistingClients] = useState<Client[]>([]);
   const [conversionMode, setConversionMode] = useState<'create' | 'existing'>('create');
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
@@ -65,6 +66,13 @@ export default function CaseReviewRequestsPage() {
     documentId: '',
     address: '',
   });
+
+  // Modal de Éxito de Apertura de Expediente
+  const [conversionSuccessData, setConversionSuccessData] = useState<{
+    caseId: number;
+    clientName: string;
+    caseType: string;
+  } | null>(null);
 
   // Modal de Búsqueda y Selección de Cliente del Maestro
   const [isClientPickerModalOpen, setIsClientPickerModalOpen] = useState(false);
@@ -115,6 +123,7 @@ export default function CaseReviewRequestsPage() {
     });
     setConversionMode('create');
     setSelectedClientId(null);
+    setConvertModalError(null);
 
     const clients = await fetchClients();
     setExistingClients(clients);
@@ -131,36 +140,42 @@ export default function CaseReviewRequestsPage() {
   const handleConfirmConversion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPetition) return;
+    setConvertModalError(null);
 
     let payload: { clientId?: number; clientData?: typeof newClientData } = {};
 
     if (conversionMode === 'existing') {
       if (!selectedClientId) {
-        alert('Debe abrir el selector y seleccionar un cliente existente.');
+        setConvertModalError('Debe abrir el selector y elegir un cliente existente del Maestro.');
         return;
       }
       payload.clientId = selectedClientId;
     } else {
       if (!newClientData.fullName.trim() || !newClientData.email.trim()) {
-        alert('Por favor complete el nombre y correo del nuevo cliente.');
+        setConvertModalError('Por favor complete el nombre y correo del nuevo cliente.');
         return;
       }
       payload.clientData = newClientData;
     }
 
     setIsUpdatingStatus(true);
-    setAlertMsg(null);
 
     const res = await convertPetitionToCase(selectedPetition.id, payload);
     setIsUpdatingStatus(false);
-    setIsConvertModalOpen(false);
 
     if (res.success && res.caseId) {
-      alert(`¡Expediente de Caso #${res.caseId} aperturado exitosamente! Se han vinculado los datos y documentos adjuntos.`);
+      const clientName = conversionMode === 'existing' && selectedClientObject ? selectedClientObject.fullName : newClientData.fullName;
+      setIsConvertModalOpen(false);
       setSelectedPetition(null);
-      navigate(`/dashboard/casos/${res.caseId}`);
+      loadData();
+      
+      setConversionSuccessData({
+        caseId: res.caseId,
+        clientName: clientName || selectedPetition.fullName,
+        caseType: selectedPetition.caseType,
+      });
     } else {
-      setAlertMsg({ type: 'error', message: res.message || 'Error al convertir en expediente.' });
+      setConvertModalError(res.message || 'Error al convertir la solicitud en expediente.');
     }
   };
 
@@ -408,9 +423,7 @@ export default function CaseReviewRequestsPage() {
             {/* Body Modal */}
             <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
               {alertMsg && (
-                <Alert variant={alertMsg.type === 'success' ? 'success' : 'error'}>
-                  {alertMsg.message}
-                </Alert>
+                <Alert variant={alertMsg.type} message={alertMsg.message} />
               )}
 
               {/* Información de Contacto */}
@@ -575,6 +588,10 @@ export default function CaseReviewRequestsPage() {
             </div>
 
             <form onSubmit={handleConfirmConversion} className="p-6 space-y-5">
+              {convertModalError && (
+                <Alert variant="error" message={convertModalError} dismissible />
+              )}
+
               {/* Opciones de Selección de Cliente */}
               <div>
                 <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
@@ -865,6 +882,53 @@ export default function CaseReviewRequestsPage() {
             <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end">
               <Button size="sm" variant="outline" onClick={() => setIsClientPickerModalOpen(false)}>
                 Cerrar Selector
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Moderno de Éxito de Apertura de Expediente */}
+      {conversionSuccessData && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden text-center p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-inner">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+            </div>
+
+            <div>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Expediente Creado Con Éxito
+              </span>
+              <h3 className="text-xl font-bold text-gray-900 mt-3">
+                Expediente de Caso #{conversionSuccessData.caseId}
+              </h3>
+              <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                Se ha aperturado el expediente en MySQL para <strong>{conversionSuccessData.clientName}</strong> ({conversionSuccessData.caseType}) y se han vinculado todos los antecedentes y soportes adjuntados.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+              <Button
+                fullWidth
+                size="lg"
+                onClick={() => {
+                  const caseId = conversionSuccessData.caseId;
+                  setConversionSuccessData(null);
+                  navigate(`/dashboard/casos/${caseId}`);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                <ArrowRight className="h-4 w-4" />
+                Ir al Expediente del Caso
+              </Button>
+              <Button
+                variant="outline"
+                fullWidth
+                size="lg"
+                onClick={() => setConversionSuccessData(null)}
+              >
+                Permanecer Aquí
               </Button>
             </div>
           </div>

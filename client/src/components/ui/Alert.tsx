@@ -7,7 +7,8 @@ type AlertVariant = 'success' | 'error' | 'info' | 'warning';
 interface AlertProps {
   variant: AlertVariant;
   title?: string;
-  message: string;
+  message?: string;
+  children?: React.ReactNode;
   dismissible?: boolean;
   className?: string;
 }
@@ -36,12 +37,13 @@ const variantConfig = {
 };
 
 /**
- * Componente de alerta reutilizable con variantes y opción de cerrar.
+ * Componente de alerta reutilizable con soporte para message prop o children.
  */
 export function Alert({
   variant,
   title,
   message,
+  children,
   dismissible = false,
   className,
 }: AlertProps) {
@@ -52,24 +54,28 @@ export function Alert({
   const config = variantConfig[variant];
   const Icon = config.icon;
 
+  const content = message || children;
+
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-lg border p-4',
+        'flex items-start gap-3 rounded-xl border p-4 shadow-2xs',
         config.containerClass,
         className
       )}
       role="alert"
     >
       <Icon className={cn('h-5 w-5 mt-0.5 shrink-0', config.iconClass)} />
-      <div className="flex-1">
-        {title && <p className="font-semibold">{title}</p>}
-        <p className={cn(title && 'mt-1', 'text-sm')}>{message}</p>
+      <div className="flex-1 min-w-0">
+        {title && <p className="font-bold text-sm">{title}</p>}
+        <div className={cn(title && 'mt-1', 'text-xs sm:text-sm font-medium leading-relaxed')}>
+          {content}
+        </div>
       </div>
       {dismissible && (
         <button
           onClick={() => setIsVisible(false)}
-          className="shrink-0 rounded-md p-1 hover:bg-black/5 transition-colors"
+          className="shrink-0 rounded-md p-1 hover:bg-black/5 transition-colors cursor-pointer"
           aria-label="Cerrar alerta"
         >
           <X className="h-4 w-4" />
