@@ -85,6 +85,9 @@ export async function convertPetitionToCase(
         caseId: res.data.data.caseId,
       };
     }
+    if (res.data && (res.data as any).error) {
+      return { success: false, message: (res.data as any).error.message };
+    }
   } catch (error) {
     console.error('[caseReviewService Error] convertPetitionToCase:', error);
   }

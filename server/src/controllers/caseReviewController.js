@@ -118,23 +118,31 @@ async function convertToCase(req, res, next) {
         });
       }
     } else {
-      // Opción B: Crear un nuevo cliente o buscarlo si el correo ya existe
+      // Opción B: Crear un nuevo cliente. Verificar si el correo ya existe.
       const nameToUse = (clientData && clientData.fullName) || petition.fullName;
       const emailToUse = (clientData && clientData.email) || petition.email;
       const phoneToUse = (clientData && clientData.phone) || petition.phone;
       const docIdToUse = (clientData && clientData.documentId) || '';
       const addressToUse = (clientData && clientData.address) || '';
 
-      client = await clientRepository.findByEmail(emailToUse);
-      if (!client) {
-        client = await clientRepository.create({
-          fullName: nameToUse,
-          email: emailToUse,
-          phone: phoneToUse,
-          documentId: docIdToUse,
-          address: addressToUse,
+      const existingClient = await clientRepository.findByEmail(emailToUse);
+      if (existingClient) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: `No es posible crear el nuevo cliente porque el correo "${emailToUse}" ya se encuentra registrado en el Maestro de Clientes (Cliente: ${existingClient.fullName}). Por favor seleccione la opción "Seleccionar un cliente existente del Maestro".`,
+            status: 400,
+          },
         });
       }
+
+      client = await clientRepository.create({
+        fullName: nameToUse,
+        email: emailToUse,
+        phone: phoneToUse,
+        documentId: docIdToUse,
+        address: addressToUse,
+      });
     }
 
     // 2. Crear el Expediente de Caso en MySQL
