@@ -119,15 +119,16 @@ export async function toggleDocumentVisibility(docId: number, visibleToClient: b
 
 export async function downloadDocument(caseId: number, docId: number, filename: string): Promise<boolean> {
   try {
-    const token = localStorage.getItem('alianza_token');
-    const response = await fetch(`http://localhost:3001/api/cases/${caseId}/documents/${docId}/download`, {
+    const token = localStorage.getItem('auth_token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${docId}/download`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
     if (!response.ok) {
-      console.error('[downloadDocument Error] HTTP:', response.status);
+      console.error('[downloadDocument Error] HTTP status:', response.status);
       return false;
     }
 
@@ -139,7 +140,7 @@ export async function downloadDocument(caseId: number, docId: number, filename: 
     document.body.appendChild(a);
     a.click();
     a.remove();
-    window.URL.revokeObjectURL(url);
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     return true;
   } catch (error) {
     console.error('[CaseService Error] downloadDocument:', error);

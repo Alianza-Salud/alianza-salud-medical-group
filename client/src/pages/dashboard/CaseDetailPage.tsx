@@ -176,6 +176,15 @@ export default function CaseDetailPage() {
     }
   };
 
+  const handleDownloadDocument = async (docId: number, filename: string) => {
+    if (!caseData) return;
+    setAlertMsg(null);
+    const ok = await downloadDocument(caseData.id, docId, filename);
+    if (!ok) {
+      setAlertMsg({ type: 'error', message: 'No se pudo descargar el archivo. Verifique los permisos de su cuenta o vuelva a iniciar sesión.' });
+    }
+  };
+
   const handleAddUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caseData || !updateTitle.trim() || !updateDesc.trim()) return;
@@ -589,7 +598,7 @@ export default function CaseDetailPage() {
                         {(doc.storageKey || doc.filePath) && (
                           <button
                             type="button"
-                            onClick={() => downloadDocument(caseData.id, doc.id, doc.originalName || doc.name)}
+                            onClick={() => handleDownloadDocument(doc.id, doc.originalName || doc.name)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark transition-colors shadow-xs cursor-pointer"
                           >
                             <Upload className="h-3.5 w-3.5 rotate-180" /> Descargar
