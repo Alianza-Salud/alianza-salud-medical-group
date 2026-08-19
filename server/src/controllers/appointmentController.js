@@ -60,21 +60,21 @@ async function updateStatus(req, res, next) {
 
     // Disparar eventos de notificación según el cambio de estado
     if (existingAppointment && status) {
-      if (status === 'confirmed') {
+      if (status === 'confirmed' || status === 'approved') {
         notificationService.emit('APPOINTMENT_CONFIRMED', {
-          fullName: existingAppointment.full_name,
+          fullName: existingAppointment.full_name || existingAppointment.fullName,
           email: existingAppointment.email,
-          serviceType: existingAppointment.service_type,
-          date: existingAppointment.preferred_date,
-          time: existingAppointment.preferred_time,
+          serviceType: existingAppointment.service_type || existingAppointment.serviceType,
+          date: existingAppointment.preferred_date || existingAppointment.preferredDate,
+          time: existingAppointment.preferred_time || existingAppointment.preferredTime,
           modality: 'Presencial en Sede / Remota',
         });
-      } else if (status === 'cancelled') {
+      } else if (status === 'cancelled' || status === 'rejected') {
         notificationService.emit('APPOINTMENT_CANCELLED', {
-          fullName: existingAppointment.full_name,
+          fullName: existingAppointment.full_name || existingAppointment.fullName,
           email: existingAppointment.email,
-          date: existingAppointment.preferred_date,
-          time: existingAppointment.preferred_time,
+          date: existingAppointment.preferred_date || existingAppointment.preferredDate,
+          time: existingAppointment.preferred_time || existingAppointment.preferredTime,
           reason: reason || 'Cancelado por administración.',
         });
       }
