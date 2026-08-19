@@ -9,6 +9,10 @@
  * Para activar esta paleta, importa './index.css' en client/src/main.tsx
  */
 
+:root {
+  --spotlight-color: rgba(13, 148, 136, 0.12);
+}
+
 @theme {
   --color-primary: #0f2b48;
   --color-primary-light: #1e3a5f;

@@ -11,7 +11,7 @@ interface SpotlightCardProps {
 
 /**
  * Tarjeta interactiva con efecto de luz radial (Spotlight) sutil en escritorio.
- * La tonalidad de la luz se adapta automáticamente al CSS importado (index.css vs index2.css).
+ * Lee automáticamente la variable CSS --spotlight-color definida en el archivo CSS activo (index.css vs index2.css).
  */
 export function SpotlightCard({
   children,
@@ -22,7 +22,8 @@ export function SpotlightCard({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mousePosition = useMousePosition(containerRef);
 
-  const defaultSpotlight = spotlightColor || 'rgba(14, 165, 233, 0.12)';
+  // Lee --spotlight-color desde CSS para responder al archivo cargado en main.tsx
+  const effectiveSpotlightColor = spotlightColor || 'var(--spotlight-color, rgba(14, 165, 233, 0.12))';
 
   return (
     <div
@@ -38,7 +39,7 @@ export function SpotlightCard({
       <div
         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:block"
         style={{
-          background: `radial-gradient(320px circle at ${mousePosition.x}px ${mousePosition.y}px, ${defaultSpotlight}, transparent 80%)`,
+          background: `radial-gradient(320px circle at ${mousePosition.x}px ${mousePosition.y}px, ${effectiveSpotlightColor}, transparent 80%)`,
         }}
       />
 
