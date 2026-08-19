@@ -1,4 +1,4 @@
-import { useParams, Link, useOutletContext } from 'react';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, UploadCloud, FileCheck, AlertCircle } from 'lucide-react';
 import { getIconByName } from '../lib/icons';
 import { usePageMeta } from '../hooks/usePageMeta';
