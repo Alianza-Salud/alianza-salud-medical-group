@@ -80,23 +80,41 @@ const templates = {
   },
 
   // 4. Confirmación de Cita
-  APPOINTMENT_CONFIRMED: ({ fullName, serviceType, date, time, modality }) => {
-    const subject = `Tu cita ha sido confirmada — Alianza Salud`;
+  APPOINTMENT_CONFIRMED: ({ fullName, serviceType, date, time, modality, meetLink }) => {
+    const isRemote = modality === 'remota' || modality === 'virtual';
+    const modalityText = isRemote ? 'Consulta Virtual / Remota (Google Meet)' : 'Presencial en Sede';
+    const subject = `Tu cita ha sido confirmada (${modalityText}) — Alianza Salud`;
+
     const html = buildHtmlLayout({
       title: subject,
       contentHtml: `
         <h2 style="color: #0f2b48; font-size: 18px;">Hola, ${fullName}.</h2>
-        <p style="color: #059669; font-weight: 700;">¡Tu cita ha sido confirmada por nuestra Unidad de Admisiones!</p>
+        <p style="color: #059669; font-weight: 700;">¡Tu cita ha sido confirmada exitosamente por nuestra Unidad de Admisiones!</p>
         
         <div class="card-box" style="border-left: 4px solid #059669;">
           <div class="card-row"><span class="card-label">Servicio:</span> <span class="card-val">${serviceType}</span></div>
           <div class="card-row"><span class="card-label">Fecha:</span> <span class="card-val">${date}</span></div>
           <div class="card-row"><span class="card-label">Hora:</span> <span class="card-val">${time}</span></div>
-          <div class="card-row"><span class="card-label">Modalidad:</span> <span class="card-val">${modality || 'Presencial en Sede'}</span></div>
+          <div class="card-row"><span class="card-label">Modalidad:</span> <span class="card-val" style="font-weight: 700; color: #0f2b48;">${modalityText}</span></div>
         </div>
+
+        ${isRemote && meetLink ? `
+        <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px; margin-top: 20px; text-align: center;">
+          <p style="margin: 0; font-size: 11px; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Videoconsulta Virtual en Vivo</p>
+          <p style="margin: 6px 0 16px 0; font-size: 14px; color: #1e3a8a; font-weight: 600;">Enlace de la reunión en Google Meet:</p>
+          <a href="${meetLink}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">
+            💻 Unirse a la Videoconsulta en Google Meet
+          </a>
+          <p style="margin: 14px 0 0 0; font-size: 11.5px; color: #1e40af;">Le sugerimos ingresar 5 minutos antes de la hora pautada utilizando una computadora o dispositivo móvil con cámara y micrófono.</p>
+        </div>
+        ` : `
+        <p style="font-size: 12.5px; color: #475569; margin-top: 16px;">
+          <strong>Instrucciones para atención presencial:</strong> Le esperamos en nuestra sede principal 10 minutos antes de su cita asignada. Por favor traiga consigo su documento de identidad y soportes médicos previos.
+        </p>
+        `}
       `,
-      ctaText: 'Ver mis citas',
-      ctaUrl: `${FRONTEND_URL}/dashboard/cliente`,
+      ctaText: isRemote && meetLink ? 'Unirse a Google Meet' : 'Ver mis citas en el portal',
+      ctaUrl: isRemote && meetLink ? meetLink : `${FRONTEND_URL}/dashboard/cliente`,
     });
     return { subject, html };
   },

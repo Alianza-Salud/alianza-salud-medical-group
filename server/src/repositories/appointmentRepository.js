@@ -12,7 +12,7 @@ class AppointmentRepository {
     let query = `
       SELECT a.id, a.full_name, a.email, a.phone, a.service_type, 
              DATE_FORMAT(a.preferred_date, '%Y-%m-%d') AS preferred_date, 
-             a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.created_at,
+             a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.modality, a.meet_link, a.created_at,
              l.full_name AS lawyer_name
       FROM appointments a
       LEFT JOIN lawyers l ON a.assigned_lawyer_id = l.id
@@ -39,6 +39,8 @@ class AppointmentRepository {
       status: r.status,
       assignedLawyerId: r.assigned_lawyer_id,
       assignedLawyerName: r.lawyer_name || '',
+      modality: r.modality || 'presencial',
+      meetLink: r.meet_link || null,
       createdAt: r.created_at,
     }));
   }
@@ -52,7 +54,7 @@ class AppointmentRepository {
       const [rows] = await pool.query(
         `SELECT a.id, a.full_name, a.email, a.phone, a.service_type, 
                 DATE_FORMAT(a.preferred_date, '%Y-%m-%d') AS preferred_date, 
-                a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.created_at,
+                a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.modality, a.meet_link, a.created_at,
                 l.full_name AS lawyer_name
          FROM appointments a
          LEFT JOIN lawyers l ON a.assigned_lawyer_id = l.id
@@ -77,6 +79,9 @@ class AppointmentRepository {
         status: r.status,
         assignedLawyerId: r.assigned_lawyer_id,
         assignedLawyerName: r.lawyer_name || '',
+        modality: r.modality || 'presencial',
+        meetLink: r.meet_link || null,
+        meet_link: r.meet_link || null,
         createdAt: r.created_at,
       };
     } catch (error) {
@@ -114,12 +119,14 @@ class AppointmentRepository {
       preferredTime,
       message = '',
       acceptedPolicy = true,
+      modality = 'presencial',
+      meetLink = null,
     } = appointmentData;
 
     const [result] = await pool.query(
       `INSERT INTO appointments 
-       (full_name, email, phone, service_type, preferred_date, preferred_time, message, accepted_policy, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       (full_name, email, phone, service_type, preferred_date, preferred_time, message, accepted_policy, status, modality, meet_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
       [
         fullName,
         email,
@@ -129,6 +136,8 @@ class AppointmentRepository {
         preferredTime,
         message,
         acceptedPolicy ? 1 : 0,
+        modality,
+        meetLink,
       ]
     );
 
@@ -136,22 +145,41 @@ class AppointmentRepository {
       id: result.insertId,
       ...appointmentData,
       status: 'pending',
+      modality,
+      meetLink,
       createdAt: new Date().toISOString(),
     };
   }
 
   /**
-   * Actualizar estado y abogado asignado a una cita (Aprobar, Rechazar, Caso Creado).
+   * Actualizar estado, modalidad, enlace de videollamada y abogado asignado a una cita.
    */
-  async updateStatus(id, status = null, assignedLawyerId = null) {
+  async updateStatus(id, { status = null, assignedLawyerId = null, modality = null, meetLink = null }) {
     if (!pool) return false;
-    if (status && assignedLawyerId !== null) {
-      await pool.query('UPDATE appointments SET status = ?, assigned_lawyer_id = ? WHERE id = ?', [status, assignedLawyerId, id]);
-    } else if (status) {
-      await pool.query('UPDATE appointments SET status = ? WHERE id = ?', [status, id]);
-    } else if (assignedLawyerId !== null) {
-      await pool.query('UPDATE appointments SET assigned_lawyer_id = ? WHERE id = ?', [assignedLawyerId, id]);
+    const updates = [];
+    const values = [];
+
+    if (status !== null && status !== undefined) {
+      updates.push('status = ?');
+      values.push(status);
     }
+    if (assignedLawyerId !== null && assignedLawyerId !== undefined) {
+      updates.push('assigned_lawyer_id = ?');
+      values.push(assignedLawyerId);
+    }
+    if (modality !== null && modality !== undefined) {
+      updates.push('modality = ?');
+      values.push(modality);
+    }
+    if (meetLink !== null && meetLink !== undefined) {
+      updates.push('meet_link = ?');
+      values.push(meetLink);
+    }
+
+    if (updates.length === 0) return true;
+
+    values.push(id);
+    await pool.query(`UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`, values);
     return true;
   }
 

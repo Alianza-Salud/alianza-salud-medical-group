@@ -14,6 +14,8 @@ export interface PrivateAppointment {
   status: 'pending' | 'approved' | 'rejected' | 'case_created';
   assignedLawyerId?: number | null;
   assignedLawyerName?: string;
+  modality?: 'presencial' | 'remota';
+  meetLink?: string | null;
   createdAt: string;
 }
 
@@ -71,12 +73,16 @@ export async function fetchPrivateAppointments(): Promise<PrivateAppointment[]> 
 export async function updateAppointmentStatus(
   id: number,
   status?: 'pending' | 'approved' | 'rejected' | 'case_created',
-  assignedLawyerId?: number | null
+  assignedLawyerId?: number | null,
+  modality?: 'presencial' | 'remota',
+  meetLink?: string | null
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const res = await apiClient.patch<ApiResponse<unknown>>(`/appointments/${id}/status`, {
       status,
       assignedLawyerId,
+      modality,
+      meetLink,
     });
     if (res.ok && res.data && res.data.success) {
       return { success: true, message: res.data.message };

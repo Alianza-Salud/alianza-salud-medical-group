@@ -19,6 +19,11 @@ import {
   LayoutGrid,
   List,
   RotateCcw,
+  Video,
+  Building2,
+  Copy,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import {
@@ -101,11 +106,45 @@ export default function AppointmentsManagerPage() {
     loadData();
   }, []);
 
-  const handleApprove = async (app: PrivateAppointment) => {
-    await updateAppointmentStatus(app.id, 'approved');
+  // Modal Aprobación Cita & Google Meet
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [approveModality, setApproveModality] = useState<'presencial' | 'remota'>('presencial');
+  const [approveMeetLink, setApproveMeetLink] = useState('');
+  const [isCopied, setIsCopied] = useState(false);
+
+  const generateRandomMeetUrl = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    const getPart = (len: number) => {
+      let res = '';
+      for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+      return res;
+    };
+    return `https://meet.google.com/${getPart(3)}-${getPart(4)}-${getPart(3)}`;
+  };
+
+  const openApproveModal = (app: PrivateAppointment) => {
+    setTargetAppointment(app);
+    setApproveModality(app.modality || 'presencial');
+    setApproveMeetLink(app.meetLink || generateRandomMeetUrl());
+    setIsApproveModalOpen(true);
+  };
+
+  const handleConfirmApprove = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetAppointment) return;
+    setIsSubmitting(true);
+    await updateAppointmentStatus(
+      targetAppointment.id,
+      'approved',
+      targetAppointment.assignedLawyerId || null,
+      approveModality,
+      approveModality === 'remota' ? approveMeetLink : null
+    );
+    setIsSubmitting(false);
+    setIsApproveModalOpen(false);
     loadData();
     if (selectedDayAppointments) {
-      updateDayModal(app.preferredDate);
+      updateDayModal(targetAppointment.preferredDate);
     }
   };
 
@@ -592,7 +631,7 @@ export default function AppointmentsManagerPage() {
                 <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-1">
                     {app.status === 'pending' && (
-                      <Button size="sm" variant="outline" onClick={() => handleApprove(app)} className="text-green-700">
+                      <Button size="sm" variant="outline" onClick={() => openApproveModal(app)} className="text-green-700">
                         Aprobar
                       </Button>
                     )}
@@ -687,7 +726,7 @@ export default function AppointmentsManagerPage() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-2">
                       {app.status === 'pending' && (
-                        <Button variant="ghost" size="sm" onClick={() => handleApprove(app)} className="text-green-700 hover:bg-green-50">
+                        <Button variant="ghost" size="sm" onClick={() => openApproveModal(app)} className="text-green-700 hover:bg-green-50">
                           <CheckCircle2 className="h-4 w-4" /> Aprobar
                         </Button>
                       )}
@@ -772,7 +811,7 @@ export default function AppointmentsManagerPage() {
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
                       {app.status === 'pending' && (
-                        <Button size="sm" variant="outline" onClick={() => handleApprove(app)} className="text-green-700">
+                        <Button size="sm" variant="outline" onClick={() => openApproveModal(app)} className="text-green-700">
                           Aprobar
                         </Button>
                       )}
@@ -1093,6 +1132,139 @@ export default function AppointmentsManagerPage() {
                 Cerrar Buscador
               </Button>
             </div>
+          </div>
+        </div>
+      {/* Modal: Aprobación de Cita (Selección de Modalidad Presencial / Remota & Google Meet) */}
+      {isApproveModalOpen && targetAppointment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 border border-gray-100">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="h-6 w-6" />
+                <h3 className="text-lg font-extrabold text-gray-900">Aprobar Solicitud de Cita</h3>
+              </div>
+              <button
+                onClick={() => setIsApproveModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-xl bg-gray-50/80 border border-gray-200/80 space-y-2 text-xs">
+              <div className="flex justify-between font-bold text-gray-900 text-sm">
+                <span>{targetAppointment.fullName}</span>
+                <span className="text-primary font-mono">{targetAppointment.preferredTime}</span>
+              </div>
+              <p className="text-gray-500">{targetAppointment.email} • {targetAppointment.phone}</p>
+              <p className="font-semibold text-primary uppercase tracking-wider text-[11px]">
+                {targetAppointment.serviceType.replace('-', ' ')} — {targetAppointment.preferredDate}
+              </p>
+            </div>
+
+            <form onSubmit={handleConfirmApprove} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-800 mb-2">
+                  Seleccionar Modalidad de Atención <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setApproveModality('presencial')}
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${
+                      approveModality === 'presencial'
+                        ? 'border-emerald-600 bg-emerald-50/60 text-emerald-900 shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <Building2 className="h-5 w-5 text-emerald-600" />
+                    <span>Presencial en Sede</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setApproveModality('remota');
+                      if (!approveMeetLink) setApproveMeetLink(generateRandomMeetUrl());
+                    }}
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${
+                      approveModality === 'remota'
+                        ? 'border-blue-600 bg-blue-50/60 text-blue-900 shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <Video className="h-5 w-5 text-blue-600" />
+                    <span>Consulta Virtual (Google Meet)</span>
+                  </button>
+                </div>
+              </div>
+
+              {approveModality === 'remota' && (
+                <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-blue-600" />
+                      Enlace de Videoconsulta Google Meet
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setApproveMeetLink(generateRandomMeetUrl())}
+                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Generar nuevo
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      required
+                      value={approveMeetLink}
+                      onChange={(e) => setApproveMeetLink(e.target.value)}
+                      placeholder="https://meet.google.com/abc-defg-hij"
+                      className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(approveMeetLink);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      }}
+                      className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
+                      title="Copiar enlace"
+                    >
+                      {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                      {isCopied ? '¡Copiado!' : 'Copiar'}
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-blue-700 leading-relaxed">
+                    Este enlace será enviado automáticamente por correo electrónico al cliente y quedará disponible en su panel personal.
+                  </p>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-gray-100 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsApproveModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                >
+                  {isSubmitting ? 'Confirmando...' : 'Confirmar y Enviar Notificación'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

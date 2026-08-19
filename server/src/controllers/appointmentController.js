@@ -40,23 +40,39 @@ async function getAppointments(req, res, next) {
   }
 }
 
+const { generateMeetUrl } = require('../utils/meetGenerator');
+
 /**
  * Actualizar estado de una cita (Aprobar, Rechazar, Cancelar).
  */
 async function updateStatus(req, res, next) {
   try {
     const { id } = req.params;
-    const { status, assignedLawyerId, reason } = req.body;
+    const { status, assignedLawyerId, modality, meetLink, reason } = req.body;
 
-    if (!status && assignedLawyerId === undefined) {
+    if (!status && assignedLawyerId === undefined && modality === undefined) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Debe especificar el nuevo estado o el profesional a asignar.', status: 400 },
+        error: { message: 'Debe especificar el nuevo estado, modalidad o el profesional a asignar.', status: 400 },
       });
     }
 
     const existingAppointment = await appointmentRepository.findById(id);
-    await appointmentRepository.updateStatus(id, status || null, assignedLawyerId || null);
+
+    // Si la modalidad es remota y se está aprobando o ya era remota, generar enlace de Google Meet si no viene proporcionado
+    let finalMeetLink = meetLink;
+    let finalModality = modality || (existingAppointment ? existingAppointment.modality : 'presencial');
+
+    if (finalModality === 'remota' && !finalMeetLink && (existingAppointment ? !existingAppointment.meetLink : true)) {
+      finalMeetLink = generateMeetUrl();
+    }
+
+    await appointmentRepository.updateStatus(id, {
+      status: status || null,
+      assignedLawyerId: assignedLawyerId !== undefined ? assignedLawyerId : null,
+      modality: finalModality,
+      meetLink: finalMeetLink,
+    });
 
     // Disparar eventos de notificación según el cambio de estado
     if (existingAppointment && status) {
@@ -67,7 +83,8 @@ async function updateStatus(req, res, next) {
           serviceType: existingAppointment.service_type || existingAppointment.serviceType,
           date: existingAppointment.preferred_date || existingAppointment.preferredDate,
           time: existingAppointment.preferred_time || existingAppointment.preferredTime,
-          modality: 'Presencial en Sede / Remota',
+          modality: finalModality,
+          meetLink: finalMeetLink,
         });
       } else if (status === 'cancelled' || status === 'rejected') {
         notificationService.emit('APPOINTMENT_CANCELLED', {
@@ -83,6 +100,12 @@ async function updateStatus(req, res, next) {
     return res.json({
       success: true,
       message: 'Cita actualizada exitosamente.',
+      data: {
+        id,
+        status: status || existingAppointment?.status,
+        modality: finalModality,
+        meetLink: finalMeetLink,
+      },
     });
   } catch (error) {
     next(error);
