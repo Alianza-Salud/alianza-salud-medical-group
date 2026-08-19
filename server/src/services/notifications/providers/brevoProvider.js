@@ -8,7 +8,9 @@ const emailConfig = require('../../../config/emailConfig');
  */
 class BrevoProvider {
   async sendEmail({ to, subject, htmlContent, textContent, replyTo }) {
-    if (!emailConfig.apiKey) {
+    const currentApiKey = emailConfig.apiKey;
+
+    if (!currentApiKey) {
       console.log(`[Brevo Simulation] Correo a ${to} ("${subject}") simulado en entorno local sin API Key.`);
       return {
         success: true,
@@ -16,6 +18,8 @@ class BrevoProvider {
         simulated: true,
       };
     }
+
+    console.log(`[Brevo Real API Call] Enviando correo transaccional real a ${to} mediante API Key Brevo...`);
 
     try {
       const payload = {
@@ -36,11 +40,13 @@ class BrevoProvider {
       const response = await axios.post(emailConfig.apiUrl, payload, {
         headers: {
           'accept': 'application/json',
-          'api-key': emailConfig.apiKey,
+          'api-key': currentApiKey,
           'content-type': 'application/json',
         },
         timeout: 10000,
       });
+
+      console.log(`[Brevo API Success] Correo entregado exitosamente a ${to}. MessageID: ${response.data.messageId}`);
 
       return {
         success: true,
