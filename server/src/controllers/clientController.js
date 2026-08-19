@@ -1,4 +1,5 @@
 const clientRepository = require('../repositories/clientRepository');
+const notificationService = require('../services/notifications/notificationService');
 
 /**
  * Controlador de Maestro de Clientes.
@@ -38,6 +39,15 @@ async function createClient(req, res, next) {
     }
 
     const newClient = await clientRepository.create({ fullName, email, phone, documentId, address });
+
+    // Disparar evento de notificación sin bloquear la respuesta
+    notificationService.emit('CLIENT_CREATED', {
+      fullName: newClient.full_name,
+      email: newClient.email,
+      clientCode: newClient.verification_code,
+      clientId: newClient.id,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Cliente registrado exitosamente. Código de verificación generado.',

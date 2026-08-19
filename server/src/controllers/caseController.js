@@ -2,7 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const caseRepository = require('../repositories/caseRepository');
 const lawyerRepository = require('../repositories/lawyerRepository');
+const clientRepository = require('../repositories/clientRepository');
 const storageService = require('../storage/StorageService');
+const notificationService = require('../services/notifications/notificationService');
 
 async function getCases(req, res, next) {
   try {
@@ -81,6 +83,22 @@ async function createCase(req, res, next) {
       assignedLawyerName: assignedLawyerName || 'Equipo Jurídico Alianza Salud',
     });
 
+    const client = await clientRepository.findById(parseInt(clientId, 10));
+
+    // Disparar evento CASE_CREATED
+    if (client) {
+      notificationService.emit('CASE_CREATED', {
+        fullName: client.fullName,
+        email: client.email,
+        caseCode: newCase.case_code || `CASO-${newCase.id}`,
+        serviceSlug: newCase.service_slug,
+        stage: newCase.stage,
+        status: newCase.status,
+        caseId: newCase.id,
+        clientId: client.id,
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Caso aperturado y vinculado al cliente exitosamente.',
@@ -119,7 +137,6 @@ async function updateCaseLawyers(req, res, next) {
 
 /**
  * Avanzar o cambiar la etapa del caso.
- * PATCH /api/cases/:id/stage
  */
 async function updateCaseStage(req, res, next) {
   try {
@@ -133,9 +150,9 @@ async function updateCaseStage(req, res, next) {
       });
     }
 
+    const previousCaseData = await caseRepository.findById(caseId);
     await caseRepository.updateStage(parseInt(caseId, 10), stageName, status || 'in_progress');
 
-    // Registrar novedad automática del cambio de etapa sin sobreescribir el status
     await caseRepository.addUpdate({
       caseId: parseInt(caseId, 10),
       createdByName: req.user.fullName || 'Administración',
@@ -146,6 +163,18 @@ async function updateCaseStage(req, res, next) {
     });
 
     const updatedCase = await caseRepository.findById(caseId);
+
+    if (updatedCase) {
+      notificationService.emit('CASE_STAGE_CHANGED', {
+        fullName: updatedCase.clientName,
+        email: updatedCase.clientEmail,
+        caseCode: updatedCase.caseCode || `CASO-${caseId}`,
+        previousStage: previousCaseData ? previousCaseData.stage : '',
+        newStage: stageName,
+        caseId: parseInt(caseId, 10),
+        clientId: updatedCase.clientId,
+      });
+    }
 
     return res.json({
       success: true,
@@ -163,7 +192,7 @@ async function updateCaseStage(req, res, next) {
 async function addCaseUpdate(req, res, next) {
   try {
     const { id: caseId } = req.params;
-    const { title, description, stageName } = req.body;
+    const { title, description, stageName, visibleForClient } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({
@@ -179,6 +208,22 @@ async function addCaseUpdate(req, res, next) {
       description,
       stageName: stageName || 'Seguimiento',
     });
+
+    const caseData = await caseRepository.findById(caseId);
+    const isVisible = visibleForClient !== false && visibleForClient !== 'false';
+
+    if (caseData && isVisible) {
+      notificationService.emit('CASE_UPDATED', {
+        fullName: caseData.clientName,
+        email: caseData.clientEmail,
+        caseCode: caseData.caseCode || `CASO-${caseId}`,
+        title,
+        summary: description,
+        visible_for_client: true,
+        caseId: parseInt(caseId, 10),
+        clientId: caseData.clientId,
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -205,7 +250,6 @@ async function addCaseDocument(req, res, next) {
         const file = files[i];
         const docName = files.length === 1 && name && name.trim() ? name.trim() : file.originalname;
 
-        // Guardar archivo mediante StorageService
         const stored = await storageService.uploadFile(file.path, file.originalname, file.mimetype);
 
         const doc = await caseRepository.addDocument({
@@ -213,7 +257,7 @@ async function addCaseDocument(req, res, next) {
           name: docName,
           type: type || 'recibido',
           description: description || '',
-          filePath: `/uploads/documents/${file.filename}`, // Conservado para compatibilidad legada
+          filePath: `/uploads/documents/${file.filename}`,
           storageKey: stored.storageKey,
           checksum: stored.checksum,
           originalName: file.originalname,
@@ -224,13 +268,8 @@ async function addCaseDocument(req, res, next) {
           status: 'ready',
         });
 
-        // Limpiar archivo temporal si se guardó en almacenamiento interno
         if (fs.existsSync(file.path)) {
-          try {
-            await fs.promises.unlink(file.path);
-          } catch (err) {
-            // Silencioso
-          }
+          try { await fs.promises.unlink(file.path); } catch (err) {}
         }
 
         createdDocs.push(doc);
@@ -252,6 +291,22 @@ async function addCaseDocument(req, res, next) {
         status: 'ready',
       });
       createdDocs.push(doc);
+    }
+
+    // Disparar evento DOCUMENT_UPLOADED si es visible para cliente
+    const caseData = await caseRepository.findById(caseId);
+    if (caseData && isVisible) {
+      for (const createdDoc of createdDocs) {
+        notificationService.emit('DOCUMENT_UPLOADED', {
+          fullName: caseData.clientName,
+          email: caseData.clientEmail,
+          caseCode: caseData.caseCode || `CASO-${caseId}`,
+          documentName: createdDoc.name,
+          visible_for_client: true,
+          caseId: parseInt(caseId, 10),
+          clientId: caseData.clientId,
+        });
+      }
     }
 
     const message = createdDocs.length > 1
@@ -277,12 +332,10 @@ async function downloadCaseDocument(req, res, next) {
       return res.status(404).json({ success: false, message: 'Documento no encontrado en este expediente.' });
     }
 
-    // Comprobar autorización para cliente
     if (req.user.role === 'client' && !doc.visibleToClient) {
       return res.status(403).json({ success: false, message: 'No tiene autorización para descargar este documento.' });
     }
 
-    // 1. Descarga desde StorageService si existe storageKey
     if (doc.storageKey && (await storageService.exists(doc.storageKey))) {
       const stream = storageService.getReadStream(doc.storageKey);
       const safeFilename = doc.originalName || doc.name || 'documento.pdf';
@@ -291,7 +344,6 @@ async function downloadCaseDocument(req, res, next) {
       return stream.pipe(res);
     }
 
-    // 2. Descarga de respaldo desde almacenamiento legado
     if (doc.filePath) {
       const legacyAbsolutePath = path.join(__dirname, '../../', doc.filePath);
       if (fs.existsSync(legacyAbsolutePath)) {

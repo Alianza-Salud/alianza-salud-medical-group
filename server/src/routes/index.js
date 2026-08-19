@@ -12,14 +12,14 @@ const clientRoutes = require('./clientRoutes');
 const lawyerRoutes = require('./lawyerRoutes');
 const userRoutes = require('./userRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
-
 const caseReviewRoutes = require('./caseReviewRoutes');
+const notificationRoutes = require('./notificationRoutes');
 
 // Health check
 router.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Alianza Salud Medical Group API REST (Maestros & Control de Etapas)',
+    message: 'Alianza Salud Medical Group API REST (Maestros, Etapas & Notificaciones)',
     timestamp: new Date().toISOString(),
   });
 });
@@ -37,5 +37,6 @@ router.use('/lawyers', lawyerRoutes);
 router.use('/users', userRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/case-reviews', caseReviewRoutes);
+router.use('/notifications', notificationRoutes);
 
 module.exports = router;

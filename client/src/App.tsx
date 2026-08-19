@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { PageLayout } from './components/layout/PageLayout';
 import { DashboardLayout } from './components/layout/DashboardLayout';
@@ -25,6 +25,7 @@ import AppointmentsManagerPage from './pages/dashboard/AppointmentsManagerPage';
 import ContactMessagesPage from './pages/dashboard/ContactMessagesPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
 import CaseReviewRequestsPage from './pages/dashboard/CaseReviewRequestsPage';
+import { NotificationSettingsPage } from './pages/dashboard/NotificationSettingsPage';
 
 /**
  * Componente raíz de la aplicación.
@@ -61,11 +62,12 @@ function App() {
               <Route path="/dashboard/clientes" element={<ClientsManagerPage />} />
             </Route>
 
-            {/* Rutas exclusivas para el Administrador */}
-            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            {/* Rutas exclusivas para el Administrador & Auxiliar */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'auxiliar_admisiones']} />}>
               <Route path="/dashboard/abogados" element={<LawyersManagerPage />} />
               <Route path="/dashboard/usuarios" element={<UsersManagerPage />} />
               <Route path="/dashboard/configuracion" element={<SettingsPage />} />
+              <Route path="/dashboard/configuracion/notificaciones" element={<NotificationSettingsPage />} />
             </Route>
 
             {/* Dashboard para Clientes */}

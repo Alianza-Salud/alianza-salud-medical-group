@@ -13,6 +13,7 @@ import {
   X,
   Sliders,
   FileSearch,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { siteInfo } from '../../data/site';
@@ -80,6 +81,11 @@ export function DashboardLayout() {
             badgeType: 'red',
           },
           {
+            label: 'Notificaciones Brevo',
+            href: '/dashboard/configuracion/notificaciones',
+            icon: Bell,
+          },
+          {
             label: 'Maestro de Clientes',
             href: '/dashboard/clientes',
             icon: Users,
@@ -127,6 +133,11 @@ export function DashboardLayout() {
             icon: Mail,
             badge: stats.unreadMessages > 0 ? stats.unreadMessages : null,
             badgeType: 'red',
+          },
+          {
+            label: 'Notificaciones Brevo',
+            href: '/dashboard/configuracion/notificaciones',
+            icon: Bell,
           },
           {
             label: 'Maestro de Clientes',

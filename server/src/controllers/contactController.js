@@ -1,8 +1,8 @@
 const contactRepository = require('../repositories/contactRepository');
+const notificationService = require('../services/notifications/notificationService');
 
 /**
  * Obtener todos los mensajes de contacto (Solo Admin / Lawyer).
- * GET /api/contact
  */
 async function getMessages(req, res, next) {
   try {
@@ -18,7 +18,6 @@ async function getMessages(req, res, next) {
 
 /**
  * Marcar mensaje como leído.
- * PATCH /api/contact/:id/read
  */
 async function markAsRead(req, res, next) {
   try {
@@ -35,7 +34,6 @@ async function markAsRead(req, res, next) {
 
 /**
  * Recibir mensaje de contacto público.
- * POST /api/contact
  */
 async function createContactMessage(req, res, next) {
   try {
@@ -60,6 +58,15 @@ async function createContactMessage(req, res, next) {
     } catch (dbError) {
       console.warn('[ContactController Warning] Falló inserción en MySQL:', dbError.message);
     }
+
+    // Disparar evento de notificación de mensaje de contacto
+    notificationService.emit('CONTACT_SUBMITTED', {
+      fullName,
+      email,
+      phone,
+      subject,
+      message,
+    });
 
     return res.status(201).json({
       success: true,

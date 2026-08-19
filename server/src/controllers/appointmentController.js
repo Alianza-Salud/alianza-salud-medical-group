@@ -1,5 +1,6 @@
 const appointmentRepository = require('../repositories/appointmentRepository');
 const lawyerRepository = require('../repositories/lawyerRepository');
+const notificationService = require('../services/notifications/notificationService');
 
 const allTimeSlots = [
   { value: '08:00', label: '8:00 AM' },
@@ -14,9 +15,6 @@ const allTimeSlots = [
 
 /**
  * Obtener citas en el entorno privado.
- * - Administrador: Ve todas las citas.
- * - Abogado/Especialista: Ve las citas asignadas a su correo/ID.
- * GET /api/appointments
  */
 async function getAppointments(req, res, next) {
   try {
@@ -43,13 +41,12 @@ async function getAppointments(req, res, next) {
 }
 
 /**
- * Actualizar estado de una cita (Aprobar, Rechazar, Convertida en Caso).
- * PATCH /api/appointments/:id/status
+ * Actualizar estado de una cita (Aprobar, Rechazar, Cancelar).
  */
 async function updateStatus(req, res, next) {
   try {
     const { id } = req.params;
-    const { status, assignedLawyerId } = req.body;
+    const { status, assignedLawyerId, reason } = req.body;
 
     if (!status && assignedLawyerId === undefined) {
       return res.status(400).json({
@@ -58,7 +55,30 @@ async function updateStatus(req, res, next) {
       });
     }
 
+    const existingAppointment = await appointmentRepository.findById(id);
     await appointmentRepository.updateStatus(id, status || null, assignedLawyerId || null);
+
+    // Disparar eventos de notificación según el cambio de estado
+    if (existingAppointment && status) {
+      if (status === 'confirmed') {
+        notificationService.emit('APPOINTMENT_CONFIRMED', {
+          fullName: existingAppointment.full_name,
+          email: existingAppointment.email,
+          serviceType: existingAppointment.service_type,
+          date: existingAppointment.preferred_date,
+          time: existingAppointment.preferred_time,
+          modality: 'Presencial en Sede / Remota',
+        });
+      } else if (status === 'cancelled') {
+        notificationService.emit('APPOINTMENT_CANCELLED', {
+          fullName: existingAppointment.full_name,
+          email: existingAppointment.email,
+          date: existingAppointment.preferred_date,
+          time: existingAppointment.preferred_time,
+          reason: reason || 'Cancelado por administración.',
+        });
+      }
+    }
 
     return res.json({
       success: true,
@@ -122,6 +142,17 @@ async function createAppointment(req, res, next) {
     } catch (dbError) {
       console.warn('[AppointmentController Warning] Falló inserción en MySQL:', dbError.message);
     }
+
+    // Disparar evento de notificación de solicitud de cita
+    notificationService.emit('APPOINTMENT_REQUESTED', {
+      fullName,
+      email,
+      phone,
+      serviceType,
+      preferredDate,
+      preferredTime,
+      message,
+    });
 
     return res.status(201).json({
       success: true,

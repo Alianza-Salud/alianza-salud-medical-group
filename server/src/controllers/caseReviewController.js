@@ -2,6 +2,7 @@ const caseReviewRepository = require('../repositories/caseReviewRepository');
 const caseRepository = require('../repositories/caseRepository');
 const clientRepository = require('../repositories/clientRepository');
 const storageService = require('../storage/StorageService');
+const notificationService = require('../services/notifications/notificationService');
 const fs = require('fs');
 
 async function createRequest(req, res, next) {
@@ -44,6 +45,16 @@ async function createRequest(req, res, next) {
       caseType: caseType.trim(),
       description: description ? description.trim() : '',
       documents: storedDocs,
+    });
+
+    // Disparar evento de notificación de solicitud de revisión
+    notificationService.emit('PETITION_SUBMITTED', {
+      fullName: petition.fullName,
+      email: petition.email,
+      phone: petition.phone,
+      caseType: petition.caseType,
+      documentsCount: storedDocs.length,
+      description: petition.description,
     });
 
     return res.status(201).json({
@@ -108,7 +119,6 @@ async function convertToCase(req, res, next) {
 
     let client = null;
 
-    // Opción A: Se seleccionó un cliente existente del Maestro
     if (clientId) {
       client = await clientRepository.findById(parseInt(clientId, 10));
       if (!client) {
@@ -118,7 +128,6 @@ async function convertToCase(req, res, next) {
         });
       }
     } else {
-      // Opción B: Crear un nuevo cliente. Verificar si el correo ya existe.
       const nameToUse = (clientData && clientData.fullName) || petition.fullName;
       const emailToUse = (clientData && clientData.email) || petition.email;
       const phoneToUse = (clientData && clientData.phone) || petition.phone;
@@ -143,9 +152,16 @@ async function convertToCase(req, res, next) {
         documentId: docIdToUse,
         address: addressToUse,
       });
+
+      // Disparar evento CLIENT_CREATED
+      notificationService.emit('CLIENT_CREATED', {
+        fullName: client.fullName,
+        email: client.email,
+        clientCode: client.verificationCode,
+        clientId: client.id,
+      });
     }
 
-    // 2. Crear el Expediente de Caso en MySQL
     const newCase = await caseRepository.createCase({
       clientId: client.id,
       title: `${petition.caseType} — ${client.fullName}`,
@@ -154,7 +170,18 @@ async function convertToCase(req, res, next) {
       description: petition.description || 'Expediente aperturado desde Solicitud de Revisión Preliminar.',
     });
 
-    // 3. Vincular los documentos preliminares adjuntos al nuevo expediente
+    // Disparar evento CASE_CREATED
+    notificationService.emit('CASE_CREATED', {
+      fullName: client.fullName,
+      email: client.email,
+      caseCode: newCase.case_code || `CASO-${newCase.id}`,
+      serviceSlug: 'pclo-dictamen',
+      stage: newCase.stage || 'Evaluación Inicial',
+      status: newCase.status || 'En Proceso',
+      caseId: newCase.id,
+      clientId: client.id,
+    });
+
     if (petition.documents && petition.documents.length > 0) {
       for (const doc of petition.documents) {
         await caseRepository.addDocument({
@@ -173,7 +200,6 @@ async function convertToCase(req, res, next) {
       }
     }
 
-    // 4. Marcar la solicitud como convertida
     await caseReviewRepository.updateStatus(petition.id, 'converted', `Convertido a Expediente Caso #${newCase.id} (Cliente: ${client.fullName}) por ${req.user.fullName}`);
 
     return res.json({
@@ -216,13 +242,11 @@ async function downloadDocument(req, res, next) {
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     if (doc.mimeType) res.setHeader('Content-Type', doc.mimeType);
 
-    // Si tiene storageKey de StorageService (Local o S3)
     if (doc.storageKey) {
       const stream = await storageService.getFileStream(doc.storageKey);
       return stream.pipe(res);
     }
 
-    // Fallback si la ruta física directa existe
     if (doc.filePath) {
       const path = require('path');
       const absolutePath = path.join(__dirname, '../../', doc.filePath.replace(/^\//, ''));
