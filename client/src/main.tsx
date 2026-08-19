@@ -4,10 +4,11 @@ import App from './App';
 
 // =========================================================================
 // CAMBIO DE PALETA VISUAL DE MARCA:
-// - Para 'Familia Corporativa' (Sky Blue #0ea5e9 + Teal + Amber): usa './index2.css'
-// - Para 'Verde Esmeralda Médico Puro': cambia la importación a './index.css'
+// - './index.css'  -> Paleta 1: Verde Esmeralda Médico Puro
+// - './index2.css' -> Paleta 2: Familia Corporativa (Sky Blue #0ea5e9 + Teal + Amber)
+// - './index3.css' -> Paleta 3: Dorado Editorial / Premium (#C9932B + Navy + Marfil)
 // =========================================================================
-import './index.css';
+import './index3.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
