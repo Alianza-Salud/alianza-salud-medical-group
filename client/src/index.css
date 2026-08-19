@@ -2,29 +2,34 @@
 
 /*
  * =============================================
- * DESIGN TOKENS — Alianza Salud Medical Group
+ * DESIGN & MOTION TOKENS — Alianza Salud Medical Group
  * =============================================
  *
- * Paleta neutra y profesional, fácilmente reemplazable
- * cuando la empresa proporcione su identidad corporativa.
+ * Paleta clínica premium + plataforma digital + editorial moderna.
  *
- * Colores actuales:
- * - Primary: Azul oscuro (confianza, seriedad jurídica)
- * - Accents: Teal/verde-azulado (salud, bienestar)
+ * Duraciones:
+ * - --motion-fast: 150ms
+ * - --motion-normal: 280ms
+ * - --motion-medium: 500ms
+ * - --motion-slow: 800ms
+ * - --motion-ambient: 7000ms
+ *
+ * Easings:
+ * - Microinteracciones: cubic-bezier(0.25, 0.1, 0.25, 1)
+ * - Entrada de contenido: cubic-bezier(0.22, 1, 0.36, 1)
+ * - Salida de elementos: cubic-bezier(0.4, 0, 1, 1)
  */
 
 @theme {
-  --color-primary: #1e3a5f;
+  --color-primary: #0f2b48;
+  --color-primary-light: #1e3a5f;
+  --color-primary-dark: #091a2e;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f1f5f9;
   --color-secondary-foreground: #1e293b;
+  --color-accent-teal: #0d9488;
+  --color-accent-emerald: #059669;
 }
-
-/*
- * =============================================
- * BASE STYLES
- * =============================================
- */
 
 @layer base {
   *,
@@ -46,5 +51,95 @@
     background-color: #ffffff;
     line-height: 1.6;
     margin: 0;
+    overflow-x: hidden;
+  }
+}
+
+/*
+ * =============================================
+ * MOTION KEYFRAMES & UTILITIES
+ * =============================================
+ */
+
+@keyframes floatAmbient {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-8px) translateX(6px);
+  }
+}
+
+@keyframes floatDocument {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes lineFlow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes blurReveal {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.animate-float-ambient {
+  animation: floatAmbient 7s ease-in-out infinite;
+}
+
+.animate-float-doc {
+  animation: floatDocument 5s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.animate-blur-reveal {
+  animation: blurReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/*
+ * =============================================
+ * PREFERS-REDUCED-MOTION SUPPORT
+ * =============================================
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

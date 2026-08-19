@@ -1,0 +1,1205 @@
+Motion & UI Design System
+Alianza Salud Medical Group — Injury Management
+
+Objetivo visual: transformar la página pública actual, que ya tiene buena parte de la estructura funcional, en una experiencia moderna, premium, médica y dinámica, sin perder credibilidad ni sobrecargarla.
+
+La regla principal:
+
+La interfaz debe sentirse viva, no animada.
+
+Es decir, el usuario debería percibir movimiento y respuesta, pero no pensar constantemente "ah, eso es una animación".
+
+1. Dirección visual
+Personalidad
+
+La interfaz debe transmitir:
+
+Atributo	Nivel
+Profesional	★★★★★
+Confianza	★★★★★
+Modernidad	★★★★★
+Cercanía	★★★★☆
+Tecnología	★★★★☆
+Elegancia	★★★★☆
+Dinamismo	★★★★☆
+Corporativo tradicional	★★☆☆☆
+"Tech startup"	★☆☆☆☆
+Referencia conceptual
+
+Piensa en una mezcla entre:
+
+clínica médica premium + plataforma digital + editorial moderna.
+
+No:
+
+landing corporativa genérica + 40 efectos hover.
+
+2. Principio fundamental de Motion
+
+Toda animación debe cumplir al menos una de estas funciones:
+
+1. Orientar
+
+Ayudar al usuario a entender dónde está.
+
+2. Jerarquizar
+
+Indicar qué elemento es más importante.
+
+3. Explicar
+
+Mostrar un proceso o relación.
+
+4. Confirmar
+
+Dar feedback después de una acción.
+
+5. Generar continuidad
+
+Hacer que el scroll se sienta como una historia.
+
+Si una animación no cumple ninguna:
+
+No se implementa.
+
+3. Sistema de duración
+
+Utilizar una escala consistente.
+
+INSTANT
+0ms
+
+Para cambios que no necesitan animación.
+
+FAST
+120–160ms
+
+Microinteracciones.
+
+NORMAL
+200–300ms
+
+Hover, botones, cards.
+
+MEDIUM
+400–600ms
+
+Entrada de elementos.
+
+SLOW
+700–1000ms
+
+Hero y elementos importantes.
+
+AMBIENT
+3000–10000ms
+
+Movimiento ambiental.
+
+4. Easing
+
+No utilizar linear para prácticamente nada excepto movimiento ambiental.
+
+Microinteracciones
+cubic-bezier(0.25, 0.1, 0.25, 1)
+Entrada de contenido
+cubic-bezier(0.22, 1, 0.36, 1)
+Elementos que salen
+cubic-bezier(0.4, 0, 1, 1)
+Movimiento ambiental
+ease-in-out
+5. Sistema de entrada de elementos
+
+No hacer que cada componente aparezca de una manera diferente.
+
+Crear un conjunto reducido de patrones.
+
+Fade Up
+
+El principal.
+
+opacity: 0
+translateY(24px)
+
+
+↓
+
+
+opacity: 1
+translateY(0)
+
+Duración:
+
+500–600ms
+
+Fade Scale
+
+Para cards e imágenes.
+
+opacity: 0
+scale(0.97)
+
+
+↓
+
+
+opacity: 1
+scale(1)
+Blur Reveal
+
+Solo para elementos hero.
+
+opacity: 0
+filter: blur(8px)
+translateY(12px)
+
+
+↓
+
+
+opacity: 1
+filter: blur(0)
+translateY(0)
+
+No abusar.
+
+6. Stagger
+
+Cuando aparecen varios elementos:
+
+Título
+   ↓ 80ms
+Descripción
+   ↓ 80ms
+CTA
+   ↓ 80ms
+Elemento visual
+
+Ejemplo:
+
+0ms     Hero eyebrow
+100ms   H1
+180ms   Description
+260ms   CTA
+340ms   Secondary CTA
+
+Máximo recomendado: 500–700ms para completar un grupo.
+
+La página no debe quedarse esperando para aparecer.
+
+7. Hero — Motion System
+
+Este será el componente más trabajado.
+
+Entrada
+Fase 1
+
+Background:
+
+opacity 0 → 1
+Fase 2
+
+Eyebrow:
+
+opacity 0
+translateY(12px)
+→
+opacity 1
+translateY(0)
+Fase 3
+
+Título:
+
+opacity 0
+translateY(30px)
+filter blur(6px)
+→
+normal
+Fase 4
+
+Descripción.
+
+Fase 5
+
+CTA.
+
+8. Hero — elemento visual
+
+Aquí introduciría una composición propia de Injury Management.
+
+Por ejemplo:
+
+                    ┌─────────────┐
+                    │   CASO      │
+                    └──────┬──────┘
+                           │
+                           ●
+                           │
+                ┌──────────┴──────────┐
+                │                     │
+             Análisis              Valoración
+                │                     │
+                └──────────┬──────────┘
+                           │
+                         Informe
+                           │
+                         Entrega
+
+No necesariamente literalmente así.
+
+Lo importante es que el elemento visual tenga:
+
+nodos;
+líneas;
+estados;
+pequeños pulsos;
+movimiento ambiental.
+Animación
+
+La línea podría dibujarse:
+
+0% ─────
+50% ─────────────
+100% ─────────────────────
+
+Y el punto viajar por ella.
+
+Esto conecta visualmente con el concepto de proceso.
+
+9. Movimiento ambiental
+
+El Hero puede tener 2–3 elementos abstractos.
+
+Por ejemplo:
+
+○
+        ○
+
+
+               ○
+
+Movimiento:
+
+translateX ± 10px
+translateY ± 8px
+
+durante:
+
+6–10 segundos
+
+con repetición infinita.
+
+Extremadamente sutil.
+
+10. Background dinámico
+
+Usaría gradientes radiales.
+
+Conceptualmente:
+
+        azul
+          ◯
+
+
+    contenido
+
+
+              ◯
+           verde
+
+El movimiento sería casi imperceptible.
+
+No quiero que parezca una aurora boreal. 😄
+
+11. Navbar
+Estado inicial
+
+Header:
+
+background: transparent / sólido muy ligero
+border: none
+Después de 40–60px de scroll
+
+Transformarlo en:
+
+background: rgba(...)
+backdrop-filter: blur(...)
+box-shadow: subtle
+
+Además:
+
+height:
+88px → 68px
+
+Animación:
+
+250–350ms
+
+12. CTA del Navbar
+
+Botón:
+
+QUIERO QUE REVISEN MI CASO →
+Hover
+translateY(-2px)
+shadow increase
+
+Icono:
+
+translateX(0)
+→
+translateX(4px)
+Active
+scale(0.98)
+13. Scroll progress
+
+Una barra mínima en la parte superior.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Altura:
+
+2px–3px
+
+No debe competir con el contenido.
+
+14. Section Reveal System
+
+Todas las secciones principales utilizarán un patrón consistente.
+
+Al entrar aproximadamente al:
+
+15–20% del viewport
+
+activar:
+
+heading
+description
+content
+
+con stagger.
+
+No esperar a que el elemento esté completamente visible.
+
+Esto hace que la página se sienta anticipatoria.
+
+15. Títulos de sección
+
+Formato:
+
+EYEBROW
+
+
+Título grande
+
+
+Descripción
+
+Ejemplo:
+
+INJURY MANAGEMENT
+
+
+Un proceso pensado para
+acompañarte de principio a fin.
+
+
+Analizamos...
+Animación
+
+Eyebrow:
+
+opacity + translate
+
+Título:
+
+clip/reveal vertical
+
+Descripción:
+
+fade up
+16. Scroll storytelling
+
+Este será uno de los pilares.
+
+No animar solamente los elementos.
+
+Animar la relación entre ellos.
+
+17. Proceso Injury Management
+
+Crear un componente interactivo.
+
+Desktop:
+
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  01 ───────── 02 ───────── 03 ───────── 04         │
+│                                                     │
+│  Análisis       Valoración      Informe     Entrega │
+│                                                     │
+│                 [contenido activo]                  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+Mientras el usuario hace scroll:
+
+Estado 1
+●────────○────────○────────○
+Estado 2
+●────────●────────○────────○
+Estado 3
+●────────●────────●────────○
+Estado 4
+●────────●────────●────────●
+18. Timeline
+
+La línea debe tener un progreso animado.
+
+background line
++
+progress line
+
+El progreso:
+
+scaleX(0)
+→
+scaleX(1)
+
+según el scroll.
+
+Esto convierte un proceso estático en una experiencia.
+
+19. Cards de casos
+
+Las tres categorías:
+
+Accidentes de tránsito
+Accidentes laborales
+Negligencia y responsabilidad médica
+
+No utilizar simplemente tres rectángulos iguales.
+
+Estado normal
+┌──────────────────────────┐
+│ 01                       │
+│                          │
+│ 🚗                       │
+│                          │
+│ Accidentes de tránsito   │
+│                          │
+│ Conocer más       →      │
+└──────────────────────────┘
+Hover
+
+La card:
+
+translateY(-6px)
+
+Icono:
+
+translateY(-3px)
+scale(1.05)
+
+Aparece un acento:
+
+──────────────
+
+y el CTA:
+
+→
+
+se desplaza ligeramente.
+
+20. Efecto spotlight
+
+Para desktop, podemos añadir un efecto muy sutil.
+
+El cursor genera un gradiente radial:
+
+radial-gradient(
+  300px circle at cursor,
+  rgba(...),
+  transparent
+)
+
+Solo en cards.
+
+Esto puede quedar brutal si se mantiene muy discreto.
+
+En móvil:
+
+desactivado.
+
+21. Documentos
+
+Para la sección de documentos:
+
+Crear documentos visuales.
+
+       ┌───────────────┐
+       │     IPAT      │
+       │               │
+       │      ✓        │
+       └───────────────┘
+
+
+ ┌────────────────────────┐
+ │     HISTORIA CLÍNICA   │
+ └────────────────────────┘
+
+Animación:
+
+translateY
+± 5px
+
+en diferentes velocidades.
+
+Al hover:
+
+rotate(1deg)
+scale(1.02)
+
+No más.
+
+22. Upload teaser
+
+Como posteriormente habrá subida real de documentos, podemos diseñar desde ahora un componente visual preparado para ello.
+
+┌─────────────────────────────────────┐
+│                                     │
+│           ↑                         │
+│                                     │
+│    Arrastra tus documentos          │
+│    o selecciónalos                  │
+│                                     │
+└─────────────────────────────────────┘
+
+Ahora puede ser meramente visual.
+
+Posteriormente se conecta al backend.
+
+23. Servicios
+
+PCLO y el informe pericial pueden utilizar cards expandibles.
+
+Estado:
+
+PCLO
+Calificación de pérdida...
+                         +
+
+Hover:
+
+PCLO
+Calificación de pérdida...
+                         →
+Más información
+
+Click futuro:
+
+expand
+24. Microinteracciones generales
+
+Crear una tabla de comportamiento.
+
+Elemento	Hover	Active
+Button	lift 2px	scale .98
+Link	color/underline	normal
+Card	lift 6px	scale .99
+Icon	translate 3px	normal
+Image	scale 1.02	normal
+Accordion	background shift	expanded
+Navbar	shadow	—
+25. Links
+
+Evitar links que simplemente cambian de color.
+
+Utilizar:
+
+Conocer más ─────→
+
+Al hover:
+
+Conocer más ───────→
+
+La flecha se mueve.
+
+26. FAQ
+
+El accordion debe ser bastante elegante.
+
+Estado cerrado:
+
+¿Qué documentos necesito?                    +
+
+Estado abierto:
+
+¿Qué documentos necesito?                    −
+
+
+Puedes comenzar con...
+...
+
+Animación:
+
+height: 0
+opacity: 0
+
+
+↓
+
+
+height: auto
+opacity: 1
+
+Duración:
+
+250–350ms
+
+No usar display: none para animar.
+
+27. CTA final
+
+Debe tener una experiencia diferente al resto.
+
+Por ejemplo:
+
+╭─────────────────────────────────────────────╮
+│                                             │
+│       ¿TU ACCIDENTE TE DEJÓ SECUELAS?      │
+│                                             │
+│  Empieza con una revisión preliminar.       │
+│                                             │
+│      [ QUIERO QUE REVISEN MI CASO ]        │
+│                                             │
+╰─────────────────────────────────────────────╯
+
+El fondo puede tener:
+
+gradiente;
+glow;
+formas ambientales.
+
+Pero no un fondo extremadamente cargado.
+
+28. CTA sticky móvil
+
+En móvil:
+
+┌───────────────────────────────────┐
+│ [ QUIERO QUE REVISEN MI CASO ]   │
+└───────────────────────────────────┘
+
+Debe:
+
+aparecer después del Hero;
+permanecer en bottom;
+tener safe-area-inset-bottom;
+no tapar contenido.
+
+Animación al aparecer:
+
+translateY(100%)
+→
+translateY(0)
+29. Parallax
+
+Usarlo solo en elementos decorativos.
+
+Ejemplo:
+
+background shape: 0.05x
+image:             0.1x
+content:           0x
+
+Nunca hacer que el texto principal tenga un parallax exagerado.
+
+30. Cursor
+
+No crearía un cursor personalizado global.
+
+Puede ser bonito durante cinco minutos y después convertirse en:
+
+"¿Por qué mi cursor está haciendo cosas?"
+
+En su lugar:
+
+microinteracciones locales.
+
+31. Estados de botones
+
+Cada botón debe tener:
+
+Default
+background
+Hover
+background shift
+translateY(-2px)
+shadow
+Active
+scale(.98)
+Focus
+outline visible
+Disabled
+opacity .5
+cursor not-allowed
+
+Esto también mejora accesibilidad.
+
+32. Loading states
+
+Cuando posteriormente exista backend:
+
+Enviar caso
+Enviando...
+
+con spinner pequeño.
+
+Después:
+
+✓ Caso enviado
+
+Animación:
+
+spinner
+→
+checkmark
+
+Eso debe diseñarse desde ahora a nivel de componente.
+
+33. Success animation
+
+Después de una acción importante:
+
+      ✓
+
+
+Caso recibido
+
+
+Nuestro equipo revisará
+la información proporcionada.
+
+El check puede aparecer con:
+
+scale(0.7)
+opacity(0)
+
+
+↓
+
+
+scale(1)
+opacity(1)
+
+Muy corto.
+
+34. Error states
+
+No utilizar simplemente:
+
+Error al enviar.
+
+Mejor:
+
+⚠ No pudimos enviar la información.
+
+
+Revisa los campos marcados e inténtalo
+nuevamente.
+
+Y los campos:
+
+border → error
+
+sin hacerlos vibrar violentamente.
+
+35. Accesibilidad de Motion
+
+Esto es obligatorio.
+
+Detectar:
+
+prefers-reduced-motion: reduce
+
+Si está activado:
+
+eliminar parallax;
+eliminar movimiento ambiental;
+eliminar scroll storytelling;
+reducir transiciones;
+mantener cambios instantáneos.
+
+La página debe seguir funcionando perfectamente.
+
+36. Performance
+
+No meter animaciones pesadas porque sí.
+
+Priorizar:
+
+transform
+opacity
+
+Evitar animar constantemente:
+
+width
+height
+top
+left
+box-shadow
+
+cuando pueda resolverse con transform.
+
+37. Arquitectura React
+
+Yo crearía algo parecido a:
+
+src/
+├── components/
+│   ├── ui/
+│   │   ├── Button
+│   │   ├── MagneticButton
+│   │   ├── Reveal
+│   │   ├── SectionHeading
+│   │   ├── SpotlightCard
+│   │   ├── AnimatedIcon
+│   │   └── Accordion
+│   │
+│   ├── navigation/
+│   │   ├── Header
+│   │   └── MobileCTA
+│   │
+│   ├── hero/
+│   │   ├── Hero
+│   │   └── InjuryFlowVisual
+│   │
+│   ├── process/
+│   │   ├── ProcessTimeline
+│   │   └── ProcessStep
+│   │
+│   └── sections/
+│       ├── CaseTypes
+│       ├── Services
+│       ├── Documents
+│       ├── Specialists
+│       ├── FAQ
+│       └── FinalCTA
+│
+├── hooks/
+│   ├── useScrollProgress
+│   ├── useInView
+│   ├── useReducedMotion
+│   └── useMousePosition
+│
+├── motion/
+│   ├── variants.ts
+│   ├── transitions.ts
+│   └── presets.ts
+│
+└── styles/
+    └── ...
+
+La idea es que Motion sea un sistema reutilizable, no veinte animaciones copiadas y pegadas.
+
+38. Presets de Motion
+
+Por ejemplo:
+
+fadeUp
+fadeScale
+blurReveal
+staggerContainer
+staggerItem
+scaleIn
+slideFromLeft
+slideFromRight
+
+Así un componente puede decir:
+
+<Reveal variant="fadeUp">
+
+en lugar de tener animaciones diferentes por toda la aplicación.
+
+39. Tokens de Motion
+
+Incluso puedes definir:
+
+--motion-fast: 160ms
+--motion-normal: 280ms
+--motion-medium: 500ms
+--motion-slow: 800ms
+
+
+--ease-standard: ...
+--ease-emphasized: ...
+
+Esto facilita muchísimo el mantenimiento.
+
+40. Responsive Motion
+Desktop
+
+Permitir:
+
+spotlight;
+parallax;
+hover;
+magnetic buttons;
+sticky sections.
+Tablet
+
+Reducir:
+
+parallax;
+efectos de cursor.
+Mobile
+
+Priorizar:
+
+tap;
+scroll reveal;
+accordion;
+sticky CTA.
+
+Eliminar:
+
+cursor effects;
+magnetic buttons;
+parallax pesado.
+41. Sistema de profundidad
+
+No todo debe estar al mismo nivel.
+
+Crear tres niveles:
+
+Level 0
+
+Fondo.
+
+Level 1
+
+Contenido.
+
+Level 2
+
+Cards.
+
+Level 3
+
+CTA / elementos destacados.
+
+Esto se puede conseguir con:
+
+sombras;
+blur;
+contraste;
+background;
+borders.
+
+No necesariamente con grandes sombras.
+
+42. Bordes
+
+Evitar:
+
+border-radius: 24px
+
+en absolutamente todo.
+
+Utilizar una jerarquía:
+
+Buttons:       10–12px
+Inputs:        10–12px
+Cards:         16–20px
+Feature card:  24px
+Hero visual:   24–32px
+
+Esto genera jerarquía visual.
+
+43. Sombras
+
+No utilizar sombras negras fuertes.
+
+Más bien:
+
+subtle ambient shadow
+
+La sombra debe sugerir profundidad, no parecer que el componente está flotando a 50 cm de la página.
+
+44. Border glow
+
+Para elementos importantes podemos utilizar un glow muy sutil:
+
+border
++
+radial highlight
+
+Especialmente:
+
+CTA;
+Hero visual;
+Injury Management process.
+45. La experiencia completa
+
+El recorrido ideal sería:
+
+             ENTRA
+               │
+               ▼
+       HERO IMPACTANTE
+               │
+               ▼
+      "¿ESTO ES PARA MÍ?"
+               │
+               ▼
+       REVISIÓN PRELIMINAR
+               │
+               ▼
+       "¿QUÉ NECESITO?"
+               │
+               ▼
+           DOCUMENTOS
+               │
+               ▼
+        "¿QUÉ TIPO DE CASO?"
+               │
+               ▼
+           CASOS
+               │
+               ▼
+        "¿QUÉ HACEN?"
+               │
+               ▼
+           SERVICIOS
+               │
+               ▼
+       "¿CÓMO FUNCIONA?"
+               │
+               ▼
+       INJURY MANAGEMENT
+               │
+               ▼
+       "¿POR QUÉ CONFIAR?"
+               │
+               ▼
+        DIFERENCIALES
+               │
+               ▼
+             CTA
+               │
+               ▼
+       REVISAR MI CASO
+
+Y las animaciones deben acompañar ese recorrido, no distraerlo.
+
+46. Las 10 interacciones que considero imprescindibles
+
+Si tienes poco tiempo, implementaría estas primero:
+
+#	Interacción	Prioridad
+01	Hero reveal	🔴
+02	Navbar dinámico al scroll	🔴
+03	CTA microinteraction	🔴
+04	Scroll reveal	🔴
+05	Timeline animado	🔴
+06	Hover cards	🟠
+07	Spotlight cards	🟠
+08	FAQ accordion	🟠
+09	CTA móvil sticky	🟠
+10	Background ambiental	🟡
+
+Con esas diez, la página ya debería sentirse muy diferente.
+
+47. Lo que NO implementaría
+
+Para evitar que Gemini/Codex se emocione demasiado:
+
+❌ Lottie en cada sección
+❌ Three.js
+❌ WebGL
+❌ Videos pesados como fondo
+❌ Cursor gigante personalizado
+❌ Texto que se deforma
+❌ Scroll horizontal innecesario
+❌ Parallax agresivo
+❌ 3D médico falso
+❌ Animaciones infinitas en todos los elementos
+❌ hover:scale-110 en absolutamente todo
+❌ Gradientes chillones
+
+El objetivo no es demostrar que sabemos animar.
+
+El objetivo es que el usuario diga:
+
+"Esta página se siente muy bien hecha."
+
+48. Resultado visual buscado
+
+En términos de sensación:
+
+Antes
+
+Hero
+────────────
+Card
+Card
+Card
+────────────
+Texto
+────────────
+Card
+Card
+────────────
+CTA
+
+Después
+
+      ✦
+   HERO VIVO
+       ↓
+  contenido entra
+       ↓
+   microinteracción
+       ↓
+  proceso se activa
+       ↓
+   timeline avanza
+       ↓
+  cards responden
+       ↓
+ documentos flotan
+       ↓
+  contenido cambia
+       ↓
+      CTA
+
+La página deja de sentirse como un documento largo y empieza a sentirse como una experiencia guiada.
+
+Mi recomendación para tu implementación
+
+Dado que ya tienes la página pública construida, yo no tocaría todavía backend ni gestión de casos. Haría una rama/fase exclusivamente visual:
+
+PHASE 2
+PUBLIC WEBSITE — UX & MOTION
+
+
+1. Design tokens
+2. Motion tokens
+3. Button system
+4. Reveal system
+5. Header animation
+6. Hero redesign
+7. Process timeline
+8. Interactive cards
+9. Document interactions
+10. FAQ motion
+11. Final CTA
+12. Mobile sticky CTA
+13. Reduced motion
+14. Performance audit
+15. Responsive QA
+
+Y hay una decisión importante: no intentaría implementar todas las ideas a la vez. Primero construiría el sistema base de Motion + UI y después haría que las secciones existentes lo consuman. Eso te permitirá seguir desarrollando la aplicación sin acabar con un código lleno de animaciones particulares difíciles de mantener.
+
+Para este proyecto, Motion/Framer Motion + CSS + Intersection Observer me parece el punto de equilibrio ideal; solo introduciría GSAP si al implementar el timeline/sticky storytelling descubrimos que realmente necesitamos una sincronización de scroll más avanzada.

@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { CaseReviewModal } from '../forms/CaseReviewModal';
 import { FloatingCaseReviewButton } from '../ui/FloatingCaseReviewButton';
+import { ScrollProgress } from '../ui/ScrollProgress';
 
 export interface PageLayoutContext {
   onOpenCaseModal: (caseType?: string) => void;
@@ -11,7 +12,7 @@ export interface PageLayoutContext {
 
 /**
  * Layout principal que envuelve todas las páginas públicas.
- * Incluye Header, Footer, Botón Circular Flotante (FAB), CaseReviewModal global y scroll-to-top.
+ * Incluye ScrollProgress superior, Header dinámico, Footer, FAB flotante y CaseReviewModal.
  */
 export function PageLayout() {
   const { pathname } = useLocation();
@@ -30,10 +31,15 @@ export function PageLayout() {
 
   return (
     <div className="flex min-h-screen flex-col relative">
+      {/* Barra de Progreso de Scroll Discreta */}
+      <ScrollProgress />
+
       <Header onOpenModal={() => handleOpenCaseModal()} />
+      
       <main className="flex-1">
         <Outlet context={{ onOpenCaseModal: handleOpenCaseModal }} />
       </main>
+      
       <Footer />
 
       {/* Botón Circular Flotante (FAB) siempre visible durante el scroll */}
