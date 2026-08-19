@@ -42,7 +42,6 @@ class NotificationService extends EventEmitter {
   async handleAppointmentRequested(data) {
     const { fullName, email, phone, serviceType, preferredDate, preferredTime, message } = data;
 
-    // Enviar a Administración si está habilitado
     await this.dispatchNotification({
       eventType: 'APPOINTMENT_REQUESTED',
       recipientEmail: emailConfig.adminEmail,
@@ -51,7 +50,6 @@ class NotificationService extends EventEmitter {
       templateData: { fullName, email, phone, serviceType, preferredDate, preferredTime, message },
     });
 
-    // Enviar a Cliente si está habilitado
     if (email) {
       await this.dispatchNotification({
         eventType: 'APPOINTMENT_REQUESTED',
@@ -92,7 +90,6 @@ class NotificationService extends EventEmitter {
   async handlePetitionSubmitted(data) {
     const { fullName, email, phone, caseType, documentsCount, description } = data;
 
-    // Enviar a Administración
     await this.dispatchNotification({
       eventType: 'PETITION_SUBMITTED',
       recipientEmail: emailConfig.adminEmail,
@@ -101,7 +98,6 @@ class NotificationService extends EventEmitter {
       templateData: { fullName, email, phone, caseType, documentsCount, description },
     });
 
-    // Enviar a Cliente
     if (email) {
       await this.dispatchNotification({
         eventType: 'PETITION_SUBMITTED',
@@ -116,7 +112,6 @@ class NotificationService extends EventEmitter {
   async handleContactSubmitted(data) {
     const { fullName, email, phone, subject, message } = data;
 
-    // Enviar a Administración
     await this.dispatchNotification({
       eventType: 'CONTACT_SUBMITTED',
       recipientEmail: emailConfig.adminEmail,
@@ -125,7 +120,6 @@ class NotificationService extends EventEmitter {
       templateData: { fullName, email, phone, subject, message },
     });
 
-    // Enviar a Cliente
     if (email) {
       await this.dispatchNotification({
         eventType: 'CONTACT_SUBMITTED',
@@ -154,7 +148,7 @@ class NotificationService extends EventEmitter {
 
   async handleCaseUpdated(data) {
     const { fullName, email, caseCode, title, summary, visible_for_client, caseId, clientId } = data;
-    if (!email || visible_for_client === false) return; // Regla fundamental: Si NO es visible para el cliente, NO enviar email
+    if (!email || visible_for_client === false) return;
 
     await this.dispatchNotification({
       eventType: 'CASE_UPDATED',
@@ -169,7 +163,7 @@ class NotificationService extends EventEmitter {
 
   async handleDocumentUploaded(data) {
     const { fullName, email, caseCode, documentName, visible_for_client, caseId, clientId } = data;
-    if (!email || visible_for_client === false) return; // Regla fundamental: Si NO es visible para el cliente, NO enviar email
+    if (!email || visible_for_client === false) return;
 
     await this.dispatchNotification({
       eventType: 'DOCUMENT_UPLOADED',
@@ -201,18 +195,14 @@ class NotificationService extends EventEmitter {
 
   async dispatchNotification({ eventType, recipientEmail, recipientType, templateName, templateData, relatedClientId, relatedCaseId }) {
     try {
-      // 1. Verificar si la notificación está habilitada en BD
       const setting = await notificationRepository.getSettingByEvent(eventType);
-      if (setting && setting.is_enabled === 0) {
-        return; // Evento desactivado globalmente
-      }
+      if (setting && setting.is_enabled === 0) return;
 
       if (setting) {
         if (recipientType === 'client' && setting.send_to_client === 0) return;
         if (recipientType === 'admin' && setting.send_to_admin === 0) return;
       }
 
-      // 2. Renderizar plantilla
       const templateFn = templates[templateName];
       if (!templateFn) {
         console.error(`[NotificationService] Plantilla ${templateName} no encontrada.`);
@@ -221,7 +211,7 @@ class NotificationService extends EventEmitter {
 
       const { subject, html } = templateFn(templateData);
 
-      // 3. Crear registro inicial en la bitácora de auditoría (PENDING)
+      // 1. Crear registro inicial (PENDING)
       const logId = await notificationRepository.createLog({
         event_type: eventType,
         recipient_email: recipientEmail,
@@ -232,16 +222,21 @@ class NotificationService extends EventEmitter {
         related_case_id: relatedCaseId,
       });
 
-      // 4. Enviar mediante Brevo Provider
-      const result = await brevoProvider.sendEmail({
-        to: recipientEmail,
-        subject,
-        htmlContent: html,
-      });
+      // 2. Intentar envío por Brevo Provider
+      let result;
+      try {
+        result = await brevoProvider.sendEmail({
+          to: recipientEmail,
+          subject,
+          htmlContent: html,
+        });
+      } catch (err) {
+        result = { success: false, error: err.message };
+      }
 
-      // 5. Actualizar resultado de la bitácora
+      // 3. Garantizar la actualización del estado desde PENDING a SENT o FAILED
       if (logId) {
-        if (result.success) {
+        if (result && result.success) {
           await notificationRepository.updateLogStatus(logId, {
             status: 'SENT',
             provider_message_id: result.messageId,
@@ -249,7 +244,7 @@ class NotificationService extends EventEmitter {
         } else {
           await notificationRepository.updateLogStatus(logId, {
             status: 'FAILED',
-            error_message: result.error || 'Fallo desconocido en el proveedor de correo',
+            error_message: (result && result.error) || 'Fallo al procesar envío',
           });
         }
       }
@@ -259,7 +254,7 @@ class NotificationService extends EventEmitter {
   }
 
   /**
-   * Reintentar notificaciones fallidas
+   * Reintentar notificaciones fallidas o pendientes estancadas
    */
   async retryFailedNotifications() {
     try {
@@ -274,7 +269,6 @@ class NotificationService extends EventEmitter {
           retry_count: log.retry_count + 1,
         });
 
-        // Intentar envío
         const result = await brevoProvider.sendEmail({
           to: log.recipient_email,
           subject: log.subject,

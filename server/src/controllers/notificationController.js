@@ -1,5 +1,4 @@
 const notificationRepository = require('../repositories/notificationRepository');
-const notificationService = require('../services/notifications/notificationService');
 const brevoProvider = require('../services/notifications/providers/brevoProvider');
 const emailConfig = require('../config/emailConfig');
 
@@ -83,7 +82,7 @@ async function getLogs(req, res, next) {
 }
 
 /**
- * Reintentar manualmente el envío de una notificación fallida.
+ * Reintentar manualmente el envío de una notificación fallida o pendiente.
  * POST /api/notifications/logs/:id/retry
  */
 async function retryLog(req, res, next) {
@@ -91,8 +90,7 @@ async function retryLog(req, res, next) {
     const { id } = req.params;
     const logId = parseInt(id, 10);
 
-    const result = await notificationRepository.getLogs({ limit: 1, offset: 0 });
-    const log = (result.logs || []).find((l) => l.id === logId);
+    const log = await notificationRepository.getLogById(logId);
 
     if (!log) {
       return res.status(404).json({
@@ -121,7 +119,7 @@ async function retryLog(req, res, next) {
     } else {
       await notificationRepository.updateLogStatus(logId, {
         status: 'FAILED',
-        error_message: sendResult.error || 'Reintento manual fallido',
+        error_message: sendResult.error || 'Fallo en el reintento manual',
       });
       return res.status(500).json({ success: false, error: { message: sendResult.error || 'Fallo en reintento' } });
     }

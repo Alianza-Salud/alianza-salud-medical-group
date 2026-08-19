@@ -130,6 +130,20 @@ class NotificationRepository {
   }
 
   /**
+   * Obtener un registro de auditoría por ID.
+   */
+  async getLogById(logId) {
+    if (!pool) return null;
+    try {
+      const [rows] = await pool.query('SELECT * FROM notification_logs WHERE id = ? LIMIT 1', [logId]);
+      return rows[0] || null;
+    } catch (error) {
+      console.error('[NotificationRepository.getLogById Error]:', error.message);
+      return null;
+    }
+  }
+
+  /**
    * Obtener registros de auditoría filtrados.
    */
   async getLogs({ status, recipient_email, event_type, limit = 50, offset = 0 }) {
@@ -138,7 +152,7 @@ class NotificationRepository {
       let whereClause = 'WHERE 1=1';
       const params = [];
 
-      if (status) {
+      if (status && status !== 'all') {
         whereClause += ' AND status = ?';
         params.push(status);
       }
