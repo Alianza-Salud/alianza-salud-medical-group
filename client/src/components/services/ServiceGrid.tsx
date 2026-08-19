@@ -9,8 +9,8 @@ interface ServiceGridProps {
 }
 
 /**
- * Grid de servicios jurídicos.
- * Muestra una cuadrícula responsive de ServiceCards.
+ * Grid de servicios médico-periciales.
+ * Adapta dinámicamente el ancho y columnas (2 columnas centradas cuando existen 2 servicios).
  */
 export function ServiceGrid({ services, className }: ServiceGridProps) {
   if (services.length === 0) {
@@ -22,10 +22,15 @@ export function ServiceGrid({ services, className }: ServiceGridProps) {
     );
   }
 
+  const isTwoServices = services.length === 2;
+
   return (
     <div
       className={cn(
-        'grid gap-6 sm:grid-cols-2 lg:grid-cols-3',
+        'grid gap-8',
+        isTwoServices
+          ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto'
+          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
         className
       )}
     >

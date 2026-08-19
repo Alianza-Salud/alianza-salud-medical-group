@@ -43,7 +43,7 @@ export function InjuryFlowVisual() {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % steps.length);
-    }, 3800);
+    }, 1900);
     return () => clearInterval(timer);
   }, []);
 
