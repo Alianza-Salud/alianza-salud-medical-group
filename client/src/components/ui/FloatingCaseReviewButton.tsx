@@ -56,8 +56,8 @@ export function FloatingCaseReviewButton({ onClick }: FloatingCaseReviewButtonPr
           <UploadCloud className="h-6 w-6 text-white group-hover:rotate-12 transition-transform duration-300" />
         </div>
 
-        {/* Texto expandible responsivo */}
-        <span className="relative font-bold text-xs sm:text-sm tracking-tight pr-1 hidden md:inline-block whitespace-nowrap">
+        {/* Texto del botón (visible tanto en móvil como en escritorio) */}
+        <span className="relative font-bold text-xs sm:text-sm tracking-tight pr-1 inline-block whitespace-nowrap">
           Quiero que revisen mi caso
         </span>
 
