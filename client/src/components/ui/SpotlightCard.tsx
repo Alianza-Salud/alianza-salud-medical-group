@@ -11,8 +11,8 @@ interface SpotlightCardProps {
 }
 
 /**
- * Tarjeta interactiva con efecto de luz radial (Spotlight) en escritorio.
- * Al mover el cursor, proyecta una iluminación radial en Azul Cielo o Verde Esmeralda según el tema activo.
+ * Tarjeta interactiva con efecto de luz radial (Spotlight) sutil en escritorio.
+ * Proyecta la misma iluminación radial sutil (transparencia idéntica), cambiando únicamente el matiz de color según el tema activo.
  */
 export function SpotlightCard({
   children,
@@ -25,8 +25,8 @@ export function SpotlightCard({
   const { theme } = useBrandTheme();
 
   const defaultSpotlight = theme === 'corporate-brand'
-    ? 'rgba(14, 165, 233, 0.22)' // Sky Blue Corporativo al hacer hover
-    : 'rgba(13, 148, 136, 0.14)'; // Emerald Teal
+    ? 'rgba(14, 165, 233, 0.12)' // Sky Blue Corporativo sutil y transparente
+    : 'rgba(13, 148, 136, 0.12)'; // Emerald Teal sutil y transparente
 
   const effectiveSpotlightColor = spotlightColor || defaultSpotlight;
 

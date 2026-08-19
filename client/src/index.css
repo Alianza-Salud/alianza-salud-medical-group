@@ -50,8 +50,8 @@
  * =============================================
  * RE-MAPEO COMPLETO PARA 'FAMILIA CORPORATIVA' (SKY BLUE #0ea5e9 + TEAL #0d9488 + AMBER #f59e0b)
  * =============================================
- * Transforma TODOS los gradientes, fondos de íconos activos, hovers de tarjetas,
- * luces radiales Spotlight, círculos numerados, bordes y sombras al Azul Cielo Corporativo (#0ea5e9).
+ * Mantiene la misma sutileza y transparencia de los efectos originales de las tarjetas (fondo blanco limpio),
+ * cambiando exclusivamente el matiz de color de los acentos, bordes e iluminación radial al Azul Cielo Corporativo (#0ea5e9).
  */
 
 [data-brand-theme="corporate-brand"] {
@@ -95,7 +95,7 @@
   color: #0369a1 !important;
 }
 
-/* Fondos e Íconos Activos */
+/* Fondos de Botones e Íconos Activos */
 [data-brand-theme="corporate-brand"] .bg-emerald-600,
 [data-brand-theme="corporate-brand"] .bg-emerald-500 {
   background-color: #0ea5e9 !important;
@@ -105,14 +105,12 @@
   background-color: #082f49 !important;
 }
 
-/* Hovers en Tarjetas, Botones y Contenedores */
-[data-brand-theme="corporate-brand"] .spotlight-card:hover,
+/* Hovers en Botones e Íconos Secundarios */
 [data-brand-theme="corporate-brand"] .group:hover .group-hover\:bg-emerald-500,
 [data-brand-theme="corporate-brand"] .group-hover\:bg-emerald-500,
 [data-brand-theme="corporate-brand"] .hover\:bg-emerald-500:hover,
 [data-brand-theme="corporate-brand"] .hover\:bg-emerald-600:hover,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-700:hover,
-[data-brand-theme="corporate-brand"] .hover\:bg-primary:hover {
+[data-brand-theme="corporate-brand"] .hover\:bg-emerald-700:hover {
   background-color: #0ea5e9 !important;
 }
 
@@ -122,18 +120,18 @@
   color: #0ea5e9 !important;
 }
 
-[data-brand-theme="corporate-brand"] .bg-emerald-50,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-50:hover {
+/* Fondos Sutiles y Translúcidos */
+[data-brand-theme="corporate-brand"] .bg-emerald-50 {
   background-color: #f0f9ff !important;
 }
 
 [data-brand-theme="corporate-brand"] .bg-emerald-500\/10,
 [data-brand-theme="corporate-brand"] .bg-emerald-500\/15,
 [data-brand-theme="corporate-brand"] .bg-emerald-500\/20 {
-  background-color: rgba(14, 165, 233, 0.15) !important;
+  background-color: rgba(14, 165, 233, 0.12) !important;
 }
 
-/* Bordes de Tarjetas en Hover en Modo Corporativo */
+/* Bordes Sutiles de Tarjetas en Hover */
 [data-brand-theme="corporate-brand"] .border-emerald-500,
 [data-brand-theme="corporate-brand"] .border-emerald-600,
 [data-brand-theme="corporate-brand"] .border-emerald-200,
@@ -144,21 +142,21 @@
 [data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/30:hover,
 [data-brand-theme="corporate-brand"] .hover\:border-primary\/40:hover,
 [data-brand-theme="corporate-brand"] .group:hover .group-hover\:border-emerald-500 {
-  border-color: rgba(14, 165, 233, 0.6) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
 }
 
 [data-brand-theme="corporate-brand"] .border-emerald-500\/60,
 [data-brand-theme="corporate-brand"] .border-emerald-500\/50,
 [data-brand-theme="corporate-brand"] .border-emerald-500\/30,
 [data-brand-theme="corporate-brand"] .border-emerald-500\/20 {
-  border-color: rgba(14, 165, 233, 0.35) !important;
+  border-color: rgba(14, 165, 233, 0.25) !important;
 }
 
-/* Anillos & Sombras */
+/* Anillos & Sombras Sutiles */
 [data-brand-theme="corporate-brand"] .ring-emerald-500,
 [data-brand-theme="corporate-brand"] .ring-emerald-500\/20,
 [data-brand-theme="corporate-brand"] .ring-emerald-400\/40 {
-  --tw-ring-color: rgba(14, 165, 233, 0.4) !important;
+  --tw-ring-color: rgba(14, 165, 233, 0.25) !important;
 }
 
 [data-brand-theme="corporate-brand"] .shadow-emerald-500\/30,
@@ -167,8 +165,7 @@
 [data-brand-theme="corporate-brand"] .shadow-emerald-600\/25,
 [data-brand-theme="corporate-brand"] .shadow-emerald-950\/50,
 [data-brand-theme="corporate-brand"] .shadow-emerald-950\/40 {
-  --tw-shadow-color: rgba(14, 165, 233, 0.3) !important;
-  box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.3) !important;
+  --tw-shadow-color: rgba(14, 165, 233, 0.2) !important;
 }
 
 /* Badges e Insignias Destacadas (Amber #f59e0b) */
