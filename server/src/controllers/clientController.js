@@ -42,9 +42,9 @@ async function createClient(req, res, next) {
 
     // Disparar evento de notificación sin bloquear la respuesta
     notificationService.emit('CLIENT_CREATED', {
-      fullName: newClient.full_name,
+      fullName: newClient.fullName || newClient.full_name,
       email: newClient.email,
-      clientCode: newClient.verification_code,
+      clientCode: newClient.verificationCode || newClient.verification_code,
       clientId: newClient.id,
     });
 

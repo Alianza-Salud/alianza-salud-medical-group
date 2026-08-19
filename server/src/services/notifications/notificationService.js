@@ -23,10 +23,12 @@ class NotificationService extends EventEmitter {
     this.on('CASE_STAGE_CHANGED', (data) => this.handleCaseStageChanged(data));
   }
 
-  // --- Handlers para cada evento ---
+  // --- Handlers para cada evento con soporte camelCase / snake_case ---
 
   async handleClientCreated(data) {
-    const { fullName, email, clientCode, clientId } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const clientCode = data.clientCode || data.verificationCode || data.verification_code || 'SIN_CODIGO';
+    const { email, clientId } = data;
     if (!email) return;
 
     await this.dispatchNotification({
@@ -40,7 +42,8 @@ class NotificationService extends EventEmitter {
   }
 
   async handleAppointmentRequested(data) {
-    const { fullName, email, phone, serviceType, preferredDate, preferredTime, message } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const { email, phone, serviceType, preferredDate, preferredTime, message } = data;
 
     await this.dispatchNotification({
       eventType: 'APPOINTMENT_REQUESTED',
@@ -62,7 +65,8 @@ class NotificationService extends EventEmitter {
   }
 
   async handleAppointmentConfirmed(data) {
-    const { fullName, email, serviceType, date, time, modality } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const { email, serviceType, date, time, modality } = data;
     if (!email) return;
 
     await this.dispatchNotification({
@@ -75,7 +79,8 @@ class NotificationService extends EventEmitter {
   }
 
   async handleAppointmentCancelled(data) {
-    const { fullName, email, date, time, reason } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const { email, date, time, reason } = data;
     if (!email) return;
 
     await this.dispatchNotification({
@@ -88,7 +93,8 @@ class NotificationService extends EventEmitter {
   }
 
   async handlePetitionSubmitted(data) {
-    const { fullName, email, phone, caseType, documentsCount, description } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const { email, phone, caseType, documentsCount, description } = data;
 
     await this.dispatchNotification({
       eventType: 'PETITION_SUBMITTED',
@@ -110,7 +116,8 @@ class NotificationService extends EventEmitter {
   }
 
   async handleContactSubmitted(data) {
-    const { fullName, email, phone, subject, message } = data;
+    const fullName = data.fullName || data.full_name || 'Usuario';
+    const { email, phone, subject, message } = data;
 
     await this.dispatchNotification({
       eventType: 'CONTACT_SUBMITTED',
@@ -132,7 +139,9 @@ class NotificationService extends EventEmitter {
   }
 
   async handleCaseCreated(data) {
-    const { fullName, email, caseCode, serviceSlug, stage, status, caseId, clientId } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const caseCode = data.caseCode || data.case_code || 'CASO-NUEVO';
+    const { email, serviceSlug, stage, status, caseId, clientId } = data;
     if (!email) return;
 
     await this.dispatchNotification({
@@ -147,7 +156,9 @@ class NotificationService extends EventEmitter {
   }
 
   async handleCaseUpdated(data) {
-    const { fullName, email, caseCode, title, summary, visible_for_client, caseId, clientId } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const caseCode = data.caseCode || data.case_code || 'CASO-NUEVO';
+    const { email, title, summary, visible_for_client, caseId, clientId } = data;
     if (!email || visible_for_client === false) return;
 
     await this.dispatchNotification({
@@ -162,7 +173,9 @@ class NotificationService extends EventEmitter {
   }
 
   async handleDocumentUploaded(data) {
-    const { fullName, email, caseCode, documentName, visible_for_client, caseId, clientId } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const caseCode = data.caseCode || data.case_code || 'CASO-NUEVO';
+    const { email, documentName, visible_for_client, caseId, clientId } = data;
     if (!email || visible_for_client === false) return;
 
     await this.dispatchNotification({
@@ -177,7 +190,9 @@ class NotificationService extends EventEmitter {
   }
 
   async handleCaseStageChanged(data) {
-    const { fullName, email, caseCode, previousStage, newStage, caseId, clientId } = data;
+    const fullName = data.fullName || data.full_name || 'Cliente';
+    const caseCode = data.caseCode || data.case_code || 'CASO-NUEVO';
+    const { email, previousStage, newStage, caseId, clientId } = data;
     if (!email) return;
 
     await this.dispatchNotification({
