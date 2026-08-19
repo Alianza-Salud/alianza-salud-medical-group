@@ -5,22 +5,29 @@ const FRONTEND_URL = process.env.CORS_ORIGIN || 'http://localhost:5173';
 const templates = {
   // 1. Registro de Cliente
   CLIENT_CREATED: ({ fullName, clientCode }) => {
-    const subject = `Bienvenido a Alianza Salud Medical Group — Código de Cliente: ${clientCode}`;
+    const subject = `Bienvenido a Alianza Salud Medical Group — Registro y Código de Verificación`;
     const html = buildHtmlLayout({
       title: subject,
       contentHtml: `
-        <h2 style="color: #0f2b48; font-size: 18px;">Hola, ${fullName}.</h2>
-        <p>Tu registro ha sido creado correctamente en nuestra plataforma de <strong>Injury Management & Peritaje Médico</strong>.</p>
+        <h2 style="color: #0f2b48; font-size: 18px;">Estimado(a) ${fullName},</h2>
+        <p>Le damos la bienvenida a <strong>Alianza Salud Medical Group</strong>. Su expediente inicial ha sido registrado exitosamente en nuestra plataforma de <strong>Injury Management & Peritaje Médico Especializado</strong>.</p>
         
-        <div class="card-box" style="text-align: center; border-left: 4px solid #0ea5e9;">
-          <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Tu Código Único de Cliente</p>
-          <p style="margin: 8px 0 0 0; font-size: 24px; font-weight: 900; color: #0ea5e9; font-family: monospace; letter-spacing: 2px;">${clientCode}</p>
+        <div class="card-box" style="text-align: center; border-left: 4px solid #0ea5e9; background-color: #f8fafc; padding: 24px;">
+          <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Código Único de Verificación de Cliente</p>
+          <p style="margin: 8px 0 0 0; font-size: 26px; font-weight: 900; color: #0ea5e9; font-family: monospace; letter-spacing: 3px;">${clientCode}</p>
         </div>
         
-        <p style="font-size: 13px; color: #475569;">Con este código podrás identificarte dentro de nuestros servicios y realizar seguimiento a tus solicitudes.</p>
+        <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 18px; margin-top: 20px;">
+          <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 700;">Requisito indispensable para el acceso a su portal:</p>
+          <p style="margin: 8px 0 0 0; font-size: 12.5px; color: #78350f; line-height: 1.6;">
+            El código asignado arriba es su <strong>credencial de verificación obligatoria</strong> para crear su usuario en nuestra plataforma. <strong>Sin este código no será posible completar su registro ni ingresar a la aplicación para consultar el estado y avance de sus casos médico-periciales.</strong>
+          </p>
+        </div>
+        
+        <p style="font-size: 13px; color: #475569; margin-top: 20px;">Para completar la activación de su cuenta de usuario y vincular sus expedientes, ingrese al portal introduciendo este código de 8 caracteres:</p>
       `,
-      ctaText: 'Acceder a la plataforma',
-      ctaUrl: `${FRONTEND_URL}/login`,
+      ctaText: 'Completar Registro en la Plataforma',
+      ctaUrl: `${FRONTEND_URL}/register`,
     });
     return { subject, html };
   },
