@@ -113,15 +113,7 @@ export default function AppointmentsManagerPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [copiedLinkId, setCopiedLinkId] = useState<number | null>(null);
 
-  const generateRandomMeetUrl = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz';
-    const getPart = (len: number) => {
-      let res = '';
-      for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
-      return res;
-    };
-    return `https://meet.google.com/${getPart(3)}-${getPart(4)}-${getPart(3)}`;
-  };
+  const generateRandomMeetUrl = () => 'https://meet.google.com/new';
 
   const openApproveModal = (app: PrivateAppointment) => {
     setTargetAppointment(app);

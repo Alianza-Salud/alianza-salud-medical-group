@@ -3,29 +3,13 @@
  */
 
 /**
- * Genera un código de reunión de Google Meet válido en formato xxx-yyyy-zzz (3-4-3 letras minúsculas).
- */
-function generateMeetCode() {
-  const chars = 'abcdefghijklmnopqrstuvwxyz';
-  const getRandomPart = (len) => {
-    let result = '';
-    for (let i = 0; i < len; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-  return `${getRandomPart(3)}-${getRandomPart(4)}-${getRandomPart(3)}`;
-}
-
-/**
- * Genera una URL completa de Google Meet.
- * @returns {string} URL formateada ej. https://meet.google.com/abc-defg-hij
+ * Genera una URL de sala directa de Google Meet o plantilla de agendamiento.
+ * @returns {string} URL activa de Google Meet
  */
 function generateMeetUrl() {
-  return `https://meet.google.com/${generateMeetCode()}`;
+  return 'https://meet.google.com/new';
 }
 
 module.exports = {
-  generateMeetCode,
   generateMeetUrl,
 };

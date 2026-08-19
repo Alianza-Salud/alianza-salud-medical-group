@@ -59,11 +59,12 @@ async function updateStatus(req, res, next) {
 
     const existingAppointment = await appointmentRepository.findById(id);
 
-    // Si la modalidad es remota y se está aprobando o ya era remota, generar enlace de Google Meet si no viene proporcionado
-    let finalMeetLink = meetLink;
     let finalModality = modality || (existingAppointment ? existingAppointment.modality : 'presencial');
+    let finalMeetLink = (meetLink && String(meetLink).trim() !== '') 
+      ? String(meetLink).trim() 
+      : (existingAppointment ? (existingAppointment.meetLink || existingAppointment.meet_link) : null);
 
-    if (finalModality === 'remota' && !finalMeetLink && (existingAppointment ? !existingAppointment.meetLink : true)) {
+    if (finalModality === 'remota' && (!finalMeetLink || String(finalMeetLink).trim() === '')) {
       finalMeetLink = generateMeetUrl();
     }
 
