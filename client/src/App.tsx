@@ -25,7 +25,7 @@ import AppointmentsManagerPage from './pages/dashboard/AppointmentsManagerPage';
 import ContactMessagesPage from './pages/dashboard/ContactMessagesPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
 import CaseReviewRequestsPage from './pages/dashboard/CaseReviewRequestsPage';
-import { NotificationSettingsPage } from './pages/dashboard/NotificationSettingsPage';
+import NotificationSettingsPage from './pages/dashboard/NotificationSettingsPage';
 
 /**
  * Componente raíz de la aplicación.

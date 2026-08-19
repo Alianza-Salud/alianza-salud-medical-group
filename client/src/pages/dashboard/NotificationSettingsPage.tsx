@@ -390,3 +390,6 @@ export function NotificationSettingsPage() {
     </div>
   );
 }
+
+export default NotificationSettingsPage;
+
