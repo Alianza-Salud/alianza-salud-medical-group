@@ -115,6 +115,44 @@ export default function AppointmentsManagerPage() {
 
   const generateRandomMeetUrl = () => 'https://meet.google.com/new';
 
+  const createGoogleCalendarEventUrl = (app: PrivateAppointment) => {
+    const title = `Cita Médica — Alianza Salud [${app.fullName}]`;
+    const details = `Cita de ${app.serviceType.replace('-', ' ')}\nCliente: ${app.fullName}\nCorreo: ${app.email}\nTeléfono: ${app.phone}`;
+
+    const dateParts = (app.preferredDate || '').split('-');
+    const timeParts = (app.preferredTime || '').split(':');
+
+    let startIso = '';
+    let endIso = '';
+
+    if (dateParts.length === 3 && timeParts.length >= 2) {
+      const year = dateParts[0];
+      const month = dateParts[1];
+      const day = dateParts[2];
+      const hour = timeParts[0].padStart(2, '0');
+      const min = timeParts[1].padStart(2, '0');
+
+      const startNum = parseInt(hour, 10);
+      const endHour = String((startNum + 1) % 24).padStart(2, '0');
+
+      startIso = `${year}${month}${day}T${hour}${min}00`;
+      endIso = `${year}${month}${day}T${endHour}${min}00`;
+    }
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: title,
+      details: details,
+      location: 'Google Meet',
+    });
+
+    if (startIso && endIso) {
+      params.append('dates', `${startIso}/${endIso}`);
+    }
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
   const openApproveModal = (app: PrivateAppointment) => {
     setTargetAppointment(app);
     setApproveModality(app.modality || 'presencial');
@@ -1314,47 +1352,58 @@ export default function AppointmentsManagerPage() {
               </div>
 
               {approveModality === 'remota' && (
-                <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 space-y-3 animate-fade-in">
+                <div className="p-4 rounded-xl bg-blue-50/90 border border-blue-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-blue-600" />
-                      Enlace de Videoconsulta Google Meet
+                      Paso 1: Generar Sala Fija en Google Calendar / Meet
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setApproveMeetLink(generateRandomMeetUrl())}
-                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
-                    >
-                      <RotateCcw className="h-3 w-3" /> Generar nuevo
-                    </button>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="url"
-                      required
-                      value={approveMeetLink}
-                      onChange={(e) => setApproveMeetLink(e.target.value)}
-                      placeholder="https://meet.google.com/abc-defg-hij"
-                      className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(approveMeetLink);
-                        setIsCopied(true);
-                        setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                      className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
-                      title="Copiar enlace"
-                    >
-                      {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                      {isCopied ? '¡Copiado!' : 'Copiar'}
-                    </button>
+                  <a
+                    href={createGoogleCalendarEventUrl(targetAppointment)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition-all text-center"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    📅 1-Clic: Crear Evento en Google Calendar con Google Meet
+                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </a>
+
+                  <div className="pt-2 border-t border-blue-200/80 space-y-1.5">
+                    <label className="block text-xs font-bold text-blue-950">
+                      Paso 2: Pegar Enlace Fijo de Google Meet Registrado <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        required
+                        value={approveMeetLink}
+                        onChange={(e) => setApproveMeetLink(e.target.value)}
+                        placeholder="https://meet.google.com/abc-defg-hij"
+                        className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (approveMeetLink) {
+                            navigator.clipboard.writeText(approveMeetLink);
+                            setIsCopied(true);
+                            setTimeout(() => setIsCopied(false), 2000);
+                          }
+                        }}
+                        className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
+                        title="Copiar enlace"
+                      >
+                        {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {isCopied ? '¡Copiado!' : 'Copiar'}
+                      </button>
+                    </div>
                   </div>
 
-                  <p className="text-[11px] text-blue-700 leading-relaxed">
-                    Este enlace será enviado automáticamente por correo electrónico al cliente y quedará disponible en su panel personal.
+                  <p className="text-[11px] text-blue-800 leading-relaxed font-medium">
+                    💡 Al presionar el botón de 1-Clic se abrirá tu Google Calendar con el cliente y horario pre-llenados. Google generará la sala fija de Meet; copia esa dirección y pégala arriba. Ambas partes ingresarán a esta misma sala fija el día de la cita.
                   </p>
                 </div>
               )}
