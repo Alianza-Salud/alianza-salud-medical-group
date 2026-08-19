@@ -3,10 +3,10 @@
 /*
  * =============================================
  * DESIGN & MOTION TOKENS — Alianza Salud Medical Group
+ * PALETA: VERDE ESMERALDA MÉDICO PURO
  * =============================================
  *
- * Paleta clínica premium + plataforma digital + editorial moderna.
- * Soporta alternar en tiempo real entre 'emerald-pure' y 'corporate-brand'.
+ * Para activar esta paleta, importa './index.css' en client/src/main.tsx
  */
 
 @theme {
@@ -18,8 +18,6 @@
   --color-secondary-foreground: #1e293b;
   --color-accent-teal: #0d9488;
   --color-accent-emerald: #059669;
-  --color-accent-sky: #0ea5e9;
-  --color-accent-amber: #f59e0b;
 }
 
 @layer base {
@@ -44,136 +42,6 @@
     margin: 0;
     overflow-x: hidden;
   }
-}
-
-/*
- * =============================================
- * RE-MAPEO COMPLETO PARA 'FAMILIA CORPORATIVA' (SKY BLUE #0ea5e9 + TEAL #0d9488 + AMBER #f59e0b)
- * =============================================
- * Mantiene la misma sutileza y transparencia de los efectos originales de las tarjetas (fondo blanco limpio),
- * cambiando exclusivamente el matiz de color de los acentos, bordes e iluminación radial al Azul Cielo Corporativo (#0ea5e9).
- */
-
-[data-brand-theme="corporate-brand"] {
-  --color-emerald-50: #f0f9ff;
-  --color-emerald-100: #e0f2fe;
-  --color-emerald-200: #bae6fd;
-  --color-emerald-300: #7dd3fc;
-  --color-emerald-400: #38bdf8;
-  --color-emerald-500: #0ea5e9;
-  --color-emerald-600: #0284c7;
-  --color-emerald-700: #0369a1;
-  --color-emerald-800: #075985;
-  --color-emerald-900: #0c4a6e;
-  --color-emerald-950: #082f49;
-
-  --color-teal-500: #0284c7;
-  --color-teal-600: #0369a1;
-}
-
-/* Gradientes (from-emerald a to-teal / to-emerald) */
-[data-brand-theme="corporate-brand"] .from-emerald-500,
-[data-brand-theme="corporate-brand"] .from-emerald-600 {
-  background-image: linear-gradient(to bottom right, #0ea5e9, #0369a1) !important;
-}
-
-/* Textos */
-[data-brand-theme="corporate-brand"] .text-emerald-600,
-[data-brand-theme="corporate-brand"] .text-emerald-500 {
-  color: #0ea5e9 !important;
-}
-
-[data-brand-theme="corporate-brand"] .text-emerald-400,
-[data-brand-theme="corporate-brand"] .text-emerald-300 {
-  color: #38bdf8 !important;
-}
-
-[data-brand-theme="corporate-brand"] .text-emerald-700,
-[data-brand-theme="corporate-brand"] .text-emerald-800,
-[data-brand-theme="corporate-brand"] .text-emerald-900,
-[data-brand-theme="corporate-brand"] .text-emerald-950 {
-  color: #0369a1 !important;
-}
-
-/* Fondos de Botones e Íconos Activos */
-[data-brand-theme="corporate-brand"] .bg-emerald-600,
-[data-brand-theme="corporate-brand"] .bg-emerald-500 {
-  background-color: #0ea5e9 !important;
-}
-
-[data-brand-theme="corporate-brand"] .bg-emerald-950 {
-  background-color: #082f49 !important;
-}
-
-/* Hovers en Botones e Íconos Secundarios */
-[data-brand-theme="corporate-brand"] .group:hover .group-hover\:bg-emerald-500,
-[data-brand-theme="corporate-brand"] .group-hover\:bg-emerald-500,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-500:hover,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-600:hover,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-700:hover {
-  background-color: #0ea5e9 !important;
-}
-
-[data-brand-theme="corporate-brand"] .group:hover .group-hover\:text-emerald-600,
-[data-brand-theme="corporate-brand"] .group-hover\:text-emerald-600,
-[data-brand-theme="corporate-brand"] .group:hover .group-hover\:text-primary {
-  color: #0ea5e9 !important;
-}
-
-/* Fondos Sutiles y Translúcidos */
-[data-brand-theme="corporate-brand"] .bg-emerald-50 {
-  background-color: #f0f9ff !important;
-}
-
-[data-brand-theme="corporate-brand"] .bg-emerald-500\/10,
-[data-brand-theme="corporate-brand"] .bg-emerald-500\/15,
-[data-brand-theme="corporate-brand"] .bg-emerald-500\/20 {
-  background-color: rgba(14, 165, 233, 0.12) !important;
-}
-
-/* Bordes Sutiles de Tarjetas en Hover */
-[data-brand-theme="corporate-brand"] .border-emerald-500,
-[data-brand-theme="corporate-brand"] .border-emerald-600,
-[data-brand-theme="corporate-brand"] .border-emerald-200,
-[data-brand-theme="corporate-brand"] .border-emerald-800,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500:hover,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/50:hover,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/40:hover,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/30:hover,
-[data-brand-theme="corporate-brand"] .hover\:border-primary\/40:hover,
-[data-brand-theme="corporate-brand"] .group:hover .group-hover\:border-emerald-500 {
-  border-color: rgba(14, 165, 233, 0.4) !important;
-}
-
-[data-brand-theme="corporate-brand"] .border-emerald-500\/60,
-[data-brand-theme="corporate-brand"] .border-emerald-500\/50,
-[data-brand-theme="corporate-brand"] .border-emerald-500\/30,
-[data-brand-theme="corporate-brand"] .border-emerald-500\/20 {
-  border-color: rgba(14, 165, 233, 0.25) !important;
-}
-
-/* Anillos & Sombras Sutiles */
-[data-brand-theme="corporate-brand"] .ring-emerald-500,
-[data-brand-theme="corporate-brand"] .ring-emerald-500\/20,
-[data-brand-theme="corporate-brand"] .ring-emerald-400\/40 {
-  --tw-ring-color: rgba(14, 165, 233, 0.25) !important;
-}
-
-[data-brand-theme="corporate-brand"] .shadow-emerald-500\/30,
-[data-brand-theme="corporate-brand"] .shadow-emerald-500\/20,
-[data-brand-theme="corporate-brand"] .shadow-emerald-600\/20,
-[data-brand-theme="corporate-brand"] .shadow-emerald-600\/25,
-[data-brand-theme="corporate-brand"] .shadow-emerald-950\/50,
-[data-brand-theme="corporate-brand"] .shadow-emerald-950\/40 {
-  --tw-shadow-color: rgba(14, 165, 233, 0.2) !important;
-}
-
-/* Badges e Insignias Destacadas (Amber #f59e0b) */
-[data-brand-theme="corporate-brand"] span.bg-emerald-50,
-[data-brand-theme="corporate-brand"] div.bg-emerald-50 {
-  background-color: #fffbeb !important;
-  color: #b45309 !important;
-  border-color: #fde68a !important;
 }
 
 /*

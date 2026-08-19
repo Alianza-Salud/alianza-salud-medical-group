@@ -1,6 +1,5 @@
 import { useRef, type ReactNode } from 'react';
 import { useMousePosition } from '../../hooks/useMousePosition';
-import { useBrandTheme } from '../../context/BrandThemeContext';
 import { cn } from '../../lib/utils';
 
 interface SpotlightCardProps {
@@ -12,7 +11,7 @@ interface SpotlightCardProps {
 
 /**
  * Tarjeta interactiva con efecto de luz radial (Spotlight) sutil en escritorio.
- * Proyecta la misma iluminación radial sutil (transparencia idéntica), cambiando únicamente el matiz de color según el tema activo.
+ * La tonalidad de la luz se adapta automáticamente al CSS importado (index.css vs index2.css).
  */
 export function SpotlightCard({
   children,
@@ -22,13 +21,8 @@ export function SpotlightCard({
 }: SpotlightCardProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mousePosition = useMousePosition(containerRef);
-  const { theme } = useBrandTheme();
 
-  const defaultSpotlight = theme === 'corporate-brand'
-    ? 'rgba(14, 165, 233, 0.12)' // Sky Blue Corporativo sutil y transparente
-    : 'rgba(13, 148, 136, 0.12)'; // Emerald Teal sutil y transparente
-
-  const effectiveSpotlightColor = spotlightColor || defaultSpotlight;
+  const defaultSpotlight = spotlightColor || 'rgba(14, 165, 233, 0.12)';
 
   return (
     <div
@@ -44,7 +38,7 @@ export function SpotlightCard({
       <div
         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100 hidden md:block"
         style={{
-          background: `radial-gradient(320px circle at ${mousePosition.x}px ${mousePosition.y}px, ${effectiveSpotlightColor}, transparent 80%)`,
+          background: `radial-gradient(320px circle at ${mousePosition.x}px ${mousePosition.y}px, ${defaultSpotlight}, transparent 80%)`,
         }}
       />
 

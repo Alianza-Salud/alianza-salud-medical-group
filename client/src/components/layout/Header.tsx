@@ -5,7 +5,6 @@ import { siteInfo } from '../../data/site';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { BrandThemeToggle } from '../ui/BrandThemeToggle';
 
 interface HeaderProps {
   onOpenModal?: () => void;
@@ -13,8 +12,7 @@ interface HeaderProps {
 
 /**
  * Header/navbar dinámico y elegante del sitio público.
- * Incorpora condensación de altura (80px -> 64px), efecto cristal translúcido,
- * conmutador de tema visual (Paleta Esmeralda vs Familia Corporativa) y navegación interactiva.
+ * Adapta su altura, fondo translúcido y sombra sutil al hacer scroll.
  */
 export function Header({ onOpenModal }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -78,7 +76,7 @@ export function Header({ onOpenModal }: HeaderProps) {
                   key={link.href}
                   to={link.href}
                   className={cn(
-                    'relative rounded-xl px-3.5 py-2 text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 hover-brand-sky',
+                    'relative rounded-xl px-4 py-2 text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5',
                     active
                       ? 'text-primary bg-white shadow-xs font-black'
                       : 'text-gray-600 hover:text-primary hover:bg-white/60 font-semibold'
@@ -91,10 +89,8 @@ export function Header({ onOpenModal }: HeaderProps) {
             })}
           </div>
 
-          {/* Selector de Tema Visual & Acciones de Usuario */}
-          <div className="hidden lg:flex lg:items-center lg:gap-3">
-            <BrandThemeToggle />
-
+          {/* Acciones de Usuario Autenticado o Invitado */}
+          <div className="hidden lg:flex lg:items-center lg:gap-2.5">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2">
                 <Link to={dashboardTarget}>
@@ -122,24 +118,20 @@ export function Header({ onOpenModal }: HeaderProps) {
           </div>
 
           {/* Botón menú móvil */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <BrandThemeToggle />
-
-            <button
-              type="button"
-              className="rounded-xl p-2 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-menu"
-              aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="lg:hidden rounded-xl p-2 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
 
         {/* Menú móvil */}
