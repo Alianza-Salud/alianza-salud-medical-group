@@ -51,7 +51,7 @@
  * RE-MAPEO COMPLETO PARA 'FAMILIA CORPORATIVA' (SKY BLUE #0ea5e9 + TEAL #0d9488 + AMBER #f59e0b)
  * =============================================
  * Transforma TODOS los gradientes, fondos de íconos activos, hovers de tarjetas,
- * círculos numerados, bordes y sombras al Azul Cielo Corporativo (#0ea5e9).
+ * luces radiales Spotlight, círculos numerados, bordes y sombras al Azul Cielo Corporativo (#0ea5e9).
  */
 
 [data-brand-theme="corporate-brand"] {
@@ -105,12 +105,14 @@
   background-color: #082f49 !important;
 }
 
-/* Hovers en Tarjetas y Contenedores */
+/* Hovers en Tarjetas, Botones y Contenedores */
+[data-brand-theme="corporate-brand"] .spotlight-card:hover,
 [data-brand-theme="corporate-brand"] .group:hover .group-hover\:bg-emerald-500,
 [data-brand-theme="corporate-brand"] .group-hover\:bg-emerald-500,
 [data-brand-theme="corporate-brand"] .hover\:bg-emerald-500:hover,
 [data-brand-theme="corporate-brand"] .hover\:bg-emerald-600:hover,
-[data-brand-theme="corporate-brand"] .hover\:bg-emerald-700:hover {
+[data-brand-theme="corporate-brand"] .hover\:bg-emerald-700:hover,
+[data-brand-theme="corporate-brand"] .hover\:bg-primary:hover {
   background-color: #0ea5e9 !important;
 }
 
@@ -120,7 +122,8 @@
   color: #0ea5e9 !important;
 }
 
-[data-brand-theme="corporate-brand"] .bg-emerald-50 {
+[data-brand-theme="corporate-brand"] .bg-emerald-50,
+[data-brand-theme="corporate-brand"] .hover\:bg-emerald-50:hover {
   background-color: #f0f9ff !important;
 }
 
@@ -130,22 +133,25 @@
   background-color: rgba(14, 165, 233, 0.15) !important;
 }
 
-/* Bordes en Modo Corporativo */
+/* Bordes de Tarjetas en Hover en Modo Corporativo */
 [data-brand-theme="corporate-brand"] .border-emerald-500,
 [data-brand-theme="corporate-brand"] .border-emerald-600,
 [data-brand-theme="corporate-brand"] .border-emerald-200,
-[data-brand-theme="corporate-brand"] .border-emerald-800 {
-  border-color: #38bdf8 !important;
+[data-brand-theme="corporate-brand"] .border-emerald-800,
+[data-brand-theme="corporate-brand"] .hover\:border-emerald-500:hover,
+[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/50:hover,
+[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/40:hover,
+[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/30:hover,
+[data-brand-theme="corporate-brand"] .hover\:border-primary\/40:hover,
+[data-brand-theme="corporate-brand"] .group:hover .group-hover\:border-emerald-500 {
+  border-color: rgba(14, 165, 233, 0.6) !important;
 }
 
 [data-brand-theme="corporate-brand"] .border-emerald-500\/60,
 [data-brand-theme="corporate-brand"] .border-emerald-500\/50,
 [data-brand-theme="corporate-brand"] .border-emerald-500\/30,
-[data-brand-theme="corporate-brand"] .border-emerald-500\/20,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/50:hover,
-[data-brand-theme="corporate-brand"] .hover\:border-emerald-500\/40:hover,
-[data-brand-theme="corporate-brand"] .group:hover .group-hover\:border-emerald-500 {
-  border-color: rgba(14, 165, 233, 0.5) !important;
+[data-brand-theme="corporate-brand"] .border-emerald-500\/20 {
+  border-color: rgba(14, 165, 233, 0.35) !important;
 }
 
 /* Anillos & Sombras */
