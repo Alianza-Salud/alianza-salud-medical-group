@@ -43,20 +43,27 @@ export function NotificationSettingsPage() {
     fetchLogs();
   }, []);
 
-  const getAuthToken = () => localStorage.getItem('alianza_token') || '';
+  const getAuthToken = () => localStorage.getItem('auth_token') || '';
 
   const fetchSettings = async () => {
     try {
       setLoading(true);
+      const token = getAuthToken();
       const res = await fetch('/api/notifications/settings', {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success && data.data) {
+      if (res.ok && data.success && data.data) {
         setSettings(data.data.settings || []);
         if (data.data.companyEmail) setCompanyEmail(data.data.companyEmail);
         if (data.data.senderName) setSenderName(data.data.senderName);
         if (data.data.senderEmail) setSenderEmail(data.data.senderEmail);
+        setFeedback(null);
+      } else {
+        setFeedback({
+          type: 'error',
+          message: data.error?.message || data.message || 'Acceso no autorizado. Verifique su sesión.',
+        });
       }
     } catch (err) {
       console.error('Error cargando configuración:', err);
