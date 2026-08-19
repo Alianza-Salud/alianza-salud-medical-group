@@ -6,7 +6,7 @@
  * =============================================
  *
  * Paleta clínica premium + plataforma digital + editorial moderna.
- * Soporta alternar entre 'emerald-pure' y 'corporate-brand' (Sky Blue, Teal & Amber).
+ * Soporta alternar en tiempo real entre 'emerald-pure' y 'corporate-brand'.
  */
 
 @theme {
@@ -48,33 +48,92 @@
 
 /*
  * =============================================
- * PALETTE BRAND THEME ACCENTS (CORPORATE FAMILY)
+ * RE-MAPEO DRAMÁTICO PARA 'FAMILIA CORPORATIVA' (SKY BLUE #0ea5e9 + TEAL #0d9488 + AMBER #f59e0b)
  * =============================================
- * Aplica acentos sutiles de la marca madre (Sky Blue #0ea5e9, Teal #0d9488 y Amber #f59e0b)
- * sin romper la primacía del Verde Esmeralda.
+ * Al cambiar a 'corporate-brand', todos los acentos visuales principales
+ * (botones, nodos activos, badges, íconos y hovers) se transforman visiblemente
+ * al color azul cielo corporativo de alianzamedical.co y dorados.
  */
 
 [data-brand-theme="corporate-brand"] {
-  --brand-accent-hover: #0ea5e9;
-  --brand-accent-highlight: #f59e0b;
-  --brand-accent-teal: #0d9488;
+  --color-emerald-50: #f0f9ff;
+  --color-emerald-100: #e0f2fe;
+  --color-emerald-200: #bae6fd;
+  --color-emerald-300: #7dd3fc;
+  --color-emerald-400: #38bdf8;
+  --color-emerald-500: #0ea5e9;
+  --color-emerald-600: #0284c7;
+  --color-emerald-700: #0369a1;
+  --color-emerald-800: #075985;
+  --color-emerald-900: #0c4a6e;
+  --color-emerald-950: #082f49;
 }
 
-/* Hovers de enlaces secundarios en modo Corporativo */
-[data-brand-theme="corporate-brand"] a.hover-brand-sky:hover {
+/* Sobrescrituras CSS directas de alta especificidad para 'corporate-brand' */
+[data-brand-theme="corporate-brand"] .text-emerald-600,
+[data-brand-theme="corporate-brand"] .text-emerald-500 {
   color: #0ea5e9 !important;
 }
 
-/* Bordes en hover de tarjetas en modo Corporativo */
-[data-brand-theme="corporate-brand"] .spotlight-card:hover {
-  border-color: rgba(14, 165, 233, 0.4) !important;
+[data-brand-theme="corporate-brand"] .text-emerald-400 {
+  color: #38bdf8 !important;
 }
 
-/* Badges destacados en modo Corporativo */
-[data-brand-theme="corporate-brand"] .brand-badge-highlight {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-  color: #d97706 !important;
-  border-color: rgba(245, 158, 11, 0.25) !important;
+[data-brand-theme="corporate-brand"] .text-emerald-700,
+[data-brand-theme="corporate-brand"] .text-emerald-800 {
+  color: #0369a1 !important;
+}
+
+[data-brand-theme="corporate-brand"] .bg-emerald-600,
+[data-brand-theme="corporate-brand"] .bg-emerald-500 {
+  background-color: #0ea5e9 !important;
+}
+
+[data-brand-theme="corporate-brand"] .bg-emerald-600:hover,
+[data-brand-theme="corporate-brand"] .bg-emerald-500:hover {
+  background-color: #0284c7 !important;
+}
+
+[data-brand-theme="corporate-brand"] .bg-emerald-50 {
+  background-color: #f0f9ff !important;
+}
+
+[data-brand-theme="corporate-brand"] .bg-emerald-500\/10,
+[data-brand-theme="corporate-brand"] .bg-emerald-500\/15,
+[data-brand-theme="corporate-brand"] .bg-emerald-500\/20 {
+  background-color: rgba(14, 165, 233, 0.15) !important;
+}
+
+[data-brand-theme="corporate-brand"] .border-emerald-500,
+[data-brand-theme="corporate-brand"] .border-emerald-600,
+[data-brand-theme="corporate-brand"] .border-emerald-200 {
+  border-color: #38bdf8 !important;
+}
+
+[data-brand-theme="corporate-brand"] .border-emerald-500\/20,
+[data-brand-theme="corporate-brand"] .border-emerald-500\/30 {
+  border-color: rgba(14, 165, 233, 0.3) !important;
+}
+
+[data-brand-theme="corporate-brand"] .ring-emerald-500\/20,
+[data-brand-theme="corporate-brand"] .ring-emerald-400\/40 {
+  --tw-ring-color: rgba(14, 165, 233, 0.4) !important;
+}
+
+[data-brand-theme="corporate-brand"] .from-emerald-500 {
+  --tw-gradient-from: #0ea5e9 var(--tw-gradient-from-position) !important;
+}
+
+[data-brand-theme="corporate-brand"] .to-emerald-600 {
+  --tw-gradient-to: #0284c7 var(--tw-gradient-to-position) !important;
+}
+
+/* Badges con Acento Dorado/Amber (#f59e0b) */
+[data-brand-theme="corporate-brand"] span.bg-emerald-50,
+[data-brand-theme="corporate-brand"] div.bg-emerald-50 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
 }
 
 /*
