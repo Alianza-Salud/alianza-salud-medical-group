@@ -115,44 +115,6 @@ export default function AppointmentsManagerPage() {
 
   const generateRandomMeetUrl = () => 'https://meet.google.com/new';
 
-  const createGoogleCalendarEventUrl = (app: PrivateAppointment) => {
-    const title = `Cita Médica — Alianza Salud [${app.fullName}]`;
-    const details = `Cita de ${app.serviceType.replace('-', ' ')}\nCliente: ${app.fullName}\nCorreo: ${app.email}\nTeléfono: ${app.phone}`;
-
-    const dateParts = (app.preferredDate || '').split('-');
-    const timeParts = (app.preferredTime || '').split(':');
-
-    let startIso = '';
-    let endIso = '';
-
-    if (dateParts.length === 3 && timeParts.length >= 2) {
-      const year = dateParts[0];
-      const month = dateParts[1];
-      const day = dateParts[2];
-      const hour = timeParts[0].padStart(2, '0');
-      const min = timeParts[1].padStart(2, '0');
-
-      const startNum = parseInt(hour, 10);
-      const endHour = String((startNum + 1) % 24).padStart(2, '0');
-
-      startIso = `${year}${month}${day}T${hour}${min}00`;
-      endIso = `${year}${month}${day}T${endHour}${min}00`;
-    }
-
-    const params = new URLSearchParams({
-      action: 'TEMPLATE',
-      text: title,
-      details: details,
-      location: 'Google Meet',
-    });
-
-    if (startIso && endIso) {
-      params.append('dates', `${startIso}/${endIso}`);
-    }
-
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
-  };
-
   const openApproveModal = (app: PrivateAppointment) => {
     setTargetAppointment(app);
     setApproveModality(app.modality || 'presencial');
@@ -387,27 +349,24 @@ export default function AppointmentsManagerPage() {
         <div className="flex items-center gap-1 bg-gray-200 p-1 rounded-lg">
           <button
             onClick={() => { setViewMode('calendar'); setFilterStatus('approved'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <Calendar className="h-4 w-4 text-primary" />
             Calendario
           </button>
           <button
             onClick={() => { setViewMode('cards'); setFilterStatus('all'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              viewMode === 'cards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'cards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <LayoutGrid className="h-4 w-4" />
             Tarjetas
           </button>
           <button
             onClick={() => { setViewMode('list'); setFilterStatus('all'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-              viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <List className="h-4 w-4" />
             Lista
@@ -518,19 +477,17 @@ export default function AppointmentsManagerPage() {
                   key={dateStr}
                   onDoubleClick={() => handleDayClick(dateStr)}
                   onClick={() => handleDayClick(dateStr)}
-                  className={`group relative min-h-[58px] sm:min-h-[110px] p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                    isToday
+                  className={`group relative min-h-[58px] sm:min-h-[110px] p-1 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${isToday
                       ? 'border-2 border-primary bg-primary/5 shadow-sm'
                       : dayApps.length > 0
-                      ? 'border-indigo-200 bg-indigo-50/20 sm:bg-white hover:border-indigo-400 hover:shadow-md'
-                      : 'border-gray-200 bg-white hover:border-primary/50 hover:shadow-md'
-                  }`}
+                        ? 'border-indigo-200 bg-indigo-50/20 sm:bg-white hover:border-indigo-400 hover:shadow-md'
+                        : 'border-gray-200 bg-white hover:border-primary/50 hover:shadow-md'
+                    }`}
                 >
                   <div className="flex items-center justify-between sm:justify-between w-full">
                     <span
-                      className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[11px] sm:text-xs font-bold ${
-                        isToday ? 'bg-primary text-white shadow-sm' : 'text-gray-700'
-                      }`}
+                      className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[11px] sm:text-xs font-bold ${isToday ? 'bg-primary text-white shadow-sm' : 'text-gray-700'
+                        }`}
                     >
                       {dayNum}
                     </span>
@@ -557,15 +514,14 @@ export default function AppointmentsManagerPage() {
                     {dayApps.slice(0, 2).map((app) => (
                       <div
                         key={app.id}
-                        className={`text-[10px] p-1 rounded font-semibold truncate flex items-center justify-between ${
-                          app.status === 'approved'
+                        className={`text-[10px] p-1 rounded font-semibold truncate flex items-center justify-between ${app.status === 'approved'
                             ? 'bg-green-100 text-green-900'
                             : app.status === 'case_created'
-                            ? 'bg-purple-100 text-purple-900'
-                            : app.status === 'rejected'
-                            ? 'bg-red-100 text-red-900'
-                            : 'bg-amber-100 text-amber-900'
-                        }`}
+                              ? 'bg-purple-100 text-purple-900'
+                              : app.status === 'rejected'
+                                ? 'bg-red-100 text-red-900'
+                                : 'bg-amber-100 text-amber-900'
+                          }`}
                       >
                         <span className="truncate">{app.fullName.split(' ')[0]}</span>
                         <span className="font-mono text-[9px] shrink-0 ml-1">{app.preferredTime}</span>
@@ -585,15 +541,14 @@ export default function AppointmentsManagerPage() {
                       {dayApps.slice(0, 3).map((app, idx) => (
                         <span
                           key={idx}
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            app.status === 'approved'
+                          className={`h-1.5 w-1.5 rounded-full ${app.status === 'approved'
                               ? 'bg-green-500'
                               : app.status === 'case_created'
-                              ? 'bg-purple-500'
-                              : app.status === 'rejected'
-                              ? 'bg-red-500'
-                              : 'bg-amber-500'
-                          }`}
+                                ? 'bg-purple-500'
+                                : app.status === 'rejected'
+                                  ? 'bg-red-500'
+                                  : 'bg-amber-500'
+                            }`}
                         />
                       ))}
                     </div>
@@ -619,23 +574,22 @@ export default function AppointmentsManagerPage() {
                     {app.preferredDate} — {app.preferredTime}
                   </div>
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                      app.status === 'approved'
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${app.status === 'approved'
                         ? 'bg-green-100 text-green-800'
                         : app.status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : app.status === 'case_created'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
+                          ? 'bg-red-100 text-red-800'
+                          : app.status === 'case_created'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-amber-100 text-amber-800'
+                      }`}
                   >
                     {app.status === 'approved'
                       ? 'Aprobada'
                       : app.status === 'rejected'
-                      ? 'Cancelada'
-                      : app.status === 'case_created'
-                      ? 'Caso Iniciado'
-                      : 'Pendiente'}
+                        ? 'Cancelada'
+                        : app.status === 'case_created'
+                          ? 'Caso Iniciado'
+                          : 'Pendiente'}
                   </span>
                 </div>
 
@@ -821,23 +775,22 @@ export default function AppointmentsManagerPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        app.status === 'approved'
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${app.status === 'approved'
                           ? 'bg-green-100 text-green-800'
                           : app.status === 'rejected'
-                          ? 'bg-red-100 text-red-800'
-                          : app.status === 'case_created'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}
+                            ? 'bg-red-100 text-red-800'
+                            : app.status === 'case_created'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-amber-100 text-amber-800'
+                        }`}
                     >
                       {app.status === 'approved'
                         ? 'Aprobada'
                         : app.status === 'rejected'
-                        ? 'Cancelada'
-                        : app.status === 'case_created'
-                        ? 'Caso Iniciado'
-                        : 'Pendiente'}
+                          ? 'Cancelada'
+                          : app.status === 'case_created'
+                            ? 'Caso Iniciado'
+                            : 'Pendiente'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -900,15 +853,14 @@ export default function AppointmentsManagerPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-bold text-primary">{app.preferredTime}</span>
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                            app.status === 'approved'
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${app.status === 'approved'
                               ? 'bg-green-100 text-green-800'
                               : app.status === 'rejected'
-                              ? 'bg-red-100 text-red-800'
-                              : app.status === 'case_created'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-amber-100 text-amber-800'
-                          }`}
+                                ? 'bg-red-100 text-red-800'
+                                : app.status === 'case_created'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-amber-100 text-amber-800'
+                            }`}
                         >
                           {app.status === 'approved' ? 'Aprobada' : app.status === 'rejected' ? 'Cancelada' : app.status === 'case_created' ? 'Caso Iniciado' : 'Pendiente'}
                         </span>
@@ -1091,11 +1043,10 @@ export default function AppointmentsManagerPage() {
                   <button
                     type="button"
                     onClick={() => setClientOption('create')}
-                    className={`flex items-center justify-center gap-2 p-2.5 text-xs font-semibold rounded-lg border transition-all ${
-                      clientOption === 'create'
+                    className={`flex items-center justify-center gap-2 p-2.5 text-xs font-semibold rounded-lg border transition-all ${clientOption === 'create'
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <UserPlus className="h-4 w-4" />
                     Crear Nuevo Cliente
@@ -1103,11 +1054,10 @@ export default function AppointmentsManagerPage() {
                   <button
                     type="button"
                     onClick={() => setClientOption('existing')}
-                    className={`flex items-center justify-center gap-2 p-2.5 text-xs font-semibold rounded-lg border transition-all ${
-                      clientOption === 'existing'
+                    className={`flex items-center justify-center gap-2 p-2.5 text-xs font-semibold rounded-lg border transition-all ${clientOption === 'existing'
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <UserCheck className="h-4 w-4" />
                     Elegir del Maestro
@@ -1323,11 +1273,10 @@ export default function AppointmentsManagerPage() {
                   <button
                     type="button"
                     onClick={() => setApproveModality('presencial')}
-                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${
-                      approveModality === 'presencial'
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${approveModality === 'presencial'
                         ? 'border-emerald-600 bg-emerald-50/60 text-emerald-900 shadow-sm'
                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Building2 className="h-5 w-5 text-emerald-600" />
                     <span>Presencial en Sede</span>
@@ -1339,11 +1288,10 @@ export default function AppointmentsManagerPage() {
                       setApproveModality('remota');
                       if (!approveMeetLink) setApproveMeetLink(generateRandomMeetUrl());
                     }}
-                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${
-                      approveModality === 'remota'
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${approveModality === 'remota'
                         ? 'border-blue-600 bg-blue-50/60 text-blue-900 shadow-sm'
                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Video className="h-5 w-5 text-blue-600" />
                     <span>Consulta Virtual (Google Meet)</span>
@@ -1352,58 +1300,47 @@ export default function AppointmentsManagerPage() {
               </div>
 
               {approveModality === 'remota' && (
-                <div className="p-4 rounded-xl bg-blue-50/90 border border-blue-200 space-y-3 animate-fade-in">
+                <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                       <Sparkles className="h-4 w-4 text-blue-600" />
-                      Paso 1: Generar Sala Fija en Google Calendar / Meet
+                      Enlace de Videoconsulta Google Meet
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => setApproveMeetLink(generateRandomMeetUrl())}
+                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Generar nuevo
+                    </button>
                   </div>
 
-                  <a
-                    href={createGoogleCalendarEventUrl(targetAppointment)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition-all text-center"
-                  >
-                    <CalendarDays className="h-4 w-4" />
-                    📅 1-Clic: Crear Evento en Google Calendar con Google Meet
-                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                  </a>
-
-                  <div className="pt-2 border-t border-blue-200/80 space-y-1.5">
-                    <label className="block text-xs font-bold text-blue-950">
-                      Paso 2: Pegar Enlace Fijo de Google Meet Registrado <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="url"
-                        required
-                        value={approveMeetLink}
-                        onChange={(e) => setApproveMeetLink(e.target.value)}
-                        placeholder="https://meet.google.com/abc-defg-hij"
-                        className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (approveMeetLink) {
-                            navigator.clipboard.writeText(approveMeetLink);
-                            setIsCopied(true);
-                            setTimeout(() => setIsCopied(false), 2000);
-                          }
-                        }}
-                        className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
-                        title="Copiar enlace"
-                      >
-                        {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                        {isCopied ? '¡Copiado!' : 'Copiar'}
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      required
+                      value={approveMeetLink}
+                      onChange={(e) => setApproveMeetLink(e.target.value)}
+                      placeholder="https://meet.google.com/abc-defg-hij"
+                      className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(approveMeetLink);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 2000);
+                      }}
+                      className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
+                      title="Copiar enlace"
+                    >
+                      {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                      {isCopied ? '¡Copiado!' : 'Copiar'}
+                    </button>
                   </div>
 
-                  <p className="text-[11px] text-blue-800 leading-relaxed font-medium">
-                    💡 Al presionar el botón de 1-Clic se abrirá tu Google Calendar con el cliente y horario pre-llenados. Google generará la sala fija de Meet; copia esa dirección y pégala arriba. Ambas partes ingresarán a esta misma sala fija el día de la cita.
+                  <p className="text-[11px] text-blue-700 leading-relaxed">
+                    Este enlace será enviado automáticamente por correo electrónico al cliente y quedará disponible en su panel personal.
                   </p>
                 </div>
               )}
