@@ -111,6 +111,7 @@ export default function AppointmentsManagerPage() {
   const [approveModality, setApproveModality] = useState<'presencial' | 'remota'>('presencial');
   const [approveMeetLink, setApproveMeetLink] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [copiedLinkId, setCopiedLinkId] = useState<number | null>(null);
 
   const generateRandomMeetUrl = () => {
     const chars = 'abcdefghijklmnopqrstuvwxyz';
@@ -628,6 +629,53 @@ export default function AppointmentsManagerPage() {
                   </p>
                 )}
 
+                {/* Modalidad de Cita & Enlace Google Meet */}
+                {app.modality === 'remota' || app.meetLink ? (
+                  <div className="p-3 rounded-xl bg-blue-50/90 border border-blue-200 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-blue-900 flex items-center gap-1.5 text-[11px]">
+                        <Video className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                        Videoconsulta Google Meet
+                      </span>
+                      {app.meetLink && (
+                        <a
+                          href={app.meetLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-bold text-blue-700 hover:text-blue-900 flex items-center gap-0.5 underline shrink-0"
+                        >
+                          Abrir reunión <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                    {app.meetLink ? (
+                      <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-blue-200 font-mono text-[11px] text-blue-900">
+                        <span className="truncate">{app.meetLink}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(app.meetLink!);
+                            setCopiedLinkId(app.id);
+                            setTimeout(() => setCopiedLinkId(null), 2000);
+                          }}
+                          className="text-[11px] font-bold text-blue-800 hover:text-blue-950 flex items-center gap-1 shrink-0 px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                          title="Copiar enlace al portapapeles"
+                        >
+                          {copiedLinkId === app.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                          {copiedLinkId === app.id ? '¡Copiado!' : 'Copiar'}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-blue-700 italic">Videoconsulta remota sin enlace asignado.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50/80 px-3 py-1.5 rounded-lg border border-emerald-200/80">
+                    <Building2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span className="font-semibold text-[11px]">Atención Presencial en Sede Principal</span>
+                  </div>
+                )}
+
                 <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-1">
                     {app.status === 'pending' && (
@@ -691,6 +739,45 @@ export default function AppointmentsManagerPage() {
                       <Clock className="h-3.5 w-3.5" />
                       {app.preferredTime}
                     </div>
+                    {app.modality === 'remota' || app.meetLink ? (
+                      <div className="mt-2 text-xs">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          <Video className="h-3 w-3 text-blue-600" /> Virtual Meet
+                        </span>
+                        {app.meetLink && (
+                          <div className="mt-1 flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(app.meetLink!);
+                                setCopiedLinkId(app.id);
+                                setTimeout(() => setCopiedLinkId(null), 2000);
+                              }}
+                              className="text-[10px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-0.5"
+                              title="Copiar enlace"
+                            >
+                              {copiedLinkId === app.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                              {copiedLinkId === app.id ? '¡Copiado!' : 'Copiar Meet'}
+                            </button>
+                            <span className="text-gray-300">•</span>
+                            <a
+                              href={app.meetLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-0.5"
+                            >
+                              Abrir <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-1.5">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <Building2 className="h-3 w-3 text-emerald-600" /> Presencial
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-xs text-gray-700 font-medium">
                     {app.assignedLawyerName ? (
@@ -806,6 +893,39 @@ export default function AppointmentsManagerPage() {
                         <p className="text-xs text-gray-700 mt-1">
                           Experto asignado: <strong>{app.assignedLawyerName}</strong>
                         </p>
+                      )}
+
+                      {/* Google Meet enlace en Modal del Día */}
+                      {app.modality === 'remota' || app.meetLink ? (
+                        <div className="mt-2 text-xs">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            <Video className="h-3 w-3 text-blue-600" /> Virtual Meet
+                          </span>
+                          {app.meetLink && (
+                            <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] text-blue-900 bg-white px-2 py-1 rounded border border-blue-200">
+                              <span className="truncate max-w-[180px]">{app.meetLink}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(app.meetLink!);
+                                  setCopiedLinkId(app.id);
+                                  setTimeout(() => setCopiedLinkId(null), 2000);
+                                }}
+                                className="text-[10px] font-bold text-blue-700 hover:text-blue-900 flex items-center gap-0.5 shrink-0 bg-blue-50 px-1.5 py-0.5 rounded"
+                                title="Copiar enlace"
+                              >
+                                {copiedLinkId === app.id ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                                {copiedLinkId === app.id ? 'Copiado' : 'Copiar'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-1.5">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <Building2 className="h-3 w-3 text-emerald-600" /> Presencial
+                          </span>
+                        </div>
                       )}
                     </div>
 
