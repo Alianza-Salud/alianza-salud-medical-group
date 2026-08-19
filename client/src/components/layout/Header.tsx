@@ -57,18 +57,8 @@ export function Header({ onOpenModal }: HeaderProps) {
             ))}
           </div>
 
-          {/* Acciones de usuario autenticado o invitado + CTA de Captación */}
+          {/* Acciones de usuario autenticado o invitado */}
           <div className="hidden lg:flex lg:items-center lg:gap-2.5">
-            <Button
-              size="sm"
-              onClick={onOpenModal}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-2xs border-none"
-            >
-              <UploadCloud className="h-4 w-4" />
-              <span className="hidden xl:inline">Quiero que revisen mi caso</span>
-              <span className="xl:hidden">Revisar Caso</span>
-            </Button>
-
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2">
                 <Link to={dashboardTarget}>
@@ -132,15 +122,6 @@ export function Header({ onOpenModal }: HeaderProps) {
                 </Link>
               ))}
               <div className="mt-4 px-4 space-y-3">
-                <Button
-                  size="sm"
-                  fullWidth
-                  onClick={() => { setIsMobileMenuOpen(false); onOpenModal && onOpenModal(); }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none shadow-xs"
-                >
-                  <UploadCloud className="h-4 w-4" />
-                  Quiero que revisen mi caso
-                </Button>
                 {isAuthenticated && user ? (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-200">

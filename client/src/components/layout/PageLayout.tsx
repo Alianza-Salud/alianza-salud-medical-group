@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CaseReviewModal } from '../forms/CaseReviewModal';
+import { FloatingCaseReviewButton } from '../ui/FloatingCaseReviewButton';
 
 export interface PageLayoutContext {
   onOpenCaseModal: (caseType?: string) => void;
@@ -10,7 +11,7 @@ export interface PageLayoutContext {
 
 /**
  * Layout principal que envuelve todas las páginas públicas.
- * Incluye Header, Footer, CaseReviewModal global y scroll-to-top.
+ * Incluye Header, Footer, Botón Circular Flotante (FAB), CaseReviewModal global y scroll-to-top.
  */
 export function PageLayout() {
   const { pathname } = useLocation();
@@ -28,12 +29,15 @@ export function PageLayout() {
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col relative">
       <Header onOpenModal={() => handleOpenCaseModal()} />
       <main className="flex-1">
         <Outlet context={{ onOpenCaseModal: handleOpenCaseModal }} />
       </main>
       <Footer />
+
+      {/* Botón Circular Flotante (FAB) siempre visible durante el scroll */}
+      <FloatingCaseReviewButton onClick={() => handleOpenCaseModal()} />
 
       <CaseReviewModal
         isOpen={isCaseModalOpen}
