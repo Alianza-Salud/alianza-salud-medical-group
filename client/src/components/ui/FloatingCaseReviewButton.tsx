@@ -8,23 +8,23 @@ interface FloatingCaseReviewButtonProps {
 /**
  * Botón circular flotante (FAB) de alta definición UX/UI.
  * Permanece fijo en la esquina inferior derecha durante el scroll.
- * Activa el modal de revisión preliminar de casos sin costo.
+ * Muestra la etiqueta informativa posicionado sobre el botón principal.
  */
 export function FloatingCaseReviewButton({ onClick }: FloatingCaseReviewButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className="fixed bottom-5 right-5 z-40 flex items-center gap-3 sm:bottom-8 sm:right-8"
+      className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2 sm:bottom-8 sm:right-8"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Etiqueta flotante informativa en desktop */}
+      {/* Etiqueta flotante informativa en modo escritorio (posicionada SOBRE el botón) */}
       <div
-        className={`hidden sm:flex items-center gap-2 rounded-2xl bg-slate-900/90 backdrop-blur-md text-white px-4 py-2.5 shadow-2xl border border-slate-700/60 transition-all duration-300 transform ${
+        className={`hidden sm:flex items-center gap-2 rounded-2xl bg-slate-900/90 backdrop-blur-md text-white px-4 py-2 shadow-2xl border border-slate-700/60 transition-all duration-300 transform origin-bottom-right ${
           isHovered
-            ? 'opacity-100 translate-x-0 scale-100'
-            : 'opacity-90 translate-x-1 scale-95 hover:opacity-100'
+            ? 'opacity-100 translate-y-0 scale-100'
+            : 'opacity-95 translate-y-1 scale-95 hover:opacity-100'
         }`}
       >
         <Sparkles className="h-4 w-4 text-emerald-400 animate-pulse" />
