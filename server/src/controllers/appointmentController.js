@@ -18,18 +18,20 @@ const allTimeSlots = [
  */
 async function getAppointments(req, res, next) {
   try {
-    const { role, email } = req.user;
+    const { role, email } = req.user || {};
     let lawyerId = null;
 
     if (role === 'lawyer') {
       const lawyers = await lawyerRepository.findAll();
-      const match = lawyers.find((l) => l.email.toLowerCase() === email.toLowerCase());
+      const userEmail = String(email || '').toLowerCase();
+      const match = lawyers.find((l) => l.email && String(l.email).toLowerCase() === userEmail);
       if (match) {
         lawyerId = match.id;
       }
     }
 
-    const appointments = await appointmentRepository.findAll(role === 'admin' ? null : lawyerId);
+    const isFullAccess = role === 'admin' || role === 'auxiliar_admisiones';
+    const appointments = await appointmentRepository.findAll(isFullAccess ? null : lawyerId);
 
     return res.json({
       success: true,
@@ -40,7 +42,7 @@ async function getAppointments(req, res, next) {
   }
 }
 
-const { generateMeetUrl } = require('../utils/meetGenerator');
+const { generateMeetUrl, createGoogleMeetEvent } = require('../utils/meetGenerator');
 
 /**
  * Actualizar estado de una cita (Aprobar, Rechazar, Cancelar).
@@ -60,12 +62,37 @@ async function updateStatus(req, res, next) {
     const existingAppointment = await appointmentRepository.findById(id);
 
     let finalModality = modality || (existingAppointment ? existingAppointment.modality : 'presencial');
-    let finalMeetLink = (meetLink && String(meetLink).trim() !== '') 
-      ? String(meetLink).trim() 
-      : (existingAppointment ? (existingAppointment.meetLink || existingAppointment.meet_link) : null);
+    let manualMeetLink = (meetLink && String(meetLink).trim() !== '') ? String(meetLink).trim() : null;
+    let existingMeetLink = existingAppointment ? (existingAppointment.meetLink || existingAppointment.meet_link) : null;
+    
+    // Si se proporcionó un enlace manual válido en esta petición, usarlo. Si no, considerar el existente si no es dummy/plantilla.
+    let finalMeetLink = manualMeetLink || (existingMeetLink && !existingMeetLink.includes('/new') ? existingMeetLink : null);
 
-    if (finalModality === 'remota' && (!finalMeetLink || String(finalMeetLink).trim() === '')) {
-      finalMeetLink = generateMeetUrl();
+    // Si la modalidad es remota y no hay un enlace real confirmado, generar mediante Google Calendar API
+    if (finalModality === 'remota' && (!finalMeetLink || String(finalMeetLink).trim() === '' || finalMeetLink.includes('/new'))) {
+      const preferredDate = existingAppointment?.preferred_date || existingAppointment?.preferredDate || new Date().toISOString().split('T')[0];
+      const preferredTime = existingAppointment?.preferred_time || existingAppointment?.preferredTime || '09:00';
+      
+      let startISO = new Date().toISOString();
+      let endISO = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+      
+      try {
+        const startDateObj = new Date(`${preferredDate}T${preferredTime}:00`);
+        if (!isNaN(startDateObj.getTime())) {
+          startISO = startDateObj.toISOString();
+          endISO = new Date(startDateObj.getTime() + 45 * 60 * 1000).toISOString();
+        }
+      } catch (err) {
+        console.warn('[AppointmentController Warning] No se pudo parsear fecha/hora de la cita:', err.message);
+      }
+
+      finalMeetLink = await createGoogleMeetEvent({
+        summary: `Videoconsulta: ${existingAppointment?.service_type || existingAppointment?.serviceType || 'Alianza Salud'}`,
+        description: `Consulta médica remota agendada con Alianza Salud Medical Group para ${existingAppointment?.full_name || existingAppointment?.fullName || 'Paciente'}.`,
+        startDateTime: startISO,
+        endDateTime: endISO,
+        attendeeEmail: existingAppointment?.email,
+      });
     }
 
     await appointmentRepository.updateStatus(id, {
@@ -142,7 +169,19 @@ async function getAvailability(req, res, next) {
 
 async function createAppointment(req, res, next) {
   try {
-    const { fullName, email, phone, serviceType, preferredDate, preferredTime, message, acceptedPolicy } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      serviceType,
+      caseType,
+      hasLawyer,
+      wantsLegalSupport,
+      preferredDate,
+      preferredTime,
+      message,
+      acceptedPolicy,
+    } = req.body;
 
     if (!fullName || !email || !phone || !serviceType || !preferredDate || !preferredTime) {
       return res.status(400).json({
@@ -158,6 +197,9 @@ async function createAppointment(req, res, next) {
         email,
         phone,
         serviceType,
+        caseType: caseType || 'No especificado',
+        hasLawyer: hasLawyer || 'no',
+        wantsLegalSupport: wantsLegalSupport || 'no_especificado',
         preferredDate,
         preferredTime,
         message,
@@ -188,9 +230,103 @@ async function createAppointment(req, res, next) {
   }
 }
 
+/**
+ * Crear cita directamente desde el panel de administración (sin necesidad de solicitud pública).
+ */
+async function createAdminAppointment(req, res, next) {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      serviceType,
+      caseType,
+      hasLawyer,
+      wantsLegalSupport,
+      preferredDate,
+      preferredTime,
+      message,
+      status = 'approved',
+      assignedLawyerId,
+      modality = 'presencial',
+      meetLink,
+    } = req.body;
+
+    if (!fullName || !email || !phone || !serviceType || !preferredDate || !preferredTime) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Faltan campos obligatorios para agendar la cita.', status: 400 },
+      });
+    }
+
+    let finalMeetLink = (meetLink && String(meetLink).trim() !== '') ? String(meetLink).trim() : null;
+
+    if (modality === 'remota' && status === 'approved' && (!finalMeetLink || finalMeetLink.includes('/new'))) {
+      let startISO = new Date().toISOString();
+      let endISO = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+      try {
+        const startDateObj = new Date(`${preferredDate}T${preferredTime}:00`);
+        if (!isNaN(startDateObj.getTime())) {
+          startISO = startDateObj.toISOString();
+          endISO = new Date(startDateObj.getTime() + 45 * 60 * 1000).toISOString();
+        }
+      } catch (err) {
+        console.warn('[AppointmentController Warning] Error parseando fecha en creación admin:', err.message);
+      }
+
+      finalMeetLink = await createGoogleMeetEvent({
+        summary: `Videoconsulta: ${serviceType}`,
+        description: `Consulta médica remota agendada para ${fullName}.`,
+        startDateTime: startISO,
+        endDateTime: endISO,
+        attendeeEmail: email,
+      });
+    }
+
+    const appointmentResult = await appointmentRepository.create({
+      fullName,
+      email,
+      phone,
+      serviceType,
+      caseType: caseType || 'No especificado',
+      hasLawyer: hasLawyer || 'no',
+      wantsLegalSupport: wantsLegalSupport || 'no_especificado',
+      preferredDate,
+      preferredTime,
+      message: message || '',
+      acceptedPolicy: true,
+      status,
+      assignedLawyerId: assignedLawyerId || null,
+      modality,
+      meetLink: finalMeetLink,
+    });
+
+    if (status === 'approved' || status === 'confirmed') {
+      notificationService.emit('APPOINTMENT_CONFIRMED', {
+        fullName,
+        email,
+        serviceType,
+        date: preferredDate,
+        time: preferredTime,
+        modality,
+        meetLink: finalMeetLink,
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Cita creada exitosamente por administración.',
+      data: appointmentResult,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getAppointments,
   updateStatus,
   getAvailability,
   createAppointment,
+  createAdminAppointment,
 };

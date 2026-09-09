@@ -24,12 +24,19 @@ import {
   Copy,
   Sparkles,
   ExternalLink,
+  Plus,
+  FileText,
+  Scale,
+  HelpCircle,
+  Info,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import {
   fetchPrivateAppointments,
   updateAppointmentStatus,
+  createAdminAppointment,
   type PrivateAppointment,
+  type CreateAdminAppointmentPayload,
 } from '../../services/appointmentService';
 import { fetchClients, createClient } from '../../services/clientService';
 import { fetchLawyers } from '../../services/lawyerService';
@@ -54,8 +61,26 @@ export default function AppointmentsManagerPage() {
   // Modos de Vista: 'list' | 'cards' | 'calendar'
   const [viewMode, setViewMode] = useState<'list' | 'cards' | 'calendar'>('calendar');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('approved');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedDate, setSelectedDate] = useState<string>('');
+
+  // Modal Crear Cita Directa (Admin)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateAdminAppointmentPayload>({
+    fullName: '',
+    email: '',
+    phone: '',
+    serviceType: 'pclo',
+    caseType: 'Accidente de tránsito',
+    hasLawyer: 'no',
+    wantsLegalSupport: 'no_especificado',
+    preferredDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    preferredTime: '09:00',
+    modality: 'presencial',
+    status: 'approved',
+    assignedLawyerId: 0,
+    message: '',
+  });
 
   // Estado del Calendario Mensual
   const [currentCalendarDate, setCurrentCalendarDate] = useState<Date>(new Date());
@@ -113,12 +138,10 @@ export default function AppointmentsManagerPage() {
   const [isCopied, setIsCopied] = useState(false);
   const [copiedLinkId, setCopiedLinkId] = useState<number | null>(null);
 
-  const generateRandomMeetUrl = () => 'https://meet.google.com/new';
-
   const openApproveModal = (app: PrivateAppointment) => {
     setTargetAppointment(app);
     setApproveModality(app.modality || 'presencial');
-    setApproveMeetLink(app.meetLink || generateRandomMeetUrl());
+    setApproveMeetLink(app.meetLink && !app.meetLink.includes('/new') ? app.meetLink : '');
     setIsApproveModalOpen(true);
   };
 
@@ -131,7 +154,7 @@ export default function AppointmentsManagerPage() {
       'approved',
       targetAppointment.assignedLawyerId || null,
       approveModality,
-      approveModality === 'remota' ? approveMeetLink : null
+      approveModality === 'remota' ? (approveMeetLink.trim() || null) : null
     );
     setIsSubmitting(false);
     setIsApproveModalOpen(false);
@@ -270,10 +293,42 @@ export default function AppointmentsManagerPage() {
       (c.documentId && c.documentId.includes(searchClientTerm))
   );
 
+  const handleCreateAdminAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    const res = await createAdminAppointment({
+      ...createForm,
+      assignedLawyerId: createForm.assignedLawyerId ? Number(createForm.assignedLawyerId) : null,
+    });
+    setIsSubmitting(false);
+    if (res.success) {
+      setIsCreateModalOpen(false);
+      setCreateForm({
+        fullName: '',
+        email: '',
+        phone: '',
+        serviceType: 'pclo',
+        caseType: 'Accidente de tránsito',
+        hasLawyer: 'no',
+        wantsLegalSupport: 'no_especificado',
+        preferredDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        preferredTime: '09:00',
+        modality: 'presencial',
+        status: 'approved',
+        assignedLawyerId: 0,
+        message: '',
+      });
+      loadData();
+    } else {
+      setErrorMessage(res.message || 'Error al crear la cita directa.');
+    }
+  };
+
   // Restablecer Filtros a Estado Inicial
   const resetFilters = () => {
     setSelectedDate('');
-    setFilterStatus(viewMode === 'calendar' ? 'approved' : 'all');
+    setFilterStatus('all');
     setSearchTerm('');
   };
 
@@ -345,24 +400,34 @@ export default function AppointmentsManagerPage() {
           </p>
         </div>
 
-        {/* Selector de Modo de Vista */}
-        <div className="flex items-center gap-1 bg-gray-200 p-1 rounded-lg">
-          <button
-            onClick={() => { setViewMode('calendar'); setFilterStatus('approved'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-          >
-            <Calendar className="h-4 w-4 text-primary" />
-            Calendario
-          </button>
-          <button
-            onClick={() => { setViewMode('cards'); setFilterStatus('all'); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'cards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-            Tarjetas
-          </button>
+        <div className="flex items-center gap-3">
+          {user?.role === 'admin' && (
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-primary hover:bg-primary-dark text-white flex items-center gap-1.5 text-xs shadow-sm font-bold"
+            >
+              <Plus className="h-4 w-4" /> Crear Cita Directa
+            </Button>
+          )}
+
+          {/* Selector de Modo de Vista */}
+          <div className="flex items-center gap-1 bg-gray-200 p-1 rounded-lg">
+            <button
+              onClick={() => { setViewMode('calendar'); setFilterStatus('all'); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              <Calendar className="h-4 w-4 text-primary" />
+              Calendario
+            </button>
+            <button
+              onClick={() => { setViewMode('cards'); setFilterStatus('all'); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'cards' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Tarjetas
+            </button>
           <button
             onClick={() => { setViewMode('list'); setFilterStatus('all'); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
@@ -373,6 +438,7 @@ export default function AppointmentsManagerPage() {
           </button>
         </div>
       </div>
+    </div>
 
       {/* Filtros con Botón de Restablecer Estado Inicial */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-xl border border-gray-200">
@@ -607,11 +673,27 @@ export default function AppointmentsManagerPage() {
                   )}
                 </div>
 
-                {app.message && (
-                  <p className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100 italic">
-                    "{app.message}"
-                  </p>
-                )}
+                <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-200/80 space-y-1.5 text-xs">
+                  <div className="text-[11px] font-semibold text-gray-700 flex items-center gap-1">
+                    <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span>Origen lesión: <strong className="text-gray-900">{app.caseType || 'No especificado'}</strong></span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <span className={`px-2 py-0.5 rounded-md font-bold ${app.hasLawyer === 'si' ? 'bg-amber-100 text-amber-900' : 'bg-gray-200/80 text-gray-700'}`}>
+                      ⚖️ {app.hasLawyer === 'si' ? 'Con abogado' : 'Sin abogado'}
+                    </span>
+                    {app.wantsLegalSupport === 'si' && (
+                      <span className="px-2 py-0.5 rounded-md font-bold bg-blue-100 text-blue-900">
+                        📋 Asesoría jurídica
+                      </span>
+                    )}
+                  </div>
+                  {app.message && (
+                    <p className="text-xs text-gray-600 italic border-t border-gray-200/60 pt-1.5 mt-1">
+                      "{app.message}"
+                    </p>
+                  )}
+                </div>
 
                 {/* Modalidad de Cita & Enlace Google Meet */}
                 {app.modality === 'remota' || app.meetLink ? (
@@ -709,7 +791,20 @@ export default function AppointmentsManagerPage() {
                   <td className="px-6 py-4">
                     <div className="font-bold text-gray-900">{app.fullName}</div>
                     <div className="text-xs text-gray-500">{app.email} — {app.phone}</div>
-                    {app.message && <p className="text-xs text-gray-600 mt-1 italic line-clamp-1">"{app.message}"</p>}
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <span className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded font-semibold">
+                        📌 {app.caseType || 'No especificado'}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded font-bold ${app.hasLawyer === 'si' ? 'bg-amber-100 text-amber-900' : 'bg-gray-100 text-gray-600'}`}>
+                        ⚖️ {app.hasLawyer === 'si' ? 'Con abogado' : 'Sin abogado'}
+                      </span>
+                      {app.wantsLegalSupport === 'si' && (
+                        <span className="bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded font-bold">
+                          📋 Asesoría jurídica
+                        </span>
+                      )}
+                    </div>
+                    {app.message && <p className="text-xs text-gray-600 mt-1 italic line-clamp-2">"{app.message}"</p>}
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-800 capitalize">
                     {app.serviceType.replace('-', ' ')}
@@ -876,6 +971,21 @@ export default function AppointmentsManagerPage() {
                           Experto asignado: <strong>{app.assignedLawyerName}</strong>
                         </p>
                       )}
+
+                      <div className="mt-2 p-2 rounded-lg bg-gray-100/70 space-y-1 text-xs text-gray-700">
+                        <div className="text-[11px] font-semibold">📌 Origen lesión: <strong className="text-gray-900">{app.caseType || 'No especificado'}</strong></div>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                          <span className={`px-1.5 py-0.5 rounded font-bold ${app.hasLawyer === 'si' ? 'bg-amber-100 text-amber-900' : 'bg-gray-200 text-gray-700'}`}>
+                            ⚖️ {app.hasLawyer === 'si' ? 'Con abogado' : 'Sin abogado'}
+                          </span>
+                          {app.wantsLegalSupport === 'si' && (
+                            <span className="px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-900">
+                              📋 Asesoría jurídica
+                            </span>
+                          )}
+                        </div>
+                        {app.message && <p className="text-xs text-gray-600 italic border-t border-gray-200 pt-1 mt-1">"{app.message}"</p>}
+                      </div>
 
                       {/* Google Meet enlace en Modal del Día */}
                       {app.modality === 'remota' || app.meetLink ? (
@@ -1286,7 +1396,6 @@ export default function AppointmentsManagerPage() {
                     type="button"
                     onClick={() => {
                       setApproveModality('remota');
-                      if (!approveMeetLink) setApproveMeetLink(generateRandomMeetUrl());
                     }}
                     className={`flex flex-col items-center justify-center p-3.5 rounded-xl border-2 transition-all text-xs font-bold gap-1.5 ${approveModality === 'remota'
                         ? 'border-blue-600 bg-blue-50/60 text-blue-900 shadow-sm'
@@ -1306,41 +1415,44 @@ export default function AppointmentsManagerPage() {
                       <Sparkles className="h-4 w-4 text-blue-600" />
                       Enlace de Videoconsulta Google Meet
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setApproveMeetLink(generateRandomMeetUrl())}
-                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
-                    >
-                      <RotateCcw className="h-3 w-3" /> Generar nuevo
-                    </button>
+                    {approveMeetLink && (
+                      <button
+                        type="button"
+                        onClick={() => setApproveMeetLink('')}
+                        className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
+                      >
+                        <RotateCcw className="h-3 w-3" /> Usar automático de Google API
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <input
                       type="url"
-                      required
                       value={approveMeetLink}
                       onChange={(e) => setApproveMeetLink(e.target.value)}
-                      placeholder="https://meet.google.com/abc-defg-hij"
-                      className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm"
+                      placeholder="Autogenerado por Google Calendar API al confirmar (o pegue una URL personalizada)"
+                      className="flex-1 rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-mono text-blue-900 focus:border-blue-500 focus:outline-none shadow-sm placeholder:text-blue-400/80 placeholder:font-sans"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(approveMeetLink);
-                        setIsCopied(true);
-                        setTimeout(() => setIsCopied(false), 2000);
-                      }}
-                      className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
-                      title="Copiar enlace"
-                    >
-                      {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                      {isCopied ? '¡Copiado!' : 'Copiar'}
-                    </button>
+                    {approveMeetLink && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(approveMeetLink);
+                          setIsCopied(true);
+                          setTimeout(() => setIsCopied(false), 2000);
+                        }}
+                        className="rounded-xl border border-blue-300 bg-white px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 flex items-center gap-1 shrink-0 transition-colors"
+                        title="Copiar enlace"
+                      >
+                        {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        {isCopied ? '¡Copiado!' : 'Copiar'}
+                      </button>
+                    )}
                   </div>
 
                   <p className="text-[11px] text-blue-700 leading-relaxed">
-                    Este enlace será enviado automáticamente por correo electrónico al cliente y quedará disponible en su panel personal.
+                    ✨ <strong>Generación Automática:</strong> Si deja este campo vacío, el backend solicitará automáticamente la creación de la sala oficial en Google Meet a través de Google Calendar API al hacer clic en <strong>Confirmar Aprobación</strong>.
                   </p>
                 </div>
               )}
@@ -1362,6 +1474,228 @@ export default function AppointmentsManagerPage() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                 >
                   {isSubmitting ? 'Confirmando...' : 'Confirmar y Enviar Notificación'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear Cita Directa (Administración) */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                  <Plus className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Crear Cita Directa (Administración)</h3>
+                  <p className="text-xs text-gray-500">Agende una consulta médica sin necesidad de solicitud previa del cliente.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {errorMessage && <Alert variant="error" message={errorMessage} dismissible />}
+
+            <form onSubmit={handleCreateAdminAppointment} className="space-y-4 overflow-y-auto pr-1 flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Nombre Completo del Cliente *</label>
+                  <input
+                    type="text"
+                    required
+                    value={createForm.fullName}
+                    onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+                    placeholder="Ej. Maria Fernández"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                    placeholder="maria@example.com"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Teléfono / WhatsApp *</label>
+                  <input
+                    type="text"
+                    required
+                    value={createForm.phone}
+                    onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+                    placeholder="+57 300 123 4567"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Servicio Médico-Pericial *</label>
+                  <select
+                    value={createForm.serviceType}
+                    onChange={(e) => setCreateForm({ ...createForm, serviceType: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="pclo">Calificación de Pérdida de Capacidad Laboral (PCLO)</option>
+                    <option value="informe-pericial-medico">Informe Médico Especializado de Tipo Pericial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Origen de la Lesión / Caso *</label>
+                  <select
+                    value={createForm.caseType || 'Accidente de tránsito'}
+                    onChange={(e) => setCreateForm({ ...createForm, caseType: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="Accidente de tránsito">Accidente de tránsito</option>
+                    <option value="Accidente laboral">Accidente laboral</option>
+                    <option value="Enfermedad laboral">Enfermedad laboral</option>
+                    <option value="Eventos adversos / Mala praxis">Eventos adversos / Mala praxis</option>
+                    <option value="Otro">Otro origen</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Experto Asignado (Opcional)</label>
+                  <select
+                    value={createForm.assignedLawyerId || 0}
+                    onChange={(e) => setCreateForm({ ...createForm, assignedLawyerId: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value={0}>-- Asignar más adelante --</option>
+                    {lawyers.map((l) => (
+                      <option key={l.id} value={l.id}>{l.fullName} ({l.specialty || 'Perito'})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Fecha de la Cita *</label>
+                  <input
+                    type="date"
+                    required
+                    value={createForm.preferredDate}
+                    onChange={(e) => setCreateForm({ ...createForm, preferredDate: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Hora de la Cita *</label>
+                  <select
+                    value={createForm.preferredTime}
+                    onChange={(e) => setCreateForm({ ...createForm, preferredTime: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="08:00">8:00 AM</option>
+                    <option value="09:00">9:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="14:00">2:00 PM</option>
+                    <option value="15:00">3:00 PM</option>
+                    <option value="16:00">4:00 PM</option>
+                    <option value="17:00">5:00 PM</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Modalidad de Atención *</label>
+                  <select
+                    value={createForm.modality}
+                    onChange={(e) => setCreateForm({ ...createForm, modality: e.target.value as 'presencial' | 'remota' })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="presencial">Presencial en Sede Principal</option>
+                    <option value="remota">Virtual / Remota (Google Meet)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Estado Inicial *</label>
+                  <select
+                    value={createForm.status}
+                    onChange={(e) => setCreateForm({ ...createForm, status: e.target.value as 'approved' | 'pending' })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="approved">Aprobada / Confirmada (Enviar correo inmediato)</option>
+                    <option value="pending">Pendiente por confirmar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">¿Cuenta con Abogado?</label>
+                  <select
+                    value={createForm.hasLawyer || 'no'}
+                    onChange={(e) => setCreateForm({ ...createForm, hasLawyer: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="no">No cuenta con abogado</option>
+                    <option value="si">Sí cuenta con abogado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Acompañamiento Jurídico</label>
+                  <select
+                    value={createForm.wantsLegalSupport || 'no_especificado'}
+                    onChange={(e) => setCreateForm({ ...createForm, wantsLegalSupport: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium focus:border-primary focus:outline-none bg-white"
+                  >
+                    <option value="no_especificado">No especificado</option>
+                    <option value="si">Desea información jurídica</option>
+                    <option value="no">No requiere acompañamiento</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Motivo u Observaciones de la Valoración</label>
+                <textarea
+                  rows={2}
+                  value={createForm.message}
+                  onChange={(e) => setCreateForm({ ...createForm, message: e.target.value })}
+                  placeholder="Detalles clínicos o antecedentes relevantes..."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex justify-end gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmitting}
+                  className="bg-primary hover:bg-primary-dark text-white font-bold"
+                >
+                  {isSubmitting ? 'Guardando...' : 'Crear y Agendar Cita'}
                 </Button>
               </div>
             </form>

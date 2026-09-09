@@ -9,6 +9,7 @@ router.post('/', appointmentController.createAppointment);
 
 // Rutas privadas para administración, auxiliares y expertos
 router.get('/', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), appointmentController.getAppointments);
+router.post('/admin', authenticateToken, requireRole('admin', 'auxiliar_admisiones'), appointmentController.createAdminAppointment);
 router.patch('/:id/status', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), appointmentController.updateStatus);
 
 module.exports = router;

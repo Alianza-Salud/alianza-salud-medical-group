@@ -2,6 +2,33 @@ const { buildHtmlLayout } = require('./emailTemplateBuilder');
 
 const FRONTEND_URL = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
+function buildCalendarLinks({ title, description, location, dateStr, timeStr }) {
+  try {
+    let cleanDate = dateStr;
+    if (cleanDate && String(cleanDate).includes('T')) {
+      cleanDate = String(cleanDate).split('T')[0];
+    }
+    const startTimeStr = timeStr || '09:00';
+    
+    const startObj = new Date(`${cleanDate}T${startTimeStr}:00`);
+    if (isNaN(startObj.getTime())) return null;
+
+    const endObj = new Date(startObj.getTime() + 45 * 60 * 1000);
+
+    const toICSFormat = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
+
+    const startCompact = toICSFormat(startObj);
+    const endCompact = toICSFormat(endObj);
+
+    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startCompact}/${endCompact}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+    const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${encodeURIComponent(title)}&startdt=${startObj.toISOString()}&enddt=${endObj.toISOString()}&body=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}`;
+
+    return { googleUrl, outlookUrl };
+  } catch (err) {
+    return null;
+  }
+}
+
 const templates = {
   // 1. Registro de Cliente
   CLIENT_CREATED: ({ fullName, clientCode }) => {
@@ -85,6 +112,18 @@ const templates = {
     const modalityText = isRemote ? 'Consulta Virtual / Remota (Google Meet)' : 'Presencial en Sede';
     const subject = `Tu cita ha sido confirmada (${modalityText}) — Alianza Salud`;
 
+    const calTitle = `Cita Médica: ${serviceType || 'Alianza Salud'}`;
+    const calDesc = `Consulta Médica con Alianza Salud Medical Group para ${fullName}.${isRemote && meetLink ? `\n\nEnlace Google Meet: ${meetLink}` : ''}`;
+    const calLoc = isRemote && meetLink ? meetLink : 'Sede Principal Alianza Salud Medical Group';
+
+    const calLinks = buildCalendarLinks({
+      title: calTitle,
+      description: calDesc,
+      location: calLoc,
+      dateStr: date,
+      timeStr: time,
+    });
+
     const html = buildHtmlLayout({
       title: subject,
       contentHtml: `
@@ -101,8 +140,8 @@ const templates = {
         ${isRemote && meetLink ? `
         <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px; margin-top: 20px; text-align: center;">
           <p style="margin: 0; font-size: 11px; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Videoconsulta Virtual en Vivo</p>
-          <p style="margin: 6px 0 16px 0; font-size: 14px; color: #1e3a8a; font-weight: 600;">Enlace de la reunión en Google Meet:</p>
-          <a href="${meetLink}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; box-shadow: 0 2px 4px rgba(37,99,235,0.2);">
+          <p style="margin: 6px 0 16px 0; font-size: 14px; color: #1e3a8a; font-weight: 600;">Enlace oficial de la reunión en Google Meet:</p>
+          <a href="${meetLink}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 6px rgba(37,99,235,0.25);">
             💻 Unirse a la Videoconsulta en Google Meet
           </a>
           <p style="margin: 14px 0 0 0; font-size: 11.5px; color: #1e40af;">Le sugerimos ingresar 5 minutos antes de la hora pautada utilizando una computadora o dispositivo móvil con cámara y micrófono.</p>
@@ -112,6 +151,20 @@ const templates = {
           <strong>Instrucciones para atención presencial:</strong> Le esperamos en nuestra sede principal 10 minutos antes de su cita asignada. Por favor traiga consigo su documento de identidad y soportes médicos previos.
         </p>
         `}
+
+        ${calLinks ? `
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-top: 20px; text-align: center;">
+          <p style="margin: 0 0 12px 0; font-size: 13px; color: #334155; font-weight: 700;">📅 Agendar esta cita en su calendario personal:</p>
+          <div style="text-align: center; margin-top: 6px;">
+            <a href="${calLinks.googleUrl}" target="_blank" style="display: inline-block; background-color: #ffffff; color: #1e293b; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 12.5px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 4px;">
+              ➕ Añadir a Google Calendar
+            </a>
+            <a href="${calLinks.outlookUrl}" target="_blank" style="display: inline-block; background-color: #ffffff; color: #1e293b; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 12.5px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 4px;">
+              ➕ Añadir a Outlook / Apple / Dispositivo
+            </a>
+          </div>
+        </div>
+        ` : ''}
       `,
       ctaText: isRemote && meetLink ? 'Unirse a Google Meet' : 'Ver mis citas en el portal',
       ctaUrl: isRemote && meetLink ? meetLink : `${FRONTEND_URL}/dashboard/cliente`,

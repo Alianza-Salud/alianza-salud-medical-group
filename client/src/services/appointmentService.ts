@@ -8,6 +8,9 @@ export interface PrivateAppointment {
   email: string;
   phone: string;
   serviceType: string;
+  caseType?: string;
+  hasLawyer?: 'si' | 'no' | string;
+  wantsLegalSupport?: 'si' | 'no' | 'no_especificado' | string;
   preferredDate: string;
   preferredTime: string;
   message: string;
@@ -17,6 +20,23 @@ export interface PrivateAppointment {
   modality?: 'presencial' | 'remota';
   meetLink?: string | null;
   createdAt: string;
+}
+
+export interface CreateAdminAppointmentPayload {
+  fullName: string;
+  email: string;
+  phone: string;
+  serviceType: string;
+  caseType?: string;
+  hasLawyer?: string;
+  wantsLegalSupport?: string;
+  preferredDate: string;
+  preferredTime: string;
+  message?: string;
+  status?: 'pending' | 'approved';
+  assignedLawyerId?: number | null;
+  modality?: 'presencial' | 'remota';
+  meetLink?: string | null;
 }
 
 interface ApiResponse<T> {
@@ -91,4 +111,18 @@ export async function updateAppointmentStatus(
     console.error('[AppointmentService Error] updateAppointmentStatus:', error);
   }
   return { success: false, message: 'Error al actualizar el estado de la cita.' };
+}
+
+export async function createAdminAppointment(
+  data: CreateAdminAppointmentPayload
+): Promise<{ success: boolean; message?: string; data?: PrivateAppointment }> {
+  try {
+    const res = await apiClient.post<ApiResponse<PrivateAppointment>>('/appointments/admin', data);
+    if (res.ok && res.data && res.data.success) {
+      return { success: true, message: res.data.message, data: res.data.data };
+    }
+  } catch (error) {
+    console.error('[AppointmentService Error] createAdminAppointment:', error);
+  }
+  return { success: false, message: 'Error al crear la cita directa.' };
 }

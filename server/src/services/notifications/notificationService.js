@@ -66,7 +66,7 @@ class NotificationService extends EventEmitter {
 
   async handleAppointmentConfirmed(data) {
     const fullName = data.fullName || data.full_name || 'Cliente';
-    const { email, serviceType, date, time, modality } = data;
+    const { email, serviceType, date, time, modality, meetLink } = data;
     if (!email) return;
 
     await this.dispatchNotification({
@@ -74,7 +74,7 @@ class NotificationService extends EventEmitter {
       recipientEmail: email,
       recipientType: 'client',
       templateName: 'APPOINTMENT_CONFIRMED',
-      templateData: { fullName, serviceType, date, time, modality },
+      templateData: { fullName, serviceType, date, time, modality, meetLink },
     });
   }
 

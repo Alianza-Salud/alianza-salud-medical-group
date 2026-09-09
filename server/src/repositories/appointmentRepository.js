@@ -10,7 +10,7 @@ class AppointmentRepository {
   async findAll(lawyerId = null) {
     if (!pool) return [];
     let query = `
-      SELECT a.id, a.full_name, a.email, a.phone, a.service_type, 
+      SELECT a.id, a.full_name, a.email, a.phone, a.service_type, a.case_type, a.has_lawyer, a.wants_legal_support,
              DATE_FORMAT(a.preferred_date, '%Y-%m-%d') AS preferred_date, 
              a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.modality, a.meet_link, a.created_at,
              l.full_name AS lawyer_name
@@ -33,6 +33,9 @@ class AppointmentRepository {
       email: r.email,
       phone: r.phone,
       serviceType: r.service_type,
+      caseType: r.case_type || 'No especificado',
+      hasLawyer: r.has_lawyer || 'no',
+      wantsLegalSupport: r.wants_legal_support || 'no_especificado',
       preferredDate: r.preferred_date,
       preferredTime: r.preferred_time,
       message: r.message || '',
@@ -52,7 +55,7 @@ class AppointmentRepository {
     if (!pool) return null;
     try {
       const [rows] = await pool.query(
-        `SELECT a.id, a.full_name, a.email, a.phone, a.service_type, 
+        `SELECT a.id, a.full_name, a.email, a.phone, a.service_type, a.case_type, a.has_lawyer, a.wants_legal_support,
                 DATE_FORMAT(a.preferred_date, '%Y-%m-%d') AS preferred_date, 
                 a.preferred_time, a.message, a.status, a.assigned_lawyer_id, a.modality, a.meet_link, a.created_at,
                 l.full_name AS lawyer_name
@@ -71,6 +74,12 @@ class AppointmentRepository {
         phone: r.phone,
         service_type: r.service_type,
         serviceType: r.service_type,
+        case_type: r.case_type,
+        caseType: r.case_type || 'No especificado',
+        has_lawyer: r.has_lawyer,
+        hasLawyer: r.has_lawyer || 'no',
+        wants_legal_support: r.wants_legal_support,
+        wantsLegalSupport: r.wants_legal_support || 'no_especificado',
         preferred_date: r.preferred_date,
         preferredDate: r.preferred_date,
         preferred_time: r.preferred_time,
@@ -106,7 +115,7 @@ class AppointmentRepository {
   }
 
   /**
-   * Crear una nueva solicitud de cita desde el sitio público.
+   * Crear una nueva solicitud o cita directa.
    */
   async create(appointmentData) {
     if (!pool) return null;
@@ -115,27 +124,37 @@ class AppointmentRepository {
       email,
       phone,
       serviceType,
+      caseType = 'No especificado',
+      hasLawyer = 'no',
+      wantsLegalSupport = 'no_especificado',
       preferredDate,
       preferredTime,
       message = '',
       acceptedPolicy = true,
+      status = 'pending',
+      assignedLawyerId = null,
       modality = 'presencial',
       meetLink = null,
     } = appointmentData;
 
     const [result] = await pool.query(
       `INSERT INTO appointments 
-       (full_name, email, phone, service_type, preferred_date, preferred_time, message, accepted_policy, status, modality, meet_link)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+       (full_name, email, phone, service_type, case_type, has_lawyer, wants_legal_support, preferred_date, preferred_time, message, accepted_policy, status, assigned_lawyer_id, modality, meet_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         fullName,
         email,
         phone,
         serviceType,
+        caseType,
+        hasLawyer,
+        wantsLegalSupport,
         preferredDate,
         preferredTime,
         message,
         acceptedPolicy ? 1 : 0,
+        status,
+        assignedLawyerId,
         modality,
         meetLink,
       ]
@@ -144,7 +163,11 @@ class AppointmentRepository {
     return {
       id: result.insertId,
       ...appointmentData,
-      status: 'pending',
+      caseType,
+      hasLawyer,
+      wantsLegalSupport,
+      status,
+      assignedLawyerId,
       modality,
       meetLink,
       createdAt: new Date().toISOString(),
