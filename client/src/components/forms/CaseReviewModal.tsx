@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Upload, CheckCircle2, ShieldCheck, FileText, AlertCircle, Send, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Upload, CheckCircle2, ShieldCheck, FileText, AlertCircle, Send } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { submitCaseReviewPetition } from '../../services/caseReviewService';
 
@@ -20,6 +20,33 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Sincronizar tipo de caso por defecto si cambia
+  useEffect(() => {
+    if (defaultCaseType) {
+      setCaseType(defaultCaseType);
+    }
+  }, [defaultCaseType]);
+
+  // Manejo de tecla Escape y bloqueo de scroll en el body cuando está abierto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -93,38 +120,48 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-gray-200/90 overflow-hidden my-8 animate-in zoom-in-95 duration-200">
-        
-        {/* Encabezado Nocturno con Resplandor */}
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 p-6 sm:p-7 text-white relative border-b border-slate-800">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="case-review-modal-title"
+    >
+      <div
+        className="relative w-full max-w-2xl max-h-[92dvh] sm:max-h-[88vh] flex flex-col rounded-2xl sm:rounded-3xl bg-white shadow-2xl border border-gray-200/90 overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Encabezado Fijo con Resplandor (Nunca se oculta ni corta en móvil) */}
+        <div className="shrink-0 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 p-4 sm:p-6 text-white relative border-b border-slate-800">
           <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
 
+          {/* Botón de cierre superior siempre visible y táctil */}
           <button
+            type="button"
             onClick={onClose}
-            className="absolute right-5 top-5 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+            className="absolute right-3.5 top-3.5 sm:right-5 sm:top-5 rounded-full p-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white/90 hover:text-white transition-all cursor-pointer z-10 touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-400"
             aria-label="Cerrar modal"
           >
             <X className="h-5 w-5" />
           </button>
           
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-extrabold uppercase tracking-wider mb-1.5">
-            <ShieldCheck className="h-4 w-4" />
-            <span>Revisión Preliminar Sin Costo ni Compromiso</span>
+          <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider mb-1 pr-10">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Revisión Preliminar Sin Costo ni Compromiso</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+          <h2 id="case-review-modal-title" className="text-base sm:text-2xl font-extrabold tracking-tight text-white pr-10 leading-snug">
             Envía tu caso para revisión médica preliminar
           </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed font-normal">
+          <p className="text-[11px] sm:text-sm text-slate-300 mt-1 leading-relaxed font-normal">
             Analizamos tus documentos disponibles, evaluamos secuelas y te orientamos sobre la viabilidad técnico-médica.
           </p>
         </div>
 
-        {/* Contenido del Formulario o Confirmación de Éxito */}
-        <div className="p-6 sm:p-8">
+        {/* Contenido del Formulario o Confirmación de Éxito con Scroll Interno */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-8">
           {isSuccess ? (
-            <div className="text-center py-8 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="text-center py-6 sm:py-8 space-y-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-inner">
                 <CheckCircle2 className="h-10 w-10 text-emerald-600" />
               </div>
@@ -284,14 +321,21 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
                 </label>
               </div>
 
-              {/* Botón de Envío */}
-              <div className="pt-3">
+              {/* Botones de Acción (Envío y Cancelar) */}
+              <div className="pt-3 flex flex-col-reverse sm:flex-row items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-gray-300 text-xs sm:text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer text-center"
+                >
+                  Cancelar
+                </button>
                 <Button
                   type="submit"
                   size="lg"
                   fullWidth
                   disabled={isSubmitting}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20 py-3.5 rounded-xl border-none"
+                  className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-600/20 py-3.5 rounded-xl border-none"
                 >
                   {isSubmitting ? (
                     'Enviando solicitud de revisión...'
@@ -311,3 +355,4 @@ export function CaseReviewModal({ isOpen, onClose, defaultCaseType = 'Accidente 
     </div>
   );
 }
+

@@ -6,7 +6,8 @@
   "scripts": {
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
-    "build:client": "cd client && npm run build",
+    "tunnel": "cloudflared tunnel --edge-ip-version 4 --protocol http2 --url http://127.0.0.1:3001",
+    "build:client": "cd client && npx vite build",
     "install:all": "cd client && npm install && cd ../server && npm install"
   }
 }

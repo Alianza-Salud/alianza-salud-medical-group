@@ -8,10 +8,16 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    strictPort: false,
-    // Proxy para el backend en desarrollo y para que el front funcione desde un puerto compartido.
+    strictPort: true,
+    allowedHosts: true,
+    // Proxy para el backend en desarrollo y para que el front y server funcionen bajo un mismo origen/túnel.
     proxy: {
       '/api': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/uploads': {
         target: 'http://127.0.0.1:3001',
         changeOrigin: true,
         secure: false,

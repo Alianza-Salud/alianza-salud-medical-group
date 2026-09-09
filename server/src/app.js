@@ -23,8 +23,20 @@ app.use(express.urlencoded({ extended: true }));
 // Servir archivos subidos de forma estática
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// ------- Rutas -------
+// Servir frontend compilado en producción / túnel remoto si existe client/dist
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+// ------- Rutas API -------
 app.use('/api', routes);
+
+// SPA fallback: Para cualquier otra ruta GET, retornar index.html del frontend
+app.get('*', (req, res, next) => {
+  const indexPath = path.join(clientDistPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) next();
+  });
+});
 
 // ------- Manejo de errores -------
 app.use(errorHandler);
