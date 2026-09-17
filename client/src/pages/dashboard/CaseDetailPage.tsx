@@ -367,34 +367,47 @@ export default function CaseDetailPage() {
           {isStaff && (
             <Card>
               <CardHeader className="border-b border-gray-100 pb-3">
-                <h2 className="text-base font-semibold text-gray-900">Actualizar Estado y Etapa del Caso</h2>
+                <h2 className="text-base font-semibold text-gray-900">Actualizar Etapa del Caso</h2>
               </CardHeader>
               <CardContent className="pt-4">
                 <div className="grid gap-4 sm:grid-cols-2 items-end">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Estado General</label>
-                    <select
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-primary focus:outline-none"
-                    >
-                      <option value="pending">Evaluación Inicial (pending)</option>
-                      <option value="in_progress">En Proceso / Activo (in_progress)</option>
-                      <option value="closed">Cerrado / Finalizado (closed)</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Etapa Activa</label>
                     <select
                       value={selectedStage}
-                      onChange={(e) => setSelectedStage(e.target.value)}
+                      onChange={(e) => {
+                        const newStage = e.target.value;
+                        setSelectedStage(newStage);
+                        // Derivar estado automáticamente según la etapa
+                        const stageLower = newStage.toLowerCase().trim();
+                        if (stageLower === 'captación' || stageLower === 'solicitud / contacto') {
+                          setSelectedStatus('pending');
+                        } else if (stageLower === 'cierre') {
+                          setSelectedStatus('closed');
+                        } else {
+                          setSelectedStatus('in_progress');
+                        }
+                      }}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-primary focus:outline-none"
                     >
                       {CASE_STAGES.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Estado General <span className="text-gray-400 font-normal">(automático)</span></label>
+                    <div className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold ${
+                      selectedStatus === 'closed'
+                        ? 'bg-red-50 border-red-200 text-red-700'
+                        : selectedStatus === 'pending'
+                          ? 'bg-amber-50 border-amber-200 text-amber-700'
+                          : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    }`}>
+                      {selectedStatus === 'closed' ? '🔴 Cerrado / Finalizado' : selectedStatus === 'pending' ? '🟡 Evaluación Inicial' : '🟢 En Proceso / Activo'}
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">El estado se ajusta automáticamente según la etapa seleccionada.</p>
                   </div>
                 </div>
 
@@ -404,7 +417,7 @@ export default function CaseDetailPage() {
                     isLoading={isUpdatingStage}
                     onClick={() => handleStageStatusChange()}
                   >
-                    Guardar Cambios de Estado / Etapa
+                    Guardar Cambio de Etapa
                   </Button>
                 </div>
               </CardContent>

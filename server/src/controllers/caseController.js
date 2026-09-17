@@ -137,11 +137,15 @@ async function updateCaseLawyers(req, res, next) {
 
 /**
  * Avanzar o cambiar la etapa del caso.
+ * El estado (status) se deriva AUTOMÁTICAMENTE de la etapa seleccionada:
+ *   - "Captación" o "Solicitud / Contacto" → pending
+ *   - "Cierre" → closed
+ *   - Cualquier otra etapa intermedia → in_progress
  */
 async function updateCaseStage(req, res, next) {
   try {
     const { id: caseId } = req.params;
-    const { stageName, status } = req.body;
+    const { stageName } = req.body;
 
     if (!stageName) {
       return res.status(400).json({
@@ -150,14 +154,31 @@ async function updateCaseStage(req, res, next) {
       });
     }
 
+    // Derivar el estado automáticamente según la etapa
+    const stageNameLower = stageName.toLowerCase().trim();
+    let derivedStatus;
+    if (stageNameLower === 'captación' || stageNameLower === 'solicitud / contacto') {
+      derivedStatus = 'pending';
+    } else if (stageNameLower === 'cierre') {
+      derivedStatus = 'closed';
+    } else {
+      derivedStatus = 'in_progress';
+    }
+
     const previousCaseData = await caseRepository.findById(caseId);
-    await caseRepository.updateStage(parseInt(caseId, 10), stageName, status || 'in_progress');
+    await caseRepository.updateStage(parseInt(caseId, 10), stageName, derivedStatus);
 
     await caseRepository.addUpdate({
       caseId: parseInt(caseId, 10),
       createdByName: req.user.fullName || 'Administración',
-      title: status === 'closed' ? `Cierre del Caso — Etapa: ${stageName}` : `Avance a Etapa: ${stageName}`,
-      description: status === 'closed' ? `El caso ha sido cerrado y finalizado formalmente en la plataforma.` : `El caso ha sido promovido a la etapa "${stageName}".`,
+      title: derivedStatus === 'closed'
+        ? `Cierre del Caso — Etapa: ${stageName}`
+        : `Avance a Etapa: ${stageName}`,
+      description: derivedStatus === 'closed'
+        ? `El caso ha sido cerrado y finalizado formalmente en la plataforma.`
+        : derivedStatus === 'pending'
+          ? `El caso se encuentra en etapa inicial "${stageName}".`
+          : `El caso ha sido promovido a la etapa "${stageName}".`,
       stageName,
       updateStageStatus: false,
     });
@@ -178,7 +199,7 @@ async function updateCaseStage(req, res, next) {
 
     return res.json({
       success: true,
-      message: 'Etapa del caso actualizada exitosamente.',
+      message: `Etapa actualizada a "${stageName}" — Estado: ${derivedStatus === 'closed' ? 'Cerrado' : derivedStatus === 'pending' ? 'Evaluación Inicial' : 'En Proceso'}.`,
       data: updatedCase,
     });
   } catch (error) {
