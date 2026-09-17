@@ -1,7 +1,2 @@
 ID	Nombre Completo	        Correo Electrónico	        Rol	                        Contraseña Asignada
-2	Admin Alianza	        admin@alianzasalud.com	    Administrador (admin)	    admin123
-5	Dr. Santiago Ospina	    santiago@alianzasalud.com   Abogado / Médico (lawyer)	expertpass123
-4	Gabriel Morales	        gabriel@example.com	        Cliente (client)	        gabriel123 (Código: SEZSND72)
-1	Laura Gómez	            laura@example.com	        Cliente (client)	        cliente123
-3	Roberto Pérez	        roberto@example.com	        Cliente (client)	        cliente123
-
+1	Admin Alianza	        admin@alianzasalud.com	    Administrador (admin)	    admin123
