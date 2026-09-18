@@ -1,2 +1,0 @@
-ID	Nombre Completo	        Correo Electrónico	        Rol	                        Contraseña Asignada
-1	Admin Alianza	        admin@alianzasalud.com	    Administrador (admin)	    admin123
