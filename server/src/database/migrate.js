@@ -13,7 +13,12 @@ async function migrate() {
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
 
   const migrationsDir = path.resolve(__dirname, '../../migrations');
-  const files = fs.readdirSync(migrationsDir).filter((name) => name.endsWith('.sql')).sort();
+  const availableFiles = fs.readdirSync(migrationsDir).filter((name) => /\.(sql|js)$/.test(name)).sort();
+  const requestedFile = process.argv[2];
+  if (requestedFile && !availableFiles.includes(requestedFile)) {
+    throw new Error('Unknown migration filename');
+  }
+  const files = requestedFile ? [requestedFile] : availableFiles;
   for (const filename of files) {
     const sql = fs.readFileSync(path.join(migrationsDir, filename), 'utf8');
     const checksum = crypto.createHash('sha256').update(sql).digest('hex');
@@ -27,7 +32,12 @@ async function migrate() {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
-      for (const statement of statements) await connection.query(statement);
+      // MySQL DDL commits implicitly. JS migrations must be resumable after a partial failure.
+      if (filename.endsWith('.js')) {
+        await require(path.join(migrationsDir, filename)).up(connection);
+      } else {
+        for (const statement of statements) await connection.query(statement);
+      }
       await connection.query('INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)', [filename, checksum]);
       await connection.commit();
       console.log(`[Migration] Applied ${filename}`);

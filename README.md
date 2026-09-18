@@ -45,6 +45,23 @@ cd server
 npm run migrate
 ```
 
+Si producción muestra `Unknown column 'a.case_type'`, falta actualizar el esquema
+de citas. Después de respaldar MySQL y desplegar este código, ejecuta en la Shell
+del servicio backend de Render, desde el directorio `server`:
+
+```bash
+npm run migrate:appointments
+```
+
+Este comando usa las variables de conexión del servicio y añade únicamente las
+columnas faltantes de citas. Conserva los registros existentes y registra la
+migración `007` en `schema_migrations`. También está incluida en `npm run migrate`.
+MySQL confirma los cambios DDL individualmente; si se interrumpe, puede reanudarse
+con el mismo comando. No ejecutarla simultáneamente desde varios procesos.
+
+Tras completarla, recarga Citas y comprueba que `GET /api/appointments` devuelve
+200. Un commit o un despliegue por sí solo no ejecuta estas migraciones.
+
 ```bash
 cd server
 npm test
