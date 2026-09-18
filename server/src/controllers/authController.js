@@ -2,10 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
 const clientRepository = require('../repositories/clientRepository');
-const { pool } = require('../database/db');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'alianza_salud_secret_key_2026_phase3';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const config = require('../config');
+const { recordAuditEvent } = require('../services/auditService');
 
 function generateToken(user) {
   return jwt.sign(
@@ -15,9 +13,19 @@ function generateToken(user) {
       fullName: user.fullName,
       role: user.role,
     },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn, algorithm: config.jwt.algorithm }
   );
+}
+
+function setAuthCookie(res, token) {
+  res.cookie(config.authCookie.name, token, {
+    httpOnly: true,
+    secure: config.nodeEnv === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: config.authCookie.maxAgeMs,
+  });
 }
 
 /**
@@ -48,31 +56,31 @@ async function register(req, res, next) {
       });
     }
 
-    if (password.length < 6) {
+    if (password.length < 12) {
       return res.status(400).json({
         success: false,
-        error: { message: 'La contraseña debe tener al menos 6 caracteres.', status: 400 },
+        error: { message: 'La contraseña debe tener al menos 12 caracteres.', status: 400 },
       });
     }
 
     // 1. Buscar cliente por código de 8 caracteres en el Maestro de Clientes
     const targetClient = await clientRepository.findByVerificationCode(verificationCode);
     if (!targetClient) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: {
-          message: 'Código de verificación inválido. Por favor confirme el código asignado por la administración.',
-          status: 404,
+          message: 'No fue posible completar el registro con los datos proporcionados.',
+          status: 400,
         },
       });
     }
 
     if (targetClient.user_id) {
-      return res.status(409).json({
+      return res.status(400).json({
         success: false,
         error: {
-          message: 'Este Código de Verificación ya fue utilizado para registrar una cuenta.',
-          status: 409,
+          message: 'No fue posible completar el registro con los datos proporcionados.',
+          status: 400,
         },
       });
     }
@@ -80,9 +88,9 @@ async function register(req, res, next) {
     // 2. Verificar si el correo ya está registrado
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
-      return res.status(409).json({
+      return res.status(400).json({
         success: false,
-        error: { message: 'El correo electrónico ya se encuentra registrado.', status: 409 },
+        error: { message: 'No fue posible completar el registro con los datos proporcionados.', status: 400 },
       });
     }
 
@@ -91,31 +99,28 @@ async function register(req, res, next) {
     const passwordHash = await bcrypt.hash(password, salt);
 
     // 4. Crear usuario cliente con el nombre registrado en el Maestro de Clientes
-    const newUser = await userRepository.create({
-      fullName: targetClient.full_name,
-      email,
+    const registration = await clientRepository.registerAccount({
+      verificationCode,
+      email: email.trim().toLowerCase(),
       passwordHash,
-      role: 'client',
-      phone: targetClient.phone || '',
     });
-
-    // 5. Vincular cliente y sus casos con el nuevo user_id
-    await clientRepository.linkUserId(targetClient.id, newUser.id);
-    if (pool) {
-      await pool.query('UPDATE cases SET user_id = ? WHERE client_id = ? OR verification_code = ?', [
-        newUser.id,
-        targetClient.id,
-        verificationCode,
-      ]);
+    if (registration.error) {
+      const status = registration.error === 'EMAIL_EXISTS' ? 409 : 400;
+      return res.status(status).json({
+        success: false,
+        error: { message: 'No fue posible completar el registro con los datos proporcionados.', status },
+      });
     }
+    const newUser = registration.user;
 
     const token = generateToken(newUser);
+    setAuthCookie(res, token);
+    void recordAuditEvent(req, { event: 'AUTH_REGISTER_SUCCESS', resourceType: 'user', resourceId: newUser.id });
 
     return res.status(201).json({
       success: true,
       message: 'Registro de cliente completado exitosamente.',
       data: {
-        token,
         user: newUser,
       },
     });
@@ -140,6 +145,7 @@ async function login(req, res, next) {
 
     const account = await userRepository.findByEmail(email);
     if (!account) {
+      void recordAuditEvent(req, { event: 'AUTH_LOGIN_FAILURE', result: 'denied' });
       return res.status(401).json({
         success: false,
         error: { message: 'Credenciales inválidas. Verifique su correo o contraseña.', status: 401 },
@@ -148,6 +154,7 @@ async function login(req, res, next) {
 
     const isPasswordValid = await bcrypt.compare(password, account.passwordHash);
     if (!isPasswordValid) {
+      void recordAuditEvent(req, { event: 'AUTH_LOGIN_FAILURE', result: 'denied' });
       return res.status(401).json({
         success: false,
         error: { message: 'Credenciales inválidas. Verifique su correo o contraseña.', status: 401 },
@@ -155,6 +162,7 @@ async function login(req, res, next) {
     }
 
     if (!account.user.isActive) {
+      void recordAuditEvent(req, { event: 'AUTH_LOGIN_FAILURE', resourceType: 'user', resourceId: account.user.id, result: 'disabled' });
       return res.status(403).json({
         success: false,
         error: { message: 'Su cuenta se encuentra desactivada. Contacte a soporte.', status: 403 },
@@ -162,12 +170,14 @@ async function login(req, res, next) {
     }
 
     const token = generateToken(account.user);
+    setAuthCookie(res, token);
+    req.user = account.user;
+    void recordAuditEvent(req, { event: 'AUTH_LOGIN_SUCCESS', resourceType: 'user', resourceId: account.user.id });
 
     return res.json({
       success: true,
       message: 'Inicio de sesión exitoso.',
       data: {
-        token,
         user: account.user,
       },
     });
@@ -191,8 +201,19 @@ async function getProfile(req, res, next) {
   }
 }
 
+function logout(req, res) {
+  res.clearCookie(config.authCookie.name, {
+    httpOnly: true,
+    secure: config.nodeEnv === 'production',
+    sameSite: 'lax',
+    path: '/',
+  });
+  return res.json({ success: true, message: 'Sesión cerrada exitosamente.' });
+}
+
 module.exports = {
   register,
   login,
   getProfile,
+  logout,
 };

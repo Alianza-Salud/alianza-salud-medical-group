@@ -2,13 +2,16 @@
  * Generador base de plantillas HTML responsivas para correos transaccionales.
  */
 function buildHtmlLayout({ title, contentHtml, ctaText, ctaUrl }) {
+  const safeTitle = String(title || 'Alianza Salud Medical Group').replace(/[<>]/g, '');
+  const safeCtaText = String(ctaText || '').replace(/[<>]/g, '');
+  const safeCtaUrl = /^https?:\/\//i.test(String(ctaUrl || '')) ? String(ctaUrl) : '';
   return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title || 'Alianza Salud Medical Group'}</title>
+  <title>${safeTitle}</title>
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
     .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
@@ -34,9 +37,9 @@ function buildHtmlLayout({ title, contentHtml, ctaText, ctaUrl }) {
     </div>
     <div class="body">
       ${contentHtml}
-      ${ctaText && ctaUrl ? `
+      ${safeCtaText && safeCtaUrl ? `
         <div style="text-align: center; margin-top: 24px;">
-          <a href="${ctaUrl}" class="cta-btn" target="_blank">${ctaText}</a>
+          <a href="${safeCtaUrl}" class="cta-btn" target="_blank" rel="noopener noreferrer">${safeCtaText}</a>
         </div>
       ` : ''}
     </div>

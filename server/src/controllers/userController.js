@@ -1,5 +1,7 @@
 const { pool } = require('../database/db');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { recordAuditEvent } = require('../services/auditService');
 
 /**
  * Controlador de Maestro de Cuentas de Usuario.
@@ -32,6 +34,9 @@ async function createUser(req, res, next) {
     const { fullName, email, password, role = 'client', phone = '', clientId, lawyerId } = req.body;
     if (!fullName || !email || !password) {
       return res.status(400).json({ success: false, error: { message: 'Nombre, correo y contraseña son obligatorios.', status: 400 } });
+    }
+    if (String(password).length < 12 || String(password).length > 128) {
+      return res.status(400).json({ success: false, error: { message: 'La contraseña debe tener entre 12 y 128 caracteres.', status: 400 } });
     }
 
     // Verificar si el correo electrónico ya existe en usuarios
@@ -71,6 +76,7 @@ async function createUser(req, res, next) {
     );
 
     const newUserId = result.insertId;
+    void recordAuditEvent(req, { event: 'USER_CREATED', resourceType: 'user', resourceId: newUserId });
 
     if (role === 'client' && clientId) {
       await clientRepository.linkUserId(parseInt(clientId, 10), newUserId);
@@ -115,6 +121,12 @@ async function updateUser(req, res, next) {
       'UPDATE users SET full_name = ?, email = ?, role = ?, phone = ?, is_active = ? WHERE id = ?',
       [fullName, email, role, phone, targetIsActive ? 1 : 0, id]
     );
+    if (currentRole !== role) {
+      void recordAuditEvent(req, { event: 'USER_ROLE_CHANGED', resourceType: 'user', resourceId: id });
+    }
+    if (Boolean(existing[0].is_active) && !targetIsActive) {
+      void recordAuditEvent(req, { event: 'USER_DISABLED', resourceType: 'user', resourceId: id });
+    }
 
     return res.json({
       success: true,
@@ -132,12 +144,17 @@ async function resetUserPassword(req, res, next) {
 
     const targetPassword = newPassword && String(newPassword).trim()
       ? String(newPassword).trim()
-      : `Alianza${Math.floor(1000 + Math.random() * 9000)}!`;
+      : `Tmp-${crypto.randomBytes(12).toString('base64url')}`;
+
+    if (targetPassword.length < 12 || targetPassword.length > 128) {
+      return res.status(400).json({ success: false, error: { message: 'La contraseña debe tener entre 12 y 128 caracteres.', status: 400 } });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(targetPassword, salt);
 
     await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, id]);
+    void recordAuditEvent(req, { event: 'USER_PASSWORD_RESET', resourceType: 'user', resourceId: id });
 
     return res.json({
       success: true,

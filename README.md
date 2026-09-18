@@ -1,102 +1,61 @@
 # Alianza Salud Medical Group
 
-Plataforma web para la captación de clientes y el seguimiento de casos jurídicos.
+Plataforma de gestión médico-legal con sitio público, expedientes privados, documentos, citas, notificaciones y paneles por rol.
 
-## Estructura del proyecto
+## Stack
 
-```
-├── client/     # Frontend React + Vite + TypeScript
-└── server/     # Backend Node.js + Express (estructura preparada)
-```
-
-## Requisitos
-
-- Node.js 18+
-- npm
-
-## Instalación
-
-```bash
-# Instalar dependencias del frontend
-cd client
-npm install
-
-# Instalar dependencias del backend
-cd ../server
-npm install
-```
+- Frontend: React, TypeScript, Vite, Tailwind CSS y React Router.
+- Backend: Node.js, Express y MySQL (`utf8mb4`).
+- Sesión: JWT HS256 de corta duración en cookie HttpOnly.
+- Almacenamiento: disco local privado o S3-compatible (incluido Cloudflare R2).
+- Integraciones opcionales: correo transaccional y Google Calendar/Meet.
 
 ## Desarrollo
 
-### Frontend
+Requiere Node.js 20+, npm y MySQL 8.
 
 ```bash
 cd client
+npm ci
 npm run dev
 ```
-
-El frontend se ejecuta en `http://localhost:5173`.
-
-### Backend
 
 ```bash
 cd server
+copy .env.example .env
+# Reemplazar placeholders; generar JWT_SECRET con: openssl rand -base64 48
+npm ci
 npm run dev
 ```
 
-El backend se ejecuta en `http://localhost:3001`.
+El cliente usa `http://localhost:5173` y proxifica `/api` a `http://localhost:3001`. La API no arranca si `JWT_SECRET` falta o tiene menos de 32 caracteres.
 
-### Compartir puertos (forward ports)
+## Configuración, roles y documentos
 
-Para exponer el frontend y backend a otra persona:
+Consulta [server/.env.example](server/.env.example). Los roles canónicos son `admin`, `auxiliar_admisiones`, `lawyer` y `client`; sus permisos están en [docs/RBAC_MATRIX.md](docs/RBAC_MATRIX.md).
 
-1. Comparte el puerto `5173` del cliente.
-2. Comparte el puerto `3001` del servidor.
+`server/uploads` es temporal y `storage` es privado; ninguno se versiona o sirve por HTTP. Toda descarga pasa por un endpoint autenticado y autorizado. Consulta [docs/STORAGE.md](docs/STORAGE.md).
 
-El frontend usa proxy de Vite (`/api`) hacia el backend local, así que si solo compartes `5173` en un entorno donde ambos puertos están en la misma máquina remota, la app seguirá funcionando.
+## Migraciones y pruebas
 
-### Variables de entorno
+Los cambios de base de datos nuevos están en `server/migrations/` y se aplican en orden después de un backup. No se modifican migraciones ya desplegadas.
 
-- `client/.env.example` contiene `VITE_API_URL=/api`
-- `server/.env.example` contiene `PORT=3001` y `CORS_ORIGIN=http://localhost:5173`
+```bash
+cd server
+npm run migrate
+```
 
-## Stack tecnológico
+```bash
+cd server
+npm test
 
-### Frontend
-- React.js + TypeScript
-- Vite
-- Tailwind CSS v4
-- React Router
-- Lucide React (iconos)
-- React Hook Form + Zod (formularios)
+cd ../client
+npm run lint
+npm run build
+```
 
-### Backend
-- Node.js
-- Express.js
-- CORS, Helmet
+CI ejecuta lint, build, pruebas de seguridad y auditoría de dependencias. Nunca se usan documentos reales como fixtures o artifacts.
 
-### Base de datos (fases futuras)
-- MySQL
+## Despliegue y seguridad
 
-## Fase actual
-
-**Fase 1** — Sitio web público con datos mock centralizados.
-
-La arquitectura está preparada para evolucionar hacia:
-- Fase 2: API REST con Express + MySQL
-- Fase 3: Autenticación + roles
-- Fase 4: Dashboard de cliente
-- Fase 5: Dashboard administrativo
-
-## Rutas disponibles
-
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Inicio |
-| `/servicios` | Listado de servicios jurídicos |
-| `/servicios/:slug` | Detalle de servicio |
-| `/nosotros` | Sobre la organización |
-| `/proceso` | Proceso de atención |
-| `/citas` | Solicitar cita |
-| `/contacto` | Contacto |
-| `/login` | Acceso (placeholder) |
+Usa HTTPS, bucket privado, secretos administrados por la plataforma y dominios CORS explícitos. La respuesta al incidente y limpieza del historial está en [SECURITY_REMEDIATION.md](SECURITY_REMEDIATION.md). Más detalles: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) y [docs/SECURITY.md](docs/SECURITY.md).

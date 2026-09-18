@@ -9,8 +9,7 @@ export interface CaseReviewPetition {
   description: string;
   documents: Array<{
     name: string;
-    storageKey?: string;
-    filePath?: string;
+    downloadAvailable?: boolean;
     mimeType?: string;
     size?: number;
   }>;
@@ -96,12 +95,9 @@ export async function convertPetitionToCase(
 
 export async function downloadPetitionDocument(petitionId: number, docIndex: number, filename: string): Promise<boolean> {
   try {
-    const token = localStorage.getItem('auth_token');
     const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(`${API_BASE_URL}/case-reviews/${petitionId}/documents/${docIndex}/download`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+      credentials: 'include',
     });
 
     if (!response.ok) {

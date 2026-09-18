@@ -43,14 +43,11 @@ export function NotificationSettingsPage() {
     fetchLogs();
   }, []);
 
-  const getAuthToken = () => localStorage.getItem('auth_token') || '';
-
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const token = getAuthToken();
       const res = await fetch('/api/notifications/settings', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       const data = await res.json();
       if (res.ok && data.success && data.data) {
@@ -76,7 +73,7 @@ export function NotificationSettingsPage() {
     try {
       const query = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
       const res = await fetch(`/api/notifications/logs${query}`, {
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -95,8 +92,8 @@ export function NotificationSettingsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getAuthToken()}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           settings,
           companyEmail,
@@ -121,7 +118,7 @@ export function NotificationSettingsPage() {
     try {
       const res = await fetch(`/api/notifications/logs/${logId}/retry`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {

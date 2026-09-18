@@ -3,11 +3,13 @@
  * Utiliza caracteres en mayúscula y números excluyendo confusos (O, 0, I, 1).
  * Ejemplo: AS7K9X2M
  */
+const crypto = require('crypto');
+
 function generateVerificationCode(length = 8) {
   const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   let result = '';
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars.charAt(crypto.randomInt(0, chars.length));
   }
   return result;
 }
@@ -22,7 +24,12 @@ function generateCaseCode(sequenceNumber) {
   return `CAS-${year}-${numStr}`;
 }
 
+function hashVerificationCode(code, pepper) {
+  return crypto.createHmac('sha256', pepper).update(String(code).trim().toUpperCase()).digest('hex');
+}
+
 module.exports = {
   generateVerificationCode,
   generateCaseCode,
+  hashVerificationCode,
 };

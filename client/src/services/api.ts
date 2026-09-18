@@ -19,21 +19,16 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const { method = 'GET', body, headers = {}, isFormData = false } = options;
 
-  const token = localStorage.getItem('auth_token');
-
   const requestHeaders: Record<string, string> = { ...headers };
 
   if (!isFormData) {
     requestHeaders['Content-Type'] = 'application/json';
   }
 
-  if (token) {
-    requestHeaders['Authorization'] = `Bearer ${token}`;
-  }
-
   const config: RequestInit = {
     method,
     headers: requestHeaders,
+    credentials: 'include',
   };
 
   if (body) {

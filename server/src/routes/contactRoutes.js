@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const contactController = require('../controllers/contactController');
 const { authenticateToken, requireRole } = require('../middlewares/authMiddleware');
+const { publicFormRateLimit } = require('../middlewares/rateLimit');
+const { validateContact, validatePositiveIntegerParams } = require('../middlewares/validateRequest');
 
-router.post('/', contactController.createContactMessage);
+router.post('/', publicFormRateLimit, validateContact, contactController.createContactMessage);
 
 router.get('/', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), contactController.getMessages);
-router.patch('/:id/read', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), contactController.markAsRead);
+router.patch('/:id/read', authenticateToken, requireRole('admin', 'auxiliar_admisiones', 'lawyer'), validatePositiveIntegerParams('id'), contactController.markAsRead);
 
 module.exports = router;
