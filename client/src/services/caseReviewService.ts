@@ -95,7 +95,7 @@ export async function convertPetitionToCase(
 
 export async function downloadPetitionDocument(petitionId: number, docIndex: number, filename: string): Promise<boolean> {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const API_BASE_URL = '/api';
     const response = await fetch(`${API_BASE_URL}/case-reviews/${petitionId}/documents/${docIndex}/download`, {
       credentials: 'include',
     });

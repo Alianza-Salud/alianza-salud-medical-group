@@ -119,7 +119,7 @@ export async function toggleDocumentVisibility(docId: number, visibleToClient: b
 
 export async function downloadDocument(caseId: number, docId: number, filename: string): Promise<boolean> {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    const API_BASE_URL = '/api';
     const response = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/${docId}/download`, {
       credentials: 'include',
     });

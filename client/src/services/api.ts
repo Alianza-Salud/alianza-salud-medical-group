@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// API same-origin in every environment: Vite proxies locally and Vercel proxies in production.
+// This keeps the HttpOnly session cookie first-party and avoids third-party-cookie blocking.
+const API_BASE_URL = '/api';
 
 interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -36,6 +38,10 @@ async function request<T>(
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`La API devolvió una respuesta no válida (${response.status}).`);
+  }
   const data = await response.json();
 
   return {

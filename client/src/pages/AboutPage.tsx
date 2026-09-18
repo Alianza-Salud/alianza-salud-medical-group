@@ -89,7 +89,7 @@ export default function AboutPage() {
                 {siteInfo?.visual_resource && (siteInfo.visual_resource.startsWith('/') || siteInfo.visual_resource.startsWith('http') || siteInfo.visual_resource.startsWith('data:')) ? (
                   <div className="group relative overflow-hidden rounded-3xl border border-gray-200 bg-slate-900 shadow-2xl transition-all duration-300 hover:shadow-2xl">
                     <img
-                      src={siteInfo.visual_resource.startsWith('/') ? `http://localhost:3001${siteInfo.visual_resource}` : siteInfo.visual_resource}
+                      src={siteInfo.visual_resource}
                       alt="Recurso Visual Institucional — Alianza Salud Medical Group"
                       className="h-80 sm:h-[420px] w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />

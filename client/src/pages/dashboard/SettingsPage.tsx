@@ -672,7 +672,7 @@ export default function SettingsPage() {
                       </span>
                       <div className="relative overflow-hidden rounded-lg border border-slate-700 max-h-64 bg-slate-950 flex items-center justify-center p-2">
                         <img
-                          src={formData.visual_resource.startsWith('/') ? `http://localhost:3001${formData.visual_resource}` : formData.visual_resource}
+                          src={formData.visual_resource}
                           alt="Recurso Visual Proyectado"
                           className="max-h-56 w-auto object-contain rounded-md"
                           onError={(e) => {

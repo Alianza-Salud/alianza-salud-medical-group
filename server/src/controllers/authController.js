@@ -22,7 +22,7 @@ function setAuthCookie(res, token) {
   res.cookie(config.authCookie.name, token, {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: config.authCookie.sameSite,
     path: '/',
     maxAge: config.authCookie.maxAgeMs,
   });
@@ -205,7 +205,7 @@ function logout(req, res) {
   res.clearCookie(config.authCookie.name, {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: config.authCookie.sameSite,
     path: '/',
   });
   return res.json({ success: true, message: 'Sesión cerrada exitosamente.' });

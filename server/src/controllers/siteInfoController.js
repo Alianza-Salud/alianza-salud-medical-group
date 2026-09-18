@@ -1,4 +1,6 @@
 const siteInfoRepository = require('../repositories/siteInfoRepository');
+const storageService = require('../storage/StorageService');
+const fs = require('fs');
 
 const mockSiteInfo = {
   company_name: 'Alianza Salud Medical Group',
@@ -33,6 +35,11 @@ async function getSiteInfo(req, res, next) {
       // Merge con los valores por defecto si faltan claves
       siteInfo = { ...mockSiteInfo, ...siteInfo };
     }
+    delete siteInfo.visual_resource_storage_key;
+    delete siteInfo.visual_resource_mime_type;
+    if (/localhost|\/uploads\//i.test(String(siteInfo.visual_resource || ''))) {
+      siteInfo.visual_resource = '';
+    }
 
     return res.json({
       success: true,
@@ -57,13 +64,27 @@ async function updateSiteInfo(req, res, next) {
       });
     }
 
-    await siteInfoRepository.updateInfo(settingsData);
+    const allowedKeys = new Set([
+      'company_name', 'tagline', 'phone', 'email', 'address', 'schedule',
+      'history', 'mission', 'vision', 'values', 'visual_resource',
+    ]);
+    const safeSettings = Object.fromEntries(
+      Object.entries(settingsData).filter(([key]) => allowedKeys.has(key))
+    );
+    if (Object.keys(safeSettings).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No se proporcionaron campos de configuración válidos.', status: 400 },
+      });
+    }
+
+    await siteInfoRepository.updateInfo(safeSettings);
     const updatedInfo = await siteInfoRepository.getInfo();
 
     return res.json({
       success: true,
       message: 'Configuración de la empresa e información institucional actualizada exitosamente.',
-      data: updatedInfo || { ...mockSiteInfo, ...settingsData },
+      data: updatedInfo || { ...mockSiteInfo, ...safeSettings },
     });
   } catch (error) {
     next(error);
@@ -80,10 +101,29 @@ async function uploadVisualResource(req, res, next) {
       });
     }
 
-    const imageUrl = `/uploads/documents/${file.filename}`;
+    const previousInfo = await siteInfoRepository.getInfo();
+    let stored;
+    try {
+      stored = await storageService.uploadFile(file.path, file.originalname, file.mimetype);
+    } finally {
+      await fs.promises.unlink(file.path).catch(() => {});
+    }
+    const imageUrl = '/api/site-info/visual-resource';
 
-    await siteInfoRepository.updateInfo({ visual_resource: imageUrl });
+    await siteInfoRepository.updateInfo({
+      visual_resource: imageUrl,
+      visual_resource_storage_key: stored.storageKey,
+      visual_resource_mime_type: file.mimetype,
+    });
+    const previousKey = previousInfo?.visual_resource_storage_key;
+    if (previousKey && previousKey !== stored.storageKey) {
+      await storageService.deleteFile(previousKey).catch(() => {});
+    }
     const updatedInfo = await siteInfoRepository.getInfo();
+    if (updatedInfo) {
+      delete updatedInfo.visual_resource_storage_key;
+      delete updatedInfo.visual_resource_mime_type;
+    }
 
     return res.json({
       success: true,
@@ -98,8 +138,28 @@ async function uploadVisualResource(req, res, next) {
   }
 }
 
+async function getVisualResource(req, res, next) {
+  try {
+    const siteInfo = await siteInfoRepository.getInfo();
+    const storageKey = siteInfo?.visual_resource_storage_key;
+    if (!storageKey || !(await storageService.exists(storageKey))) {
+      return res.status(404).json({ success: false, error: { message: 'Imagen no disponible.', status: 404 } });
+    }
+    const mimeType = ['image/jpeg', 'image/png'].includes(siteInfo.visual_resource_mime_type)
+      ? siteInfo.visual_resource_mime_type
+      : 'application/octet-stream';
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    return (await storageService.getReadStream(storageKey)).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getSiteInfo,
   updateSiteInfo,
   uploadVisualResource,
+  getVisualResource,
 };

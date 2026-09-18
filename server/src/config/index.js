@@ -5,12 +5,16 @@
 const jwtSecret = process.env.JWT_SECRET;
 const nodeEnv = process.env.NODE_ENV || 'development';
 const corsOrigin = process.env.CORS_ORIGIN || (nodeEnv === 'production' ? '' : 'http://localhost:5173');
+const cookieSameSite = String(process.env.AUTH_COOKIE_SAME_SITE || 'lax').toLowerCase();
 
 if (!jwtSecret || jwtSecret.length < 32) {
   throw new Error('JWT_SECRET is required and must be at least 32 characters');
 }
 if (nodeEnv === 'production' && (!corsOrigin || corsOrigin.split(',').some((origin) => origin.trim() === '*'))) {
   throw new Error('CORS_ORIGIN must contain explicit origins in production');
+}
+if (!['lax', 'strict', 'none'].includes(cookieSameSite)) {
+  throw new Error('AUTH_COOKIE_SAME_SITE must be lax, strict, or none');
 }
 
 const config = {
@@ -27,6 +31,7 @@ const config = {
   authCookie: {
     name: 'access_token',
     maxAgeMs: parseInt(process.env.AUTH_COOKIE_MAX_AGE_MS || '900000', 10),
+    sameSite: cookieSameSite,
   },
   verificationCodePepper: process.env.VERIFICATION_CODE_PEPPER || jwtSecret,
 
