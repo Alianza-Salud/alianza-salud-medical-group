@@ -1,4 +1,4 @@
-export type UserRole = 'client' | 'cliente' | 'lawyer' | 'auxiliar_admisiones' | 'admin';
+export type UserRole = 'client' | 'lawyer' | 'auxiliar_admisiones' | 'admin';
 
 export interface User {
   id: number;
@@ -25,7 +25,6 @@ export interface AuthResponse {
   success: boolean;
   message?: string;
   data?: {
-    token: string;
     user: User;
   };
   error?: {

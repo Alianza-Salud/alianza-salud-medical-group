@@ -27,8 +27,15 @@ class LocalStorage {
 
   getAbsolutePath(storageKey) {
     // Evitar transversión de directorios (Path Traversal Protection)
-    const normalizedKey = path.normalize(storageKey).replace(/^(\.\.[\/\\])+/, '');
-    return path.join(this.baseDir, normalizedKey);
+    if (typeof storageKey !== 'string' || !storageKey || path.isAbsolute(storageKey)) {
+      throw new Error('Invalid storage key');
+    }
+    const root = path.resolve(this.baseDir);
+    const candidate = path.resolve(root, storageKey);
+    if (candidate === root || !candidate.startsWith(`${root}${path.sep}`)) {
+      throw new Error('Invalid storage key');
+    }
+    return candidate;
   }
 
   async calculateChecksum(filePath) {

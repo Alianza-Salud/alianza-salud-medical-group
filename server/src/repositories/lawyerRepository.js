@@ -41,6 +41,12 @@ class LawyerRepository {
     };
   }
 
+  async findByUserId(userId) {
+    if (!pool) return null;
+    const [rows] = await pool.query('SELECT id FROM lawyers WHERE user_id = ? AND is_active = 1 LIMIT 1', [userId]);
+    return rows.length > 0 ? this.findById(rows[0].id) : null;
+  }
+
   async create({ fullName, email, phone = '', specialty = 'Derecho Médico', roleType = 'lawyer' }) {
     if (!pool) return null;
     const [result] = await pool.query(

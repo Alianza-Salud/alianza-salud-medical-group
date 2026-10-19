@@ -152,6 +152,7 @@ class CaseRepository {
         title: u.title,
         description: u.description,
         stageName: u.stage_name,
+        visibleToClient: Boolean(u.visible_to_client),
         createdAt: u.created_at,
       })),
       documents: documentsRows.map((d) => ({
@@ -160,8 +161,8 @@ class CaseRepository {
         name: d.name,
         type: d.type,
         description: d.description,
-        filePath: d.file_path,
         originalName: d.original_name,
+        downloadAvailable: Boolean(d.storage_key || d.file_path),
         uploadedByName: d.uploaded_by_name,
         status: d.status,
         visibleToClient: Boolean(d.visible_to_client),
@@ -229,9 +230,7 @@ class CaseRepository {
       name: d.name,
       type: d.type,
       description: d.description,
-      filePath: d.file_path,
-      storageKey: d.storage_key,
-      checksum: d.checksum,
+      downloadAvailable: Boolean(d.storage_key || d.file_path),
       originalName: d.original_name,
       uploadedByName: d.uploaded_by_name,
       status: d.status,
@@ -271,7 +270,6 @@ class CaseRepository {
       name,
       type,
       description,
-      filePath,
       storageKey,
       checksum,
       originalName,
@@ -328,7 +326,7 @@ class CaseRepository {
   async findByClientUser(userId, email) {
     if (!pool) return [];
     const [rows] = await pool.query(
-      'SELECT * FROM cases WHERE user_id = ? OR client_email = ? ORDER BY created_at DESC',
+      'SELECT * FROM cases WHERE user_id = ? OR (user_id IS NULL AND LOWER(client_email) = LOWER(?)) ORDER BY created_at DESC',
       [userId, email]
     );
     const fullCases = await Promise.all(rows.map((r) => this.findById(r.id)));
@@ -350,6 +348,34 @@ class CaseRepository {
     return fullCases.filter(Boolean);
   }
 
+  async isLawyerUserAssigned(caseId, userId) {
+    if (!pool) return false;
+    const [rows] = await pool.query(
+      `SELECT 1
+       FROM lawyers l
+       JOIN case_lawyers cl ON cl.lawyer_id = l.id
+       WHERE cl.case_id = ? AND l.user_id = ? AND l.is_active = 1
+       LIMIT 1`,
+      [caseId, userId]
+    );
+    return rows.length > 0;
+  }
+
+  async findByLawyerUser(userId) {
+    if (!pool) return [];
+    const [rows] = await pool.query(
+      `SELECT DISTINCT c.id
+       FROM cases c
+       JOIN case_lawyers cl ON cl.case_id = c.id
+       JOIN lawyers l ON l.id = cl.lawyer_id
+       WHERE l.user_id = ? AND l.is_active = 1
+       ORDER BY c.created_at DESC`,
+      [userId]
+    );
+    const fullCases = await Promise.all(rows.map((row) => this.findById(row.id)));
+    return fullCases.filter(Boolean);
+  }
+
   /**
    * Cambiar o avanzar la etapa del caso.
    */
@@ -362,7 +388,7 @@ class CaseRepository {
   /**
    * Agregar novedad / movimiento a un caso.
    */
-  async addUpdate({ caseId, createdByName, title, description, stageName, updateStageStatus = true }) {
+  async addUpdate({ caseId, createdByName, title, description, stageName, updateStageStatus = true, visibleToClient = true }) {
     if (!pool) return null;
 
     if (stageName && updateStageStatus) {
@@ -370,9 +396,9 @@ class CaseRepository {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO case_updates (case_id, created_by_name, title, description, stage_name)
-       VALUES (?, ?, ?, ?, ?)`,
-      [caseId, createdByName, title, description, stageName || 'Actualización']
+      `INSERT INTO case_updates (case_id, created_by_name, title, description, stage_name, visible_to_client)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [caseId, createdByName, title, description, stageName || 'Actualización', visibleToClient ? 1 : 0]
     );
 
     return {
@@ -382,6 +408,7 @@ class CaseRepository {
       title,
       description,
       stageName,
+      visibleToClient: Boolean(visibleToClient),
       createdAt: new Date().toISOString(),
     };
   }

@@ -1,6 +1,23 @@
 const { buildHtmlLayout } = require('./emailTemplateBuilder');
 
-const FRONTEND_URL = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const FRONTEND_URL = process.env.APP_URL || String(process.env.CORS_ORIGIN || 'http://localhost:5173').split(',')[0].trim();
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/[\r\n]+/g, ' ');
+}
+
+function sanitizeTemplateData(data = {}) {
+  return Object.fromEntries(Object.entries(data).map(([key, value]) => [
+    key,
+    typeof value === 'string' ? escapeHtml(value) : value,
+  ]));
+}
 
 function buildCalendarLinks({ title, description, location, dateStr, timeStr }) {
   try {
@@ -354,4 +371,6 @@ const templates = {
   },
 };
 
-module.exports = templates;
+module.exports = Object.fromEntries(
+  Object.entries(templates).map(([event, render]) => [event, (data) => render(sanitizeTemplateData(data))])
+);

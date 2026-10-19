@@ -13,7 +13,8 @@ export interface CaseDocument {
   name: string;
   type: string;
   description?: string;
-  filePath?: string;
+  downloadAvailable?: boolean;
+  storageKey?: string;
   originalName?: string;
   uploadedByName?: string;
   status: string;

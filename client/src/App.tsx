@@ -72,7 +72,7 @@ function App() {
             </Route>
 
             {/* Dashboard para Clientes */}
-            <Route element={<ProtectedRoute allowedRoles={['client', 'cliente', 'admin', 'auxiliar_admisiones', 'lawyer']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'auxiliar_admisiones', 'lawyer']} />}>
               <Route path="/dashboard/cliente" element={<ClientDashboardPage />} />
             </Route>
           </Route>

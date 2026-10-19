@@ -1,10 +1,14 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Runtime uploads / private documents
+server/uploads/
+storage/
+
+# Local environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Build
 dist/
@@ -22,6 +26,11 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Local tools and sensitive operator notes
+cftunnel.exe
+usuarios.txt
+scratch/
 
 # Testing
 coverage/

@@ -14,7 +14,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { usePageMeta } from '../../hooks/usePageMeta';
-import { fetchCases, fetchCaseById } from '../../services/caseService';
+import { fetchCases, fetchCaseById, downloadDocument } from '../../services/caseService';
 import type { LegalCase } from '../../types/case';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader } from '../../components/ui/Card';
@@ -205,16 +205,14 @@ export default function ClientDashboardPage() {
                               <Eye className="h-3.5 w-3.5 text-emerald-600" /> Disponible
                             </span>
 
-                            {doc.filePath && (
-                              <a
-                                href={`http://localhost:3001${doc.filePath}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download
+                            {doc.downloadAvailable && (
+                              <button
+                                type="button"
+                                onClick={() => downloadDocument(selectedCase.id, doc.id, doc.originalName || doc.name)}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm"
                               >
                                 <Download className="h-3.5 w-3.5" /> Descargar
-                              </a>
+                              </button>
                             )}
                           </div>
                         </div>

@@ -1,7 +1,17 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'alianza_salud_secret_key_2026_phase3';
+function getCookie(req, name) {
+  const cookies = String(req.headers.cookie || '').split(';');
+  for (const cookie of cookies) {
+    const separator = cookie.indexOf('=');
+    if (separator === -1) continue;
+    if (cookie.slice(0, separator).trim() === name) {
+      return decodeURIComponent(cookie.slice(separator + 1).trim());
+    }
+  }
+  return null;
+}
 
 /**
  * Middleware para verificar la validez del token JWT en la cabecera Authorization.
@@ -9,7 +19,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'alianza_salud_secret_key_2026_phas
  */
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = getCookie(req, config.authCookie.name) || bearerToken;
 
   if (!token) {
     return res.status(401).json({
@@ -18,7 +29,7 @@ function authenticateToken(req, res, next) {
     });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decodedUser) => {
+  jwt.verify(token, config.jwt.secret, { algorithms: [config.jwt.algorithm] }, (err, decodedUser) => {
     if (err) {
       return res.status(403).json({
         success: false,

@@ -42,3 +42,11 @@ export async function fetchCurrentUser(): Promise<{ success: boolean; data?: Use
   }
   return { success: false };
 }
+
+export async function logoutUser(): Promise<void> {
+  try {
+    await apiClient.post('/auth/logout', {});
+  } catch (error) {
+    console.error('[AuthService Error] logoutUser:', error);
+  }
+}

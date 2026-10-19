@@ -11,7 +11,7 @@ class BrevoProvider {
     const currentApiKey = emailConfig.apiKey;
 
     if (!currentApiKey) {
-      console.log(`[Brevo Simulation] Correo a ${to} ("${subject}") simulado en entorno local sin API Key.`);
+      console.log('[Notification] Email simulated because provider credentials are not configured.');
       return {
         success: true,
         messageId: `simulated-brevo-${Date.now()}`,
@@ -19,7 +19,7 @@ class BrevoProvider {
       };
     }
 
-    console.log(`[Brevo Real API Call] Enviando correo transaccional real a ${to} mediante API Key Brevo...`);
+    console.log('[Notification] Sending transactional email through configured provider.');
 
     try {
       const payload = {
@@ -46,7 +46,7 @@ class BrevoProvider {
         timeout: 10000,
       });
 
-      console.log(`[Brevo API Success] Correo entregado exitosamente a ${to}. MessageID: ${response.data.messageId}`);
+      console.log('[Notification] Transactional email accepted by provider.');
 
       return {
         success: true,
@@ -54,11 +54,10 @@ class BrevoProvider {
         data: response.data,
       };
     } catch (error) {
-      const errorDetails = error.response?.data?.message || error.message;
-      console.error(`[Brevo Provider Error] Error enviando correo a ${to}:`, errorDetails);
+      console.error('[Notification] Transactional email provider request failed.');
       return {
         success: false,
-        error: errorDetails,
+        error: 'No fue posible entregar el correo mediante el proveedor configurado.',
       };
     }
   }

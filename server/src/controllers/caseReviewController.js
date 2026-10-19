@@ -4,6 +4,27 @@ const clientRepository = require('../repositories/clientRepository');
 const storageService = require('../storage/StorageService');
 const notificationService = require('../services/notifications/notificationService');
 const fs = require('fs');
+const path = require('path');
+
+function resolveLegacyUploadPath(filePath) {
+  const root = path.resolve(__dirname, '../../uploads');
+  const relativePath = String(filePath || '').replace(/^[/\\]*uploads[/\\]*/i, '');
+  const candidate = path.resolve(root, relativePath);
+  if (candidate === root || !candidate.startsWith(`${root}${path.sep}`)) return null;
+  return candidate;
+}
+
+function toPublicPetition(petition) {
+  return {
+    ...petition,
+    documents: (petition.documents || []).map((document) => ({
+      name: document.name,
+      mimeType: document.mimeType,
+      size: document.size,
+      downloadAvailable: Boolean(document.storageKey || document.filePath),
+    })),
+  };
+}
 
 async function createRequest(req, res, next) {
   try {
@@ -25,16 +46,15 @@ async function createRequest(req, res, next) {
         storedDocs.push({
           name: file.originalname,
           storageKey: stored.storageKey,
-          filePath: `/uploads/documents/${file.filename}`,
           mimeType: file.mimetype,
           size: stored.size,
         });
 
-        if (fs.existsSync(file.path)) {
-          try { await fs.promises.unlink(file.path); } catch {}
-        }
       } catch (err) {
-        console.error('[CaseReviewController Error] File upload failed:', err);
+        console.error('[CaseReviewController] Private file storage failed.');
+        throw err;
+      } finally {
+        await fs.promises.unlink(file.path).catch(() => {});
       }
     }
 
@@ -60,7 +80,7 @@ async function createRequest(req, res, next) {
     return res.status(201).json({
       success: true,
       message: 'Solicitud de revisión preliminar recibida exitosamente.',
-      data: petition,
+      data: { id: petition.id, status: petition.status, createdAt: petition.createdAt },
     });
   } catch (error) {
     next(error);
@@ -73,7 +93,7 @@ async function getRequests(req, res, next) {
     const petitions = await caseReviewRepository.findAll(status);
     return res.json({
       success: true,
-      data: petitions,
+      data: petitions.map(toPublicPetition),
     });
   } catch (error) {
     next(error);
@@ -189,7 +209,7 @@ async function convertToCase(req, res, next) {
           name: doc.name || 'Documento Preliminar',
           type: 'recibido',
           description: 'Documento aportado en la Solicitud de Revisión Preliminar sin costo.',
-          filePath: doc.filePath || '',
+          filePath: '',
           storageKey: doc.storageKey || '',
           mimeType: doc.mimeType || '',
           fileSize: doc.size || null,
@@ -240,7 +260,8 @@ async function downloadDocument(req, res, next) {
 
     const filename = doc.name || `documento_${idx + 1}.pdf`;
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    if (doc.mimeType) res.setHeader('Content-Type', doc.mimeType);
+    res.setHeader('Content-Type', doc.mimeType || 'application/octet-stream');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
 
     if (doc.storageKey) {
       const stream = await storageService.getFileStream(doc.storageKey);
@@ -248,9 +269,8 @@ async function downloadDocument(req, res, next) {
     }
 
     if (doc.filePath) {
-      const path = require('path');
-      const absolutePath = path.join(__dirname, '../../', doc.filePath.replace(/^\//, ''));
-      if (fs.existsSync(absolutePath)) {
+      const absolutePath = resolveLegacyUploadPath(doc.filePath);
+      if (absolutePath && fs.existsSync(absolutePath)) {
         return res.sendFile(absolutePath);
       }
     }

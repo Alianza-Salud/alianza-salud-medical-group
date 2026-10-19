@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterFormData } from '../types/auth';
-import { loginUser, registerUser, fetchCurrentUser } from '../services/authService';
+import { loginUser, registerUser, fetchCurrentUser, logoutUser } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; message?: string }>;
   register: (data: RegisterFormData) => Promise<{ success: boolean; message?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,14 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Verificar sesión existente al cargar la app
   useEffect(() => {
     async function checkAuth() {
-      const token = localStorage.getItem('auth_token');
-      if (token) {
-        const res = await fetchCurrentUser();
-        if (res.success && res.data) {
-          setUser(res.data);
-        } else {
-          localStorage.removeItem('auth_token');
-        }
+      const res = await fetchCurrentUser();
+      if (res.success && res.data) {
+        setUser(res.data);
       }
       setIsLoading(false);
     }
@@ -37,7 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginCredentials) => {
     const res = await loginUser(credentials);
     if (res.success && res.data) {
-      localStorage.setItem('auth_token', res.data.token);
       setUser(res.data.user);
       return { success: true, message: res.message };
     }
@@ -50,7 +44,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: RegisterFormData) => {
     const res = await registerUser(data);
     if (res.success && res.data) {
-      localStorage.setItem('auth_token', res.data.token);
       setUser(res.data.user);
       return { success: true, message: res.message };
     }
@@ -60,8 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
+  const logout = async () => {
+    await logoutUser();
     setUser(null);
   };
 

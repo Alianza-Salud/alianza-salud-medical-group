@@ -613,7 +613,7 @@ export default function CaseDetailPage() {
                           </span>
                         )}
 
-                        {(doc.storageKey || doc.filePath) && (
+                        {doc.downloadAvailable && (
                           <button
                             type="button"
                             onClick={() => handleDownloadDocument(doc.id, doc.originalName || doc.name)}

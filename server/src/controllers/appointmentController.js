@@ -18,13 +18,11 @@ const allTimeSlots = [
  */
 async function getAppointments(req, res, next) {
   try {
-    const { role, email } = req.user || {};
+    const { role, id: userId } = req.user || {};
     let lawyerId = null;
 
     if (role === 'lawyer') {
-      const lawyers = await lawyerRepository.findAll();
-      const userEmail = String(email || '').toLowerCase();
-      const match = lawyers.find((l) => l.email && String(l.email).toLowerCase() === userEmail);
+      const match = await lawyerRepository.findByUserId(userId);
       if (match) {
         lawyerId = match.id;
       }
